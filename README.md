@@ -22,6 +22,11 @@ This workspace is configured for a single-window, high-autonomy delivery model.
 
 In future tasks, wake the fleet explicitly. The primary wake word is `苏醒`.
 
+In this workspace, `苏醒` is a per-thread latch:
+
+- after you say `苏醒`, the rest of the current conversation defaults to fleet mode
+- that default stays active until you explicitly say `休眠`, `退出舰队模式`, or start a different thread without waking the fleet
+
 Recommended examples:
 
 - `苏醒，做这个任务。`

@@ -8,6 +8,17 @@ Operate this project as a single-window autonomous fleet with maximum safe paral
 
 The primary fleet wake word is `苏醒`.
 
+## Session latch
+
+Inside this workspace, `苏醒` latches fleet mode for the rest of the current conversation thread.
+
+Once latched, interpret follow-up requests as fleet-authorized by default until one of these happens:
+
+- the user says `休眠`
+- the user says `退出舰队模式`
+- the user clearly asks to stop using the fleet
+- the conversation switches to a different thread or workspace
+
 When the user says `苏醒`, interpret it as:
 
 - activate the fleet operating model
@@ -75,6 +86,7 @@ When the user says `苏醒`, interpret it as:
 ## Primary entry points
 
 - `.fleet/START-HERE.md`
+- `.fleet/policies/session-latch.md`
 - `.fleet/policies/operating-model.md`
 - `.fleet/policies/memory-lifecycle.md`
 - `.fleet/policies/review-gates.md`
