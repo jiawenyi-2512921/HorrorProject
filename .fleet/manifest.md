@@ -4,6 +4,17 @@
 
 Operate this project as a single-window autonomous fleet with maximum safe parallelism, explicit review gates, and disciplined context management.
 
+## Wake word
+
+The primary fleet wake word is `苏醒`.
+
+When the user says `苏醒`, interpret it as:
+
+- activate the fleet operating model
+- load `.fleet/START-HERE.md`
+- use the relevant policies, prompts, and `ContextVault/` slices
+- proceed in high-autonomy mode unless a strategic escalation is required
+
 ## Modes
 
 - `Autopilot`

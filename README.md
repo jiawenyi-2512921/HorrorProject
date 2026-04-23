@@ -20,10 +20,16 @@ This workspace is configured for a single-window, high-autonomy delivery model.
 
 ## How to use
 
-In future tasks, ask for the fleet explicitly, for example:
+In future tasks, wake the fleet explicitly. The primary wake word is `苏醒`.
 
-- `Use our fleet OS to implement this feature.`
-- `Run the agent team on this task in full autonomous mode.`
-- `Use the fleet with architecture review and independent QA.`
+Recommended examples:
 
-That wording is intentional. It makes the request unambiguous, which allows aggressive parallel delegation and review.
+- `苏醒，做这个任务。`
+- `苏醒，用 fleet 模式实现这个功能。`
+- `苏醒，开启全自治执行和审查。`
+
+Technical fallback:
+
+- `Use $agent-fleet-os to run this task through our fleet in full autonomous mode.`
+
+That wording is intentional. It makes fleet activation unambiguous, which allows aggressive parallel delegation and review.
