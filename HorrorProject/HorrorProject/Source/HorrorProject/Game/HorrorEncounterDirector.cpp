@@ -3,9 +3,15 @@
 #include "Game/HorrorEncounterDirector.h"
 
 #include "AI/HorrorThreatCharacter.h"
+#include "Game/HorrorEventBusSubsystem.h"
 
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraShakeBase.h"
+#include "Sound/SoundBase.h"
+#include "TimerManager.h"
+#include "GameplayTagContainer.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 void UHorrorEncounterPhaseDelegateProbe::HandleEncounterPhaseChanged(EHorrorEncounterPhase NewPhase, FName EncounterId)
@@ -33,6 +39,13 @@ bool AHorrorEncounterDirector::PrimeEncounter(FName InEncounterId)
 	ActiveEncounterId = InEncounterId.IsNone() ? DefaultEncounterId : InEncounterId;
 	EncounterPhase = EHorrorEncounterPhase::Primed;
 	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
+
+	if (PrimeSound)
+	{
+		PlayEncounterSound(PrimeSound);
+	}
+
+	PublishEncounterEvent(TEXT("Encounter.Primed"), ActiveEncounterId);
 	BP_OnEncounterPrimed(ActiveEncounterId);
 	return true;
 }
@@ -44,16 +57,18 @@ bool AHorrorEncounterDirector::TriggerReveal(AActor* PlayerActor)
 		return false;
 	}
 
-	AHorrorThreatCharacter* RevealThreat = SpawnThreatActor();
-	EncounterPhase = EHorrorEncounterPhase::Revealed;
-	LastRevealTarget = PlayerActor;
-	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
-	if (RevealThreat)
+	if (RevealDelaySeconds > 0.0f)
 	{
-		RevealThreat->ActivateThreat();
-		RevealThreat->UpdateDetectedTarget(PlayerActor);
+		BP_OnRevealSequenceStart(PlayerActor);
+		GetWorldTimerManager().SetTimer(
+			RevealDelayTimerHandle,
+			FTimerDelegate::CreateUObject(this, &AHorrorEncounterDirector::ExecuteDelayedReveal, PlayerActor),
+			RevealDelaySeconds,
+			false);
+		return true;
 	}
-	BP_OnEncounterRevealed(ActiveEncounterId, PlayerActor, RevealThreat);
+
+	ExecuteDelayedReveal(PlayerActor);
 	return true;
 }
 
@@ -69,7 +84,14 @@ bool AHorrorEncounterDirector::ResolveEncounter()
 	{
 		ThreatActor->DeactivateThreat();
 	}
+
+	if (ResolveSound)
+	{
+		PlayEncounterSound(ResolveSound);
+	}
+
 	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
+	PublishEncounterEvent(TEXT("Encounter.Resolved"), ActiveEncounterId);
 	BP_OnEncounterResolved(ActiveEncounterId);
 	return true;
 }
@@ -162,4 +184,102 @@ AHorrorThreatCharacter* AHorrorEncounterDirector::SpawnThreatActor()
 AHorrorThreatCharacter* AHorrorEncounterDirector::GetThreatActor() const
 {
 	return ThreatActor.Get();
+}
+
+void AHorrorEncounterDirector::ExecuteDelayedReveal(AActor* PlayerActor)
+{
+	if (EncounterPhase != EHorrorEncounterPhase::Primed)
+	{
+		return;
+	}
+
+	AHorrorThreatCharacter* RevealThreat = SpawnThreatActor();
+	EncounterPhase = EHorrorEncounterPhase::Revealed;
+	LastRevealTarget = PlayerActor;
+
+	if (RevealSound)
+	{
+		PlayEncounterSound(RevealSound);
+	}
+
+	if (RevealCameraShake)
+	{
+		TriggerCameraShake(RevealCameraShake, RevealCameraShakeScale);
+	}
+
+	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
+	PublishEncounterEvent(TEXT("Encounter.Revealed"), ActiveEncounterId);
+
+	if (RevealThreat)
+	{
+		RevealThreat->ActivateThreat();
+		RevealThreat->UpdateDetectedTarget(PlayerActor);
+	}
+
+	BP_OnRevealSequenceComplete(PlayerActor, RevealThreat);
+	BP_OnEncounterRevealed(ActiveEncounterId, PlayerActor, RevealThreat);
+}
+
+void AHorrorEncounterDirector::PublishEncounterEvent(FName EventName, FName PhaseTag)
+{
+	if (!bPublishToEventBus)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	UHorrorEventBusSubsystem* EventBus = World->GetSubsystem<UHorrorEventBusSubsystem>();
+	if (!EventBus)
+	{
+		return;
+	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(EventName);
+	FGameplayTag StateTag = FGameplayTag::RequestGameplayTag(PhaseTag);
+	EventBus->Publish(EventTag, EventBusSourceId, StateTag, this);
+}
+
+void AHorrorEncounterDirector::PlayEncounterSound(USoundBase* Sound, float VolumeMultiplier)
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation(), VolumeMultiplier);
+}
+
+void AHorrorEncounterDirector::TriggerCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale)
+{
+	if (!ShakeClass)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC)
+	{
+		return;
+	}
+
+	PC->ClientStartCameraShake(ShakeClass, Scale);
+}
+
+void AHorrorEncounterDirector::BP_OnRevealSequenceStart_Implementation(AActor* PlayerActor)
+{
+}
+
+void AHorrorEncounterDirector::BP_OnRevealSequenceComplete_Implementation(AActor* PlayerActor, AHorrorThreatCharacter* RevealedThreat)
+{
 }

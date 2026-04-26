@@ -8,6 +8,9 @@
 
 class AHorrorThreatCharacter;
 class USceneComponent;
+class USoundBase;
+class UCameraShakeBase;
+class UHorrorEventBusSubsystem;
 
 UENUM(BlueprintType)
 enum class EHorrorEncounterPhase : uint8
@@ -97,6 +100,36 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Horror|Encounter")
 	FHorrorEncounterPhaseChangedSignature OnEncounterPhaseChanged;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Audio")
+	TObjectPtr<USoundBase> PrimeSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Audio")
+	TObjectPtr<USoundBase> RevealSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Audio")
+	TObjectPtr<USoundBase> ResolveSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Camera")
+	TSubclassOf<UCameraShakeBase> RevealCameraShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Camera", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float RevealCameraShakeScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Timing")
+	float RevealDelaySeconds = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|EventBus")
+	bool bPublishToEventBus = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|EventBus")
+	FName EventBusSourceId = TEXT("EncounterDirector");
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
+	void PlayEncounterSound(USoundBase* Sound, float VolumeMultiplier = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
+	void TriggerCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale = 1.0f);
+
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Encounter")
 	void BP_OnEncounterPrimed(FName PrimedEncounterId);
@@ -110,6 +143,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Encounter")
 	void BP_OnEncounterReset(FName ResetEncounterId);
 
+	UFUNCTION(BlueprintNativeEvent, Category="Horror|Encounter")
+	void BP_OnRevealSequenceStart(AActor* PlayerActor);
+
+	UFUNCTION(BlueprintNativeEvent, Category="Horror|Encounter")
+	void BP_OnRevealSequenceComplete(AActor* PlayerActor, AHorrorThreatCharacter* RevealedThreat);
+
 private:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Horror|Encounter", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<USceneComponent> SceneRoot;
@@ -122,4 +161,9 @@ private:
 
 	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category="Horror|Encounter", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<AActor> LastRevealTarget;
+
+	FTimerHandle RevealDelayTimerHandle;
+
+	void ExecuteDelayedReveal(AActor* PlayerActor);
+	void PublishEncounterEvent(FName EventName, FName PhaseTag);
 };
