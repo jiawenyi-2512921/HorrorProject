@@ -151,7 +151,7 @@ function Show-BehaviorTreeStatus {
                 $type = $matches[2]
                 $info = $matches[3].Trim()
 
-                Write-Host "  [$time] $type: $info"
+                Write-Host "  [$time] ${type}: $info"
             }
         }
     } else {

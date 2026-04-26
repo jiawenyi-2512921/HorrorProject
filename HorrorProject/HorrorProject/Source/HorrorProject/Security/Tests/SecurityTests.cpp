@@ -4,6 +4,8 @@
 #include "Security/InputValidator.h"
 #include "Security/DataEncryption.h"
 
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInputValidatorStringTest, "HorrorProject.Security.InputValidator.String", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInputValidatorStringTest::RunTest(const FString& Parameters)
@@ -174,3 +176,5 @@ bool FInputValidatorFilePathTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS

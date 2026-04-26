@@ -7,13 +7,14 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "GeneralProjectSettings.h"
+#include "HAL/PlatformProperties.h"
 
 void USessionTracker::StartSession()
 {
 	CurrentSession = FSessionData();
 	CurrentSession.SessionId = GenerateSessionId();
 	CurrentSession.StartTime = FDateTime::UtcNow();
-	CurrentSession.Platform = UGameplayStatics::GetPlatformName();
+	CurrentSession.Platform = FPlatformProperties::PlatformName();
 	CurrentSession.AppVersion = GetDefault<UGeneralProjectSettings>()->ProjectVersion;
 
 	LoadSessionHistory();

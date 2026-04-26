@@ -81,9 +81,13 @@ try {
         Write-Host "`n[ERROR] Compilation failed with exit code $($Process.ExitCode)" -ForegroundColor Red
         Write-Host "Check log file: $LogFile" -ForegroundColor Yellow
 
-        # Extract errors from log
+        # Extract common compiler, linker, and UnrealHeaderTool errors from the log.
         $LogContent = Get-Content $LogFile -Raw
-        $Errors = [regex]::Matches($LogContent, "error [A-Z0-9]+:.*") | Select-Object -First 10
+        $Errors = @(
+            [regex]::Matches($LogContent, "(?im)^.*error [A-Z][A-Z0-9]+:.*$")
+            [regex]::Matches($LogContent, "(?im)^.*fatal error [A-Z][A-Z0-9]+:.*$")
+            [regex]::Matches($LogContent, "(?im)^.*\bError:\s+.*$")
+        ) | ForEach-Object { $_ } | Select-Object -First 10
 
         if ($Errors.Count -gt 0) {
             Write-Host "`nFirst 10 errors:" -ForegroundColor Red

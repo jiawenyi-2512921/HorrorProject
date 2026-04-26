@@ -1,6 +1,6 @@
 ﻿# Compilation Report
 
-Generated: 2026-04-27 01:17:14
+Generated: 2026-04-27 01:35:44
 
 ## Project
 
@@ -15,7 +15,7 @@ Generated: 2026-04-27 01:17:14
 - VFX cpp files: 4
 - Audio cpp files: 12
 - UI cpp files: 13
-- Runtime test cpp files: 58
+- Runtime test cpp files: 59
 - Editor tool cpp files: 4
 
 ## Runtime Module Dependencies
@@ -84,9 +84,9 @@ Generated: 2026-04-27 01:17:14
 
 - Niagara, UMG, networking, rendering, navigation, JSON, and editor dependencies are declared in Build.cs.
 - Legacy automation tests are intentionally quarantined by HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0 until they are migrated to current APIs.
-- PowerShell syntax scan currently covers 195 scripts.
-- PowerShell files with syntax errors: 38
-- PowerShell syntax error count: 370
+- PowerShell syntax scan currently covers 199 scripts.
+- PowerShell files with syntax errors: 0
+- PowerShell syntax error count: 0
 
 ## Recommended Next Work
 

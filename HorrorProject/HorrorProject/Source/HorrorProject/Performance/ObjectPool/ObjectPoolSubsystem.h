@@ -30,6 +30,15 @@ struct FPooledObjectEntry
 	int32 UseCount = 0;
 };
 
+USTRUCT()
+struct FPooledObjectEntryArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FPooledObjectEntry> Entries;
+};
+
 /**
  * Object Pool Subsystem
  * Manages pooled objects to reduce allocation/deallocation overhead
@@ -42,8 +51,6 @@ class HORRORPROJECT_API UObjectPoolSubsystem : public UWorldSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	virtual void Tick(float DeltaTime) override;
-	virtual TStatId GetStatId() const override;
 
 	// Audio component pooling
 	UFUNCTION(BlueprintCallable, Category = "Performance|ObjectPool")
@@ -104,13 +111,14 @@ protected:
 
 private:
 	UPROPERTY(Transient)
-	TMap<UClass*, TArray<FPooledObjectEntry>> ObjectPools;
+	TMap<UClass*, FPooledObjectEntryArray> ObjectPools;
 
 	UPROPERTY(Transient)
 	TMap<UClass*, int32> MaxPoolSizes;
 
 	float LastCleanupTime = 0.0f;
 	float CleanupInterval = 30.0f;
+	FTimerHandle CleanupTimerHandle;
 
 	void CleanupPools();
 	void CleanupPool(UClass* ObjectClass);
@@ -136,21 +144,21 @@ T* UObjectPoolSubsystem::AcquireObject(UObject* Outer)
 	}
 
 	// Create new object if pool is empty or below max size
-	TArray<FPooledObjectEntry>& Pool = ObjectPools.FindOrAdd(ObjectClass);
+	FPooledObjectEntryArray& Pool = ObjectPools.FindOrAdd(ObjectClass);
 	int32 MaxSize = MaxPoolSizes.Contains(ObjectClass) ? MaxPoolSizes[ObjectClass] : DefaultMaxPoolSize;
 
-	if (Pool.Num() < MaxSize)
+	if (Pool.Entries.Num() < MaxSize)
 	{
-		T* NewObject = NewObject<T>(Outer ? Outer : this);
+		T* CreatedObject = ::NewObject<T>(Outer ? Outer : this);
 
 		FPooledObjectEntry NewEntry;
-		NewEntry.Object = NewObject;
+		NewEntry.Object = CreatedObject;
 		NewEntry.bInUse = true;
 		NewEntry.LastUsedTime = GetWorld()->GetTimeSeconds();
 		NewEntry.UseCount = 1;
 
-		Pool.Add(NewEntry);
-		return NewObject;
+		Pool.Entries.Add(NewEntry);
+		return CreatedObject;
 	}
 
 	return nullptr;
@@ -165,14 +173,14 @@ void UObjectPoolSubsystem::ReleaseObject(T* Object)
 	}
 
 	UClass* ObjectClass = Object->GetClass();
-	TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
+	FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 
 	if (!Pool)
 	{
 		return;
 	}
 
-	for (FPooledObjectEntry& Entry : *Pool)
+	for (FPooledObjectEntry& Entry : Pool->Entries)
 	{
 		if (Entry.Object == Object)
 		{

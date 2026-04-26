@@ -4,6 +4,7 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 
 void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -19,28 +20,22 @@ void UObjectPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	// Set default max sizes
 	MaxPoolSizes.Add(UAudioComponent::StaticClass(), MaxAudioComponents);
 	MaxPoolSizes.Add(UNiagaraComponent::StaticClass(), MaxNiagaraComponents);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(CleanupTimerHandle, this, &UObjectPoolSubsystem::CleanupPools, CleanupInterval, true);
+	}
 }
 
 void UObjectPoolSubsystem::Deinitialize()
 {
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(CleanupTimerHandle);
+	}
+
 	ClearAllPools();
 	Super::Deinitialize();
-}
-
-void UObjectPoolSubsystem::Tick(float DeltaTime)
-{
-	float CurrentTime = GetWorld()->GetTimeSeconds();
-
-	if (CurrentTime - LastCleanupTime >= CleanupInterval)
-	{
-		CleanupPools();
-		LastCleanupTime = CurrentTime;
-	}
-}
-
-TStatId UObjectPoolSubsystem::GetStatId() const
-{
-	RETURN_QUICK_DECLARE_CYCLE_STAT(UObjectPoolSubsystem, STATGROUP_Tickables);
 }
 
 UAudioComponent* UObjectPoolSubsystem::AcquireAudioComponent(AActor* Owner)
@@ -75,20 +70,20 @@ void UObjectPoolSubsystem::ReleaseNiagaraComponent(UNiagaraComponent* Component)
 
 int32 UObjectPoolSubsystem::GetPoolSize(UClass* ObjectClass) const
 {
-	const TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
-	return Pool ? Pool->Num() : 0;
+	const FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
+	return Pool ? Pool->Entries.Num() : 0;
 }
 
 int32 UObjectPoolSubsystem::GetActiveObjectCount(UClass* ObjectClass) const
 {
-	const TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
+	const FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 	if (!Pool)
 	{
 		return 0;
 	}
 
 	int32 Count = 0;
-	for (const FPooledObjectEntry& Entry : *Pool)
+	for (const FPooledObjectEntry& Entry : Pool->Entries)
 	{
 		if (Entry.bInUse)
 		{
@@ -100,10 +95,10 @@ int32 UObjectPoolSubsystem::GetActiveObjectCount(UClass* ObjectClass) const
 
 void UObjectPoolSubsystem::ClearPool(UClass* ObjectClass)
 {
-	TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
+	FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 	if (Pool)
 	{
-		Pool->Empty();
+		Pool->Entries.Empty();
 	}
 }
 
@@ -120,6 +115,11 @@ void UObjectPoolSubsystem::SetMaxPoolSize(UClass* ObjectClass, int32 MaxSize)
 void UObjectPoolSubsystem::SetPoolCleanupInterval(float Interval)
 {
 	CleanupInterval = FMath::Max(1.0f, Interval);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(CleanupTimerHandle, this, &UObjectPoolSubsystem::CleanupPools, CleanupInterval, true);
+	}
 }
 
 void UObjectPoolSubsystem::CleanupPools()
@@ -128,10 +128,10 @@ void UObjectPoolSubsystem::CleanupPools()
 
 	for (auto& PoolPair : ObjectPools)
 	{
-		TArray<FPooledObjectEntry>& Pool = PoolPair.Value;
+		FPooledObjectEntryArray& Pool = PoolPair.Value;
 
 		// Remove unused objects that have timed out
-		Pool.RemoveAll([CurrentTime, this](const FPooledObjectEntry& Entry)
+		Pool.Entries.RemoveAll([CurrentTime, this](const FPooledObjectEntry& Entry)
 		{
 			return !Entry.bInUse && (CurrentTime - Entry.LastUsedTime) > ObjectTimeoutSeconds;
 		});
@@ -140,7 +140,7 @@ void UObjectPoolSubsystem::CleanupPools()
 
 void UObjectPoolSubsystem::CleanupPool(UClass* ObjectClass)
 {
-	TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
+	FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 	if (!Pool)
 	{
 		return;
@@ -148,7 +148,7 @@ void UObjectPoolSubsystem::CleanupPool(UClass* ObjectClass)
 
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 
-	Pool->RemoveAll([CurrentTime, this](const FPooledObjectEntry& Entry)
+	Pool->Entries.RemoveAll([CurrentTime, this](const FPooledObjectEntry& Entry)
 	{
 		return !Entry.bInUse && (CurrentTime - Entry.LastUsedTime) > ObjectTimeoutSeconds;
 	});
@@ -156,13 +156,13 @@ void UObjectPoolSubsystem::CleanupPool(UClass* ObjectClass)
 
 FPooledObjectEntry* UObjectPoolSubsystem::FindAvailableEntry(UClass* ObjectClass)
 {
-	TArray<FPooledObjectEntry>* Pool = ObjectPools.Find(ObjectClass);
+	FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 	if (!Pool)
 	{
 		return nullptr;
 	}
 
-	for (FPooledObjectEntry& Entry : *Pool)
+	for (FPooledObjectEntry& Entry : Pool->Entries)
 	{
 		if (!Entry.bInUse && Entry.Object)
 		{
