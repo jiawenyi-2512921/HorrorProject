@@ -3,7 +3,9 @@
 #include "Game/HorrorEncounterDirector.h"
 
 #include "AI/HorrorThreatCharacter.h"
+#include "AI/HorrorGolemBehaviorComponent.h"
 #include "Game/HorrorEventBusSubsystem.h"
+#include "Audio/HorrorAudioSubsystem.h"
 
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
@@ -251,6 +253,18 @@ void AHorrorEncounterDirector::PlayEncounterSound(USoundBase* Sound, float Volum
 		return;
 	}
 
+	if (bUseAudioSubsystem)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (UHorrorAudioSubsystem* AudioSys = World->GetSubsystem<UHorrorAudioSubsystem>())
+			{
+				AudioSys->PlaySoundAtLocation(Sound, GetActorLocation(), VolumeMultiplier);
+				return;
+			}
+		}
+	}
+
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation(), VolumeMultiplier);
 }
 
@@ -282,4 +296,38 @@ void AHorrorEncounterDirector::BP_OnRevealSequenceStart_Implementation(AActor* P
 
 void AHorrorEncounterDirector::BP_OnRevealSequenceComplete_Implementation(AActor* PlayerActor, AHorrorThreatCharacter* RevealedThreat)
 {
+}
+
+bool AHorrorEncounterDirector::ActivateGolemBehavior(AActor* TargetActor)
+{
+	if (!ThreatActor || !IsValid(TargetActor))
+	{
+		return false;
+	}
+
+	UHorrorGolemBehaviorComponent* GolemBehavior = ThreatActor->GetGolemBehavior();
+	if (!GolemBehavior)
+	{
+		return false;
+	}
+
+	GolemBehavior->ActivateBehavior(TargetActor);
+	return true;
+}
+
+bool AHorrorEncounterDirector::DeactivateGolemBehavior()
+{
+	if (!ThreatActor)
+	{
+		return false;
+	}
+
+	UHorrorGolemBehaviorComponent* GolemBehavior = ThreatActor->GetGolemBehavior();
+	if (!GolemBehavior)
+	{
+		return false;
+	}
+
+	GolemBehavior->DeactivateBehavior();
+	return true;
 }

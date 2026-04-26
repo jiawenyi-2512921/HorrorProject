@@ -62,6 +62,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Threat", meta=(ClampMin="0.0", Units="cm"))
 	float DetectionRadius = 800.0f;
 
+	UFUNCTION(BlueprintPure, Category="Horror|Threat")
+	class UHorrorGolemBehaviorComponent* GetGolemBehavior() const;
+
 	UPROPERTY(BlueprintAssignable, Category="Horror|Threat")
 	FHorrorThreatActiveChangedSignature OnThreatActiveChanged;
 

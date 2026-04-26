@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "AI/HorrorThreatCharacter.h"
+#include "AI/HorrorGolemBehaviorComponent.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 void UHorrorThreatDelegateProbe::HandleThreatActiveChanged(bool bIsActive)
@@ -92,4 +93,9 @@ bool AHorrorThreatCharacter::ClearDetectedTarget()
 	DetectedTarget.Reset();
 	OnDetectedTargetChanged.Broadcast(nullptr);
 	return true;
+}
+
+UHorrorGolemBehaviorComponent* AHorrorThreatCharacter::GetGolemBehavior() const
+{
+	return FindComponentByClass<UHorrorGolemBehaviorComponent>();
 }

@@ -79,6 +79,12 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Encounter")
 	AHorrorThreatCharacter* GetThreatActor() const;
 
+	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
+	bool ActivateGolemBehavior(AActor* TargetActor);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
+	bool DeactivateGolemBehavior();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter")
 	FName DefaultEncounterId = TEXT("Encounter.GolemReveal01");
 
@@ -129,6 +135,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
 	void TriggerCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale = 1.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter|Audio")
+	bool bUseAudioSubsystem = true;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Encounter")
