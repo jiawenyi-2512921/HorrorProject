@@ -1,0 +1,374 @@
+================================================================================
+HORROR PROJECT - VFX SYSTEM DOCUMENTATION
+================================================================================
+
+OVERVIEW
+--------
+Complete visual effects system for underwater horror game including:
+- Post-process effects (VHS, underwater, pressure, fear)
+- Niagara particle systems (debris, blood, water, steam)
+- Camera feedback (shake, distortion, blur)
+- Performance optimization (LOD, culling, budgets)
+
+================================================================================
+POST-PROCESS EFFECTS
+================================================================================
+
+EFFECT TYPES
+------------
+1. VHS Effect
+   - Scanlines, noise, color bleeding
+   - Retro camera aesthetic
+   - Intensity: 0.0 - 1.0
+
+2. Underwater Effect
+   - Color grading, caustics, fog
+   - Depth-based intensity
+   - Automatic depth detection
+
+3. Pressure Vignette
+   - Increases with depth
+   - Dark edges, tunnel vision
+   - Intensity: 0.0 - 1.0
+
+4. Lens Droplets
+   - Water droplets on camera
+   - Dynamic dripping animation
+   - Intensity: 0.0 - 1.0
+
+5. Chromatic Aberration
+   - Color separation effect
+   - Impact and pressure feedback
+   - Amount: 0.0 - 5.0
+
+6. Scanlines
+   - Horizontal scan effect
+   - Configurable speed and count
+   - Speed: 0.5 - 2.0
+
+7. Noise Overlay
+   - Film grain effect
+   - Dynamic noise pattern
+   - Amount: 0.0 - 1.0
+
+8. Fear Effect
+   - Distortion and color shift
+   - Increases with fear level
+   - Intensity: 0.0 - 1.0
+
+9. Death Effect
+   - Desaturation and darkness
+   - Fade to black
+   - Duration: 3.0 seconds
+
+USAGE EXAMPLES
+--------------
+// Apply VHS effect
+PostProcessController->ApplyEffect(EPostProcessEffectType::VHS, 0.7f);
+
+// Update pressure based on depth
+PostProcessController->UpdatePressureEffect(CurrentDepth, MaxDepth);
+
+// Apply drowning effect
+PostProcessController->ApplyDrowningEffect(OxygenPercent);
+
+// Apply impact effect
+PostProcessController->ApplyImpactEffect(ImpactLocation, 0.8f);
+
+// Update fear effect
+PostProcessController->UpdateFearEffect(FearLevel);
+
+// Apply death effect
+PostProcessController->ApplyDeathEffect();
+
+// Clear all effects
+PostProcessController->ClearAllEffects();
+
+================================================================================
+NIAGARA PARTICLE SYSTEMS
+================================================================================
+
+PARTICLE TYPES
+--------------
+1. Underwater Debris
+   - Floating particles, sediment
+   - Ambient underwater atmosphere
+   - Spawn rate: 10-50/sec
+
+2. Dust Particles
+   - Air-based dust motes
+   - Interior atmosphere
+   - Spawn rate: 5-20/sec
+
+3. Blood Splatter
+   - Impact blood effects
+   - Underwater blood clouds
+   - One-shot effect
+
+4. Water Drips
+   - Ceiling drips, leaks
+   - Continuous or burst
+   - Spawn rate: 1-5/sec
+
+5. Steam Vents
+   - Pipe steam, heat effects
+   - Directional emission
+   - Spawn rate: 20-100/sec
+
+6. Emergency Lights
+   - Sparking electrical effects
+   - Intermittent bursts
+   - Spawn rate: 10-30/sec
+
+7. Bubble Trail
+   - Player movement bubbles
+   - Attached to player
+   - Spawn rate: 5-15/sec
+
+8. Spark Shower
+   - Electrical damage effects
+   - Burst emission
+   - One-shot effect
+
+USAGE EXAMPLES
+--------------
+// Spawn effect at location
+ParticleSpawner->SpawnEffectAtLocation(
+    EParticleEffectType::BloodSplatter,
+    ImpactLocation,
+    ImpactRotation
+);
+
+// Spawn attached effect
+ParticleSpawner->SpawnAttachedEffect(
+    EParticleEffectType::BubbleTrail,
+    PlayerMesh,
+    FName("head")
+);
+
+// Set effect parameter
+ParticleSpawner->SetEffectParameter(Effect, FName("SpawnRate"), 50.0f);
+
+// Set effect color
+ParticleSpawner->SetEffectColor(Effect, FLinearColor::Red);
+
+// Stop effect
+ParticleSpawner->StopEffect(Effect, false);
+
+// Stop all effects
+ParticleSpawner->StopAllEffects(true);
+
+================================================================================
+CAMERA EFFECTS
+================================================================================
+
+SHAKE TYPES
+-----------
+1. Impact Shake
+   - Short, sharp shake
+   - Distance-based intensity
+   - Duration: 0.2-0.5 seconds
+
+2. Explosion Shake
+   - Large, sustained shake
+   - Radius-based falloff
+   - Duration: 1.0-2.0 seconds
+
+3. Pressure Shake
+   - Subtle, continuous shake
+   - Increases with depth
+   - Continuous
+
+4. Fear Shake
+   - Irregular, unsettling shake
+   - Increases with fear
+   - Continuous
+
+5. Drowning Shake
+   - Erratic, desperate shake
+   - Low oxygen trigger
+   - Continuous
+
+6. Death Shake
+   - Final impact shake
+   - Maximum intensity
+   - Duration: 2.0 seconds
+
+USAGE EXAMPLES
+--------------
+// Apply camera shake
+ScreenEffectManager->ApplyCameraShake(ECameraShakeType::Impact, 0.8f);
+
+// Apply impact feedback
+ScreenEffectManager->ApplyImpactFeedback(ImpactLocation, Strength);
+
+// Apply pressure feedback
+ScreenEffectManager->ApplyPressureFeedback(PressureLevel);
+
+// Apply drowning feedback
+ScreenEffectManager->ApplyDrowningFeedback(OxygenPercent);
+
+// Apply fear feedback
+ScreenEffectManager->ApplyFearFeedback(FearLevel);
+
+// Apply death feedback
+ScreenEffectManager->ApplyDeathFeedback();
+
+// Set screen distortion
+ScreenEffectManager->SetScreenDistortion(0.3f);
+
+// Set screen blur
+ScreenEffectManager->SetScreenBlur(0.5f);
+
+// Clear all effects
+ScreenEffectManager->ClearAllScreenEffects();
+
+================================================================================
+PERFORMANCE OPTIMIZATION
+================================================================================
+
+LOD SYSTEM
+----------
+- Distance-based particle LOD
+- Automatic quality reduction
+- Configurable LOD distances
+
+PARTICLE BUDGET
+---------------
+- Maximum active particles: 1000
+- Automatic culling of old effects
+- Priority-based spawning
+
+MATERIAL COMPLEXITY
+-------------------
+- Simplified shaders at distance
+- Dynamic material instances
+- Parameter caching
+
+RENDERING OPTIMIZATION
+----------------------
+- Frustum culling enabled
+- Occlusion culling for particles
+- Batch rendering where possible
+
+PERFORMANCE SETTINGS
+--------------------
+// Update particle budget
+ParticleSpawner->UpdateParticleBudget(500);
+
+// Enable/disable LOD
+ParticleSpawner->bEnableParticleLOD = true;
+
+// Enable/disable culling
+ParticleSpawner->bEnableParticleCulling = true;
+
+// Set LOD distance
+ParticleSpawner->ParticleLODDistance = 2000.0f;
+
+// Enable/disable screen effects
+ScreenEffectManager->bEnableScreenEffects = true;
+
+// Set max shake intensity
+ScreenEffectManager->MaxShakeIntensity = 2.0f;
+
+================================================================================
+BEST PRACTICES
+================================================================================
+
+1. EFFECT MANAGEMENT
+   - Always clean up effects when done
+   - Use auto-destroy for one-shot effects
+   - Pool frequently used effects
+
+2. PERFORMANCE
+   - Monitor active particle count
+   - Use LOD for distant effects
+   - Limit simultaneous effects
+
+3. VISUAL QUALITY
+   - Layer multiple effects for depth
+   - Use subtle intensities (0.3-0.7)
+   - Combine post-process with particles
+
+4. GAMEPLAY INTEGRATION
+   - Tie effects to game state
+   - Use effects for feedback
+   - Avoid overwhelming the player
+
+5. TESTING
+   - Test at various performance levels
+   - Verify effect cleanup
+   - Check memory usage
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+EFFECTS NOT VISIBLE
+-------------------
+- Check material assignments
+- Verify post-process volume settings
+- Ensure effects are within intensity range
+
+PERFORMANCE ISSUES
+------------------
+- Reduce particle budget
+- Enable LOD and culling
+- Simplify material complexity
+
+CAMERA SHAKE NOT WORKING
+-------------------------
+- Verify camera manager reference
+- Check shake class assignments
+- Ensure shake intensity > 0
+
+PARTICLES NOT SPAWNING
+-----------------------
+- Check particle budget
+- Verify Niagara system assignments
+- Ensure spawn location is valid
+
+================================================================================
+TECHNICAL SPECIFICATIONS
+================================================================================
+
+SYSTEM REQUIREMENTS
+-------------------
+- Unreal Engine 5.6+
+- Niagara plugin enabled
+- Post-process volume in level
+
+DEPENDENCIES
+------------
+- NiagaraFunctionLibrary
+- PostProcessVolume
+- CameraShakeBase
+- MaterialInstanceDynamic
+
+FILE STRUCTURE
+--------------
+Source/HorrorProject/VFX/
+├── PostProcessController.h/cpp
+├── ParticleSpawner.h/cpp
+├── ScreenEffectManager.h/cpp
+└── Tests/VFXTests.cpp
+
+Content/_SM13/VFX/
+├── NS_UnderwaterDebris.uasset
+├── NS_DustParticles.uasset
+├── NS_BloodSplatter.uasset
+├── NS_WaterDrips.uasset
+├── NS_SteamVents.uasset
+└── NS_EmergencyLights.uasset
+
+Content/_SM13/Materials/PostProcess/
+├── MI_UnderwaterVHS.uasset
+├── M_PressureVignette.uasset
+├── M_LensDroplets.uasset
+├── M_ChromaticAberration.uasset
+├── M_Scanlines.uasset
+└── M_NoiseOverlay.uasset
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
