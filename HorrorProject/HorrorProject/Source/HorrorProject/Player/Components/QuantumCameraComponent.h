@@ -80,6 +80,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="QuantumCamera|Recording")
 	bool StopRecording();
 
+	UFUNCTION(BlueprintPure, Category="QuantumCamera|Battery")
+	class UCameraBatteryComponent* GetBatteryComponent() const;
+
 	UFUNCTION(BlueprintCallable, Category="QuantumCamera|Photo")
 	bool TakePhoto();
 
@@ -98,8 +101,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="QuantumCamera|Runtime")
 	FQuantumCameraEnabledChangedSignature OnCameraEnabledChanged;
 
+protected:
+	virtual void BeginPlay() override;
+
 private:
 	bool CanUseCamera() const;
+	void OnBatteryDepleted();
+	void FindOrCreateBatteryComponent();
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="QuantumCamera|Runtime", meta=(AllowPrivateAccess="true"))
 	bool bCameraAcquired = false;
@@ -109,4 +117,7 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="QuantumCamera|Modes", meta=(AllowPrivateAccess="true"))
 	EQuantumCameraMode CameraMode = EQuantumCameraMode::Disabled;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCameraBatteryComponent> CachedBatteryComponent = nullptr;
 };

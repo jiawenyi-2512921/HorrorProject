@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/CameraBatteryComponent.h"
+#include "GameFramework/Actor.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 void UQuantumCameraRuntimeDelegateProbe::HandleCameraAcquiredChanged(bool bNewAcquired)
@@ -134,6 +136,42 @@ UQuantumCameraComponent::UQuantumCameraComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UQuantumCameraComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FindOrCreateBatteryComponent();
+
+	if (CachedBatteryComponent)
+	{
+		CachedBatteryComponent->OnBatteryDepleted.AddDynamic(this, &UQuantumCameraComponent::OnBatteryDepleted);
+	}
+}
+
+UCameraBatteryComponent* UQuantumCameraComponent::GetBatteryComponent() const
+{
+	return CachedBatteryComponent;
+}
+
+void UQuantumCameraComponent::FindOrCreateBatteryComponent()
+{
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	CachedBatteryComponent = Owner->FindComponentByClass<UCameraBatteryComponent>();
+}
+
+void UQuantumCameraComponent::OnBatteryDepleted()
+{
+	if (CameraMode == EQuantumCameraMode::Recording)
+	{
+		StopRecording();
+	}
+}
+
 bool UQuantumCameraComponent::SetCameraAcquired(bool bNewAcquired)
 {
 	if (bCameraAcquired == bNewAcquired)
@@ -215,7 +253,19 @@ bool UQuantumCameraComponent::IsCameraMode(EQuantumCameraMode QueryMode) const
 
 bool UQuantumCameraComponent::StartRecording()
 {
-	return SetCameraMode(EQuantumCameraMode::Recording);
+	if (CachedBatteryComponent && CachedBatteryComponent->IsBatteryDepleted())
+	{
+		return false;
+	}
+
+	bool bSuccess = SetCameraMode(EQuantumCameraMode::Recording);
+
+	if (bSuccess && CachedBatteryComponent)
+	{
+		CachedBatteryComponent->StartRecordingDrain();
+	}
+
+	return bSuccess;
 }
 
 bool UQuantumCameraComponent::StopRecording()
@@ -223,6 +273,11 @@ bool UQuantumCameraComponent::StopRecording()
 	if (CameraMode != EQuantumCameraMode::Recording)
 	{
 		return false;
+	}
+
+	if (CachedBatteryComponent)
+	{
+		CachedBatteryComponent->StopRecordingDrain();
 	}
 
 	return SetCameraMode(CanUseCamera() ? EQuantumCameraMode::Viewfinder : EQuantumCameraMode::Disabled);
