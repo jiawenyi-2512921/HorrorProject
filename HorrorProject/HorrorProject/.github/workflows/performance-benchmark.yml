@@ -1,0 +1,115 @@
+name: Performance Benchmark
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Benchmark Type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - stress
+
+env:
+  UE_VERSION: '5.6'
+  PROJECT_NAME: 'HorrorProject'
+
+jobs:
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: System Information
+      run: |
+        echo "### System Information :computer:" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **OS:** $(Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption)" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **CPU:** $(Get-CimInstance Win32_Processor | Select-Object -ExpandProperty Name)" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **RAM:** $([math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 2)) GB" >> $env:GITHUB_STEP_SUMMARY
+
+    - name: Start Performance Monitoring
+      run: |
+        Start-Job -Name "PerfMonitor" -ScriptBlock {
+          & "${{ github.workspace }}\Scripts\Build\PerformanceMonitor.ps1" `
+            -Duration 7200 `
+            -OutputFormat "JSON" `
+            -SampleInterval 5
+        }
+
+    - name: Run Build Performance Test
+      run: |
+        $StartTime = Get-Date
+
+        & "${{ github.workspace }}\Scripts\Build\BuildDevelopment.ps1" `
+          -Clean `
+          -Parallel
+
+        $Duration = (Get-Date) - $StartTime
+
+        echo "Build Duration: $($Duration.TotalMinutes) minutes" >> $env:GITHUB_STEP_SUMMARY
+
+    - name: Run Compilation Benchmark
+      run: |
+        & "${{ github.workspace }}\Scripts\Build\CleanBuild.ps1" `
+          -Configuration Development `
+          -Parallel
+
+    - name: Stop Performance Monitoring
+      if: always()
+      run: |
+        Get-Job -Name "PerfMonitor" | Stop-Job
+        Get-Job -Name "PerfMonitor" | Receive-Job
+        Get-Job -Name "PerfMonitor" | Remove-Job
+
+    - name: Generate Performance Report
+      if: always()
+      run: |
+        if (Test-Path "Saved/Reports/PerformanceMonitor_*.json") {
+          $PerfData = Get-Content (Get-ChildItem "Saved/Reports/PerformanceMonitor_*.json" | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName | ConvertFrom-Json
+
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "### Performance Metrics :chart_with_upwards_trend:" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "| Metric | Average | Peak |" >> $env:GITHUB_STEP_SUMMARY
+          echo "|--------|---------|------|" >> $env:GITHUB_STEP_SUMMARY
+          echo "| CPU Usage | $($PerfData.Averages.CPU)% | $($PerfData.Peaks.CPU)% |" >> $env:GITHUB_STEP_SUMMARY
+          echo "| Memory Usage | $($PerfData.Averages.Memory)% | $($PerfData.Peaks.Memory)% |" >> $env:GITHUB_STEP_SUMMARY
+        }
+
+    - name: Upload Performance Data
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-benchmark-${{ github.sha }}
+        path: |
+          Saved/Reports/PerformanceMonitor_*
+          Saved/Reports/BuildReport_*
+        retention-days: 90
+
+  compare-performance:
+    name: Compare Performance
+    runs-on: windows-latest
+    needs: performance-benchmark
+    if: always()
+
+    steps:
+    - name: Download Current Results
+      uses: actions/download-artifact@v4
+      with:
+        name: performance-benchmark-${{ github.sha }}
+        path: current/
+
+    - name: Performance Comparison
+      run: |
+        echo "### Performance Comparison :bar_chart:" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "Performance benchmark completed successfully" >> $env:GITHUB_STEP_SUMMARY

@@ -1,10 +1,49 @@
 # HorrorProject Documentation
 
-## Welcome
+Complete documentation for the HorrorProject horror game framework.
 
-This is the complete documentation for HorrorProject, an Unreal Engine 5.6 horror game built with a modular, event-driven architecture.
+**Total Documents**: 149+ comprehensive guides, references, and tutorials
 
-## Quick Links
+## 🚀 Quick Start
+
+New to HorrorProject? Start here:
+1. [Getting Started Guide](Tutorials/GettingStarted.md) - 30-minute setup
+2. [Blueprint Quick Start](Blueprint/Blueprint_QuickStart.md) - Essential Blueprint skills
+3. [FAQ](Troubleshooting/FAQ.md) - 50+ common questions answered
+
+## 📚 Documentation Sections
+
+### API Reference
+Complete C++ API documentation with examples.
+- [API Overview](API/README.md)
+- [Audio System API](API/Audio/HorrorAudioSubsystem.md)
+- [Evidence System API](API/Evidence/EvidenceCollectionComponent.md)
+- [Doxygen Setup](API/DoxygenConfig.md)
+
+### Tutorials
+Step-by-step guides for all skill levels.
+- [Tutorial Index](Tutorials/README.md)
+- [Getting Started](Tutorials/GettingStarted.md) - Beginner
+- [Audio System](Tutorials/AudioSystem.md) - Intermediate
+- [Evidence Collection](Tutorials/EvidenceCollection.md) - Beginner
+- [AI System](Tutorials/AISystem.md) - Advanced
+- [Performance Optimization](Tutorials/PerformanceOptimization.md) - Advanced
+
+### Troubleshooting
+Solutions to common problems.
+- [FAQ](Troubleshooting/FAQ.md) - 50+ questions
+- [Compilation Errors](Troubleshooting/CompilationErrors.md)
+- [Runtime Errors](Troubleshooting/RuntimeErrors.md)
+- [Performance Issues](Troubleshooting/PerformanceIssues.md)
+- [Asset Problems](Troubleshooting/AssetProblems.md)
+
+### Best Practices
+Industry-standard guidelines.
+- [C++ Coding](BestPractices/CppCoding.md)
+- [Blueprint Design](BestPractices/BlueprintDesign.md)
+- [Performance Optimization](BestPractices/PerformanceOptimization.md)
+- [Asset Management](BestPractices/AssetManagement.md)
+- [Testing](BestPractices/Testing.md)
 
 ### For Developers
 - [Getting Started](Developer/GettingStarted.md) - Set up your development environment

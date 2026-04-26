@@ -6,10 +6,26 @@ on:
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build Type'
+        required: true
+        default: 'Development'
+        type: choice
+        options:
+          - Development
+          - Shipping
+          - Server
+      enable_parallel:
+        description: 'Enable Parallel Build'
+        required: false
+        default: true
+        type: boolean
 
 env:
   UE_VERSION: '5.6'
   PROJECT_NAME: 'HorrorProject'
+  BUILD_CACHE_VERSION: 'v1'
 
 jobs:
   build:
@@ -28,10 +44,24 @@ jobs:
         lfs: true
         submodules: recursive
 
+    - name: Cache Build Artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          Intermediate/Build
+          DerivedDataCache
+        key: ${{ runner.os }}-build-${{ env.BUILD_CACHE_VERSION }}-${{ matrix.config }}-${{ hashFiles('**/*.uproject', '**/*.uplugin') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.BUILD_CACHE_VERSION }}-${{ matrix.config }}-
+          ${{ runner.os }}-build-${{ env.BUILD_CACHE_VERSION }}-
+
     - name: Setup Unreal Engine
       run: |
         echo "Setting up Unreal Engine ${{ env.UE_VERSION }}"
-        # Add UE setup steps here
+        if (-not (Test-Path "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}")) {
+          Write-Error "Unreal Engine ${{ env.UE_VERSION }} not found"
+          exit 1
+        }
 
     - name: Generate Project Files
       run: |
@@ -39,30 +69,113 @@ jobs:
           -project="${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" `
           -game -engine
 
-    - name: Build Project
+    - name: Build Project with Automation Script
       run: |
-        & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\Build.bat" `
-          ${{ env.PROJECT_NAME }}Editor `
-          ${{ matrix.platform }} `
-          ${{ matrix.config }} `
-          "${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" `
-          -WaitMutex
+        $BuildScript = "${{ github.workspace }}\Scripts\Build\Build${{ matrix.config }}.ps1"
+        if (Test-Path $BuildScript) {
+          & $BuildScript -Platform ${{ matrix.platform }} -Parallel
+        } else {
+          & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\Build.bat" `
+            ${{ env.PROJECT_NAME }}Editor `
+            ${{ matrix.platform }} `
+            ${{ matrix.config }} `
+            "${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" `
+            -WaitMutex
+        }
+
+    - name: Generate Build Report
+      if: always()
+      run: |
+        & "${{ github.workspace }}\Scripts\Build\GenerateBuildReport.ps1" `
+          -BuildType ${{ matrix.config }} `
+          -Format "ALL"
 
     - name: Upload Build Artifacts
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: Build-${{ matrix.config }}-${{ matrix.platform }}
+        name: Build-${{ matrix.config }}-${{ matrix.platform }}-${{ github.sha }}
         path: |
           Binaries/
           !Binaries/**/*.pdb
+          !Binaries/**/*.exp
+          !Binaries/**/*.lib
         retention-days: 7
+        compression-level: 9
+
+    - name: Upload Build Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: BuildReports-${{ matrix.config }}-${{ matrix.platform }}
+        path: Saved/Reports/
+        retention-days: 30
+
+    - name: Upload Build Logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: BuildLogs-${{ matrix.config }}-${{ matrix.platform }}
+        path: Saved/Logs/
+        retention-days: 14
 
     - name: Build Summary
       if: always()
       run: |
-        echo "### Build Results :rocket:" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Configuration:** ${{ matrix.config }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Platform:** ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "### Build Results :rocket:" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Configuration:** ${{ matrix.config }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Platform:** ${{ matrix.platform }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ job.status }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $env:GITHUB_STEP_SUMMARY
+
+        if (Test-Path "Saved/Reports/BuildReport_${{ matrix.config }}_*.txt") {
+          $Report = Get-Content (Get-ChildItem "Saved/Reports/BuildReport_${{ matrix.config }}_*.txt" | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName -Raw
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "#### Build Details" >> $env:GITHUB_STEP_SUMMARY
+          echo '```' >> $env:GITHUB_STEP_SUMMARY
+          echo $Report >> $env:GITHUB_STEP_SUMMARY
+          echo '```' >> $env:GITHUB_STEP_SUMMARY
+        }
+
+  build-server:
+    name: Build Dedicated Server
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+
+    - name: Build Server
+      run: |
+        & "${{ github.workspace }}\Scripts\Build\BuildServer.ps1" -Platform Win64 -Parallel
+
+    - name: Upload Server Build
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Server-Build-${{ github.sha }}
+        path: Binaries/Win64/*Server*
+        retention-days: 14
+
+  notify:
+    name: Build Notification
+    runs-on: windows-latest
+    needs: [build, build-server]
+    if: always()
+
+    steps:
+    - name: Send Notification
+      run: |
+        $Status = "${{ needs.build.result }}"
+        $ServerStatus = "${{ needs.build-server.result }}"
+
+        echo "Build Status: $Status"
+        echo "Server Build Status: $ServerStatus"
+
+        if ($Status -eq "failure" -or $ServerStatus -eq "failure") {
+          echo "::warning::Build failed - check logs for details"
+        }

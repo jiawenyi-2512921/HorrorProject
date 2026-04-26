@@ -20,7 +20,11 @@ public class HorrorProject : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"SlateCore",
-			"Niagara"
+			"Niagara",
+			"OnlineSubsystem",
+			"OnlineSubsystemUtils",
+			"Sockets",
+			"Networking"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
