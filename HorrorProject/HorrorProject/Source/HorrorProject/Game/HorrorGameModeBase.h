@@ -9,6 +9,7 @@
 #include "HorrorGameModeBase.generated.h"
 
 class ADeepWaterStationRouteKit;
+class AHorrorEncounterDirector;
 class AHorrorPlayerCharacter;
 class UHorrorSaveSubsystem;
 
@@ -85,6 +86,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Objectives")
 	void SyncFoundFootageRuntimeStateToPlayer();
 
+	UFUNCTION(BlueprintPure, Category="Horror|Encounter")
+	AHorrorEncounterDirector* GetRuntimeEncounterDirector() const { return RuntimeEncounterDirector.Get(); }
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Save")
 	bool SaveDay1Checkpoint(FName CheckpointId);
 
@@ -103,6 +107,10 @@ private:
 	bool RecordFoundFootageEvent(FGameplayTag EventTag, FName SourceId);
 	AHorrorPlayerCharacter* ResolveLeadPlayerCharacter() const;
 	ADeepWaterStationRouteKit* EnsureRouteKit();
+	AHorrorEncounterDirector* EnsureEncounterDirector();
+	void RegisterDefaultObjectiveMetadata();
+	void HandleObjectiveStateChange(FGameplayTag StateTag);
+	void TryAutosaveOnMilestone(FName CheckpointId);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Bootstrap", meta=(AllowPrivateAccess="true"))
 	bool bAutoGrantBodycamOnPlayerBeginPlay = false;
@@ -115,6 +123,21 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<ADeepWaterStationRouteKit> RuntimeRouteKit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter", meta=(AllowPrivateAccess="true"))
+	bool bAutoSpawnEncounterDirectorOnBeginPlay = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter", meta=(AllowPrivateAccess="true"))
+	FTransform RuntimeEncounterDirectorTransform = FTransform::Identity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter", meta=(AllowPrivateAccess="true"))
+	TSubclassOf<AHorrorEncounterDirector> RuntimeEncounterDirectorClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AHorrorEncounterDirector> RuntimeEncounterDirector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Save", meta=(AllowPrivateAccess="true"))
+	bool bAutosaveOnObjectiveMilestone = true;
 
 	FHorrorFoundFootageContract FoundFootageContract;
 	FHorrorAnomalyDirector AnomalyDirector;

@@ -4,6 +4,7 @@
 
 #include "EngineUtils.h"
 #include "Game/DeepWaterStationRouteKit.h"
+#include "Game/HorrorEncounterDirector.h"
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
@@ -39,19 +40,44 @@ namespace
 	}
 }
 
+namespace HorrorObjectiveMilestoneCheckpoints
+{
+	const FName FirstNoteCollected(TEXT("Checkpoint.Day1.FirstNoteCollected"));
+	const FName FirstAnomalyRecorded(TEXT("Checkpoint.Day1.FirstAnomalyRecorded"));
+	const FName ArchiveReviewed(TEXT("Checkpoint.Day1.ArchiveReviewed"));
+	const FName ExitUnlocked(TEXT("Checkpoint.Day1.ExitUnlocked"));
+}
+
+namespace HorrorObjectiveMilestoneSources
+{
+	const FName Bodycam(TEXT("Bodycam"));
+	const FName FirstNote(TEXT("FirstNote"));
+	const FName FirstAnomaly(TEXT("FirstAnomaly"));
+	const FName Archive(TEXT("Archive"));
+	const FName Exit(TEXT("Exit"));
+}
+
 AHorrorGameModeBase::AHorrorGameModeBase()
 {
 	DefaultPawnClass = AHorrorPlayerCharacter::StaticClass();
 	PlayerControllerClass = AHorrorPlayerController::StaticClass();
+	RuntimeEncounterDirectorClass = AHorrorEncounterDirector::StaticClass();
 }
 
 void AHorrorGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RegisterDefaultObjectiveMetadata();
+
 	if (bAutoSpawnRouteKitOnBeginPlay)
 	{
 		EnsureRouteKit();
+	}
+
+	if (bAutoSpawnEncounterDirectorOnBeginPlay)
+	{
+		EnsureEncounterDirector();
 	}
 }
 
@@ -113,6 +139,13 @@ bool AHorrorGameModeBase::TryRecordFirstAnomaly(bool bIsRecording)
 	if (bRecorded)
 	{
 		PublishFoundFootageEvents(GetWorld(), FoundFootageContract, RecordedEvents, this);
+		for (const FHorrorFoundFootageStateChange& StateChange : StateChanges)
+		{
+			if (StateChange.bCompleted)
+			{
+				HandleObjectiveStateChange(StateChange.StateTag);
+			}
+		}
 	}
 	return bRecorded;
 }
@@ -281,6 +314,13 @@ bool AHorrorGameModeBase::RecordFoundFootageEvent(FGameplayTag EventTag, FName S
 	if (bRecorded)
 	{
 		PublishFoundFootageEvents(GetWorld(), FoundFootageContract, RecordedEvents, this);
+		for (const FHorrorFoundFootageStateChange& StateChange : StateChanges)
+		{
+			if (StateChange.bCompleted)
+			{
+				HandleObjectiveStateChange(StateChange.StateTag);
+			}
+		}
 	}
 	return bRecorded;
 }
@@ -337,4 +377,161 @@ bool AHorrorGameModeBase::IsLeadPlayerRecording() const
 	const AHorrorPlayerCharacter* PlayerCharacter = ResolveLeadPlayerCharacter();
 	const UQuantumCameraComponent* QuantumCamera = PlayerCharacter ? PlayerCharacter->GetQuantumCameraComponent() : nullptr;
 	return QuantumCamera && QuantumCamera->IsCameraMode(EQuantumCameraMode::Recording);
+}
+
+AHorrorEncounterDirector* AHorrorGameModeBase::EnsureEncounterDirector()
+{
+	if (RuntimeEncounterDirector)
+	{
+		return RuntimeEncounterDirector.Get();
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	for (TActorIterator<AHorrorEncounterDirector> It(World); It; ++It)
+	{
+		RuntimeEncounterDirector = *It;
+		return RuntimeEncounterDirector.Get();
+	}
+
+	const TSubclassOf<AHorrorEncounterDirector> SpawnClass = RuntimeEncounterDirectorClass
+		? RuntimeEncounterDirectorClass
+		: TSubclassOf<AHorrorEncounterDirector>(AHorrorEncounterDirector::StaticClass());
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	RuntimeEncounterDirector = World->SpawnActor<AHorrorEncounterDirector>(SpawnClass, RuntimeEncounterDirectorTransform, SpawnParameters);
+	if (RuntimeEncounterDirector)
+	{
+		RuntimeEncounterDirector->RevealRadius = 0.0f;
+	}
+	return RuntimeEncounterDirector.Get();
+}
+
+void AHorrorGameModeBase::RegisterDefaultObjectiveMetadata()
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	UHorrorEventBusSubsystem* EventBus = World->GetSubsystem<UHorrorEventBusSubsystem>();
+	if (!EventBus)
+	{
+		return;
+	}
+
+	const struct FDefaultMilestoneMetadata
+	{
+		FGameplayTag EventTag;
+		FName SourceId;
+		FName TrailerBeatId;
+		const TCHAR* HintFallback;
+		const TCHAR* DebugLabel;
+	} Defaults[] = {
+		{
+			HorrorFoundFootageTags::BodycamAcquiredEvent(),
+			HorrorObjectiveMilestoneSources::Bodycam,
+			TEXT("Trailer.Beat.BodycamAcquired"),
+			TEXT("Bodycam online — keep it raised."),
+			TEXT("Bodycam Acquired")
+		},
+		{
+			HorrorFoundFootageTags::FirstNoteCollectedEvent(),
+			HorrorObjectiveMilestoneSources::FirstNote,
+			TEXT("Trailer.Beat.FirstNote"),
+			TEXT("Note logged — find the first anomaly."),
+			TEXT("First Note Collected")
+		},
+		{
+			HorrorFoundFootageTags::FirstAnomalyRecordedEvent(),
+			HorrorObjectiveMilestoneSources::FirstAnomaly,
+			TEXT("Trailer.Beat.FirstAnomaly"),
+			TEXT("Anomaly captured — head to the archive terminal."),
+			TEXT("First Anomaly Recorded")
+		},
+		{
+			HorrorFoundFootageTags::ArchiveReviewedEvent(),
+			HorrorObjectiveMilestoneSources::Archive,
+			TEXT("Trailer.Beat.ArchiveReviewed"),
+			TEXT("Archive review complete — exit unlocking."),
+			TEXT("Archive Reviewed")
+		},
+		{
+			HorrorFoundFootageTags::ExitUnlockedEvent(),
+			HorrorObjectiveMilestoneSources::Exit,
+			TEXT("Trailer.Beat.ExitUnlocked"),
+			TEXT("Exit unlocked — get out."),
+			TEXT("Exit Unlocked")
+		}
+	};
+
+	for (const FDefaultMilestoneMetadata& Default : Defaults)
+	{
+		FHorrorObjectiveMessageMetadata Metadata;
+		Metadata.TrailerBeatId = Default.TrailerBeatId;
+		Metadata.ObjectiveHint = FText::AsCultureInvariant(Default.HintFallback);
+		Metadata.DebugLabel = FText::AsCultureInvariant(Default.DebugLabel);
+		EventBus->RegisterObjectiveMetadata(Default.EventTag, Default.SourceId, Metadata);
+	}
+}
+
+void AHorrorGameModeBase::HandleObjectiveStateChange(FGameplayTag StateTag)
+{
+	if (!StateTag.IsValid())
+	{
+		return;
+	}
+
+	if (AHorrorEncounterDirector* EncounterDirector = EnsureEncounterDirector())
+	{
+		if (StateTag == HorrorFoundFootageTags::FirstNoteCollectedState())
+		{
+			EncounterDirector->PrimeEncounter(NAME_None);
+		}
+		else if (StateTag == HorrorFoundFootageTags::FirstAnomalyRecordedState())
+		{
+			if (AHorrorPlayerCharacter* PlayerCharacter = ResolveLeadPlayerCharacter())
+			{
+				EncounterDirector->TriggerReveal(PlayerCharacter);
+			}
+		}
+		else if (StateTag == HorrorFoundFootageTags::ArchiveReviewedState())
+		{
+			EncounterDirector->ResolveEncounter();
+		}
+	}
+
+	if (StateTag == HorrorFoundFootageTags::FirstNoteCollectedState())
+	{
+		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::FirstNoteCollected);
+	}
+	else if (StateTag == HorrorFoundFootageTags::FirstAnomalyRecordedState())
+	{
+		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::FirstAnomalyRecorded);
+	}
+	else if (StateTag == HorrorFoundFootageTags::ArchiveReviewedState())
+	{
+		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::ArchiveReviewed);
+	}
+	else if (StateTag == HorrorFoundFootageTags::ExitUnlockedState())
+	{
+		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::ExitUnlocked);
+	}
+}
+
+void AHorrorGameModeBase::TryAutosaveOnMilestone(FName CheckpointId)
+{
+	if (!bAutosaveOnObjectiveMilestone || CheckpointId.IsNone())
+	{
+		return;
+	}
+
+	SaveDay1Checkpoint(CheckpointId);
 }
