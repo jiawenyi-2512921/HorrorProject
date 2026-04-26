@@ -9,6 +9,8 @@
 
 class UCameraComponent;
 class UMaterialInterface;
+class UMaterialInstanceDynamic;
+class UVHSNoiseGenerator;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBodycamAcquiredChangedSignature, bool, bIsAcquired);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBodycamEnabledChangedSignature, bool, bIsEnabled);
@@ -55,6 +57,15 @@ public:
 	UFUNCTION(BlueprintPure, Category="VHS|PostProcess")
 	UCameraComponent* GetBoundPostProcessCamera() const;
 
+	UFUNCTION(BlueprintCallable, Category="VHS|Noise")
+	void UpdateNoiseGenerator(float DeltaTime, float StressLevel, float BatteryLevel);
+
+	UFUNCTION(BlueprintCallable, Category="VHS|Noise")
+	UVHSNoiseGenerator* GetNoiseGenerator() const;
+
+	UFUNCTION(BlueprintCallable, Category="VHS|Noise")
+	void InitializeNoiseGenerator();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="VHS|PostProcess")
 	TObjectPtr<UMaterialInterface> VHSPostProcessMaterial;
 
@@ -73,9 +84,16 @@ public:
 private:
 	void UpdateFeedbackState(EQuantumCameraMode NewMode);
 	void ApplyPostProcessBlendWeight();
+	void CreateDynamicMaterialInstance();
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCameraComponent> BoundPostProcessCamera;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> DynamicPostProcessMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UVHSNoiseGenerator> NoiseGenerator;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="VHS|Bodycam", meta=(AllowPrivateAccess="true"))
 	bool bBodycamAcquired = false;

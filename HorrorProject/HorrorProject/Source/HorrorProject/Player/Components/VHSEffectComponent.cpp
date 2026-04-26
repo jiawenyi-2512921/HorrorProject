@@ -5,6 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Player/Components/VHSNoiseGenerator.h"
 #include "UObject/Package.h"
 
 namespace HorrorVHSDefaults
@@ -102,6 +104,37 @@ UVHSEffectComponent::UVHSEffectComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UVHSEffectComponent::InitializeNoiseGenerator()
+{
+	if (!NoiseGenerator)
+	{
+		NoiseGenerator = NewObject<UVHSNoiseGenerator>(this);
+	}
+
+	if (NoiseGenerator && DynamicPostProcessMaterial)
+	{
+		NoiseGenerator->Initialize(DynamicPostProcessMaterial);
+	}
+}
+
+void UVHSEffectComponent::UpdateNoiseGenerator(float DeltaTime, float StressLevel, float BatteryLevel)
+{
+	if (!NoiseGenerator)
+	{
+		InitializeNoiseGenerator();
+	}
+
+	if (NoiseGenerator && bFeedbackActive)
+	{
+		NoiseGenerator->UpdateNoise(DeltaTime, StressLevel, BatteryLevel);
+	}
+}
+
+UVHSNoiseGenerator* UVHSEffectComponent::GetNoiseGenerator() const
+{
+	return NoiseGenerator;
+}
+
 bool UVHSEffectComponent::SetBodycamAcquired(bool bNewAcquired)
 {
 	if (bBodycamAcquired == bNewAcquired)
@@ -181,6 +214,7 @@ bool UVHSEffectComponent::BindPostProcessCamera(UCameraComponent* CameraComponen
 	}
 
 	BoundPostProcessCamera = CameraComponent;
+	CreateDynamicMaterialInstance();
 	ApplyPostProcessBlendWeight();
 	return BoundPostProcessCamera != nullptr;
 }
@@ -206,6 +240,21 @@ UCameraComponent* UVHSEffectComponent::GetBoundPostProcessCamera() const
 	return BoundPostProcessCamera.Get();
 }
 
+void UVHSEffectComponent::CreateDynamicMaterialInstance()
+{
+	if (!VHSPostProcessMaterial || DynamicPostProcessMaterial)
+	{
+		return;
+	}
+
+	DynamicPostProcessMaterial = UMaterialInstanceDynamic::Create(VHSPostProcessMaterial, this);
+
+	if (DynamicPostProcessMaterial && NoiseGenerator)
+	{
+		NoiseGenerator->Initialize(DynamicPostProcessMaterial);
+	}
+}
+
 void UVHSEffectComponent::UpdateFeedbackState(EQuantumCameraMode NewMode)
 {
 	const bool bNewFeedbackActive = bBodycamEnabled && NewMode != EQuantumCameraMode::Disabled;
@@ -223,12 +272,18 @@ void UVHSEffectComponent::UpdateFeedbackState(EQuantumCameraMode NewMode)
 
 void UVHSEffectComponent::ApplyPostProcessBlendWeight()
 {
-	if (!BoundPostProcessCamera || !VHSPostProcessMaterial)
+	if (!BoundPostProcessCamera)
+	{
+		return;
+	}
+
+	UMaterialInterface* MaterialToUse = DynamicPostProcessMaterial ? Cast<UMaterialInterface>(DynamicPostProcessMaterial) : VHSPostProcessMaterial.Get();
+	if (!MaterialToUse)
 	{
 		return;
 	}
 
 	BoundPostProcessCamera->PostProcessSettings.AddBlendable(
-		VHSPostProcessMaterial.Get(),
+		MaterialToUse,
 		bFeedbackActive ? FMath::Clamp(VHSPostProcessBlendWeight, 0.0f, 1.0f) : 0.0f);
 }
