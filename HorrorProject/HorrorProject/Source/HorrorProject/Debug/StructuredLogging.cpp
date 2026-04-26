@@ -15,6 +15,10 @@ void UStructuredLogging::Initialize(FSubsystemCollectionBase& Collection)
 	bLogToConsole = true;
 	MaxLogEntries = 10000;
 
+	// Memory optimization: Pre-allocate log entries and filters
+	LogEntries.Reserve(MaxLogEntries);
+	CategoryFilters.Reserve(16);
+
 	LogFilePath = FPaths::ProjectSavedDir() / TEXT("Logs") / TEXT("StructuredLog.txt");
 
 	UE_LOG(LogTemp, Log, TEXT("Structured Logging System Initialized"));

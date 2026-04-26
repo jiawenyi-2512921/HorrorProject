@@ -125,6 +125,15 @@ UInventoryComponent::UInventoryComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UInventoryComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	// Memory optimization: Pre-allocate capacity for typical evidence collection
+	CollectedEvidenceIds.Reserve(32);
+	EvidenceMetadataById.Reserve(32);
+}
+
 bool UInventoryComponent::AddCollectedEvidenceId(FName EvidenceId)
 {
 	if (EvidenceId.IsNone() || CollectedEvidenceIds.Contains(EvidenceId))
@@ -191,6 +200,7 @@ bool UInventoryComponent::GetEvidenceMetadata(FName EvidenceId, FHorrorEvidenceM
 TArray<FHorrorEvidenceMetadata> UInventoryComponent::GetCollectedEvidenceMetadata() const
 {
 	TArray<FHorrorEvidenceMetadata> CollectedMetadata;
+	CollectedMetadata.Reserve(CollectedEvidenceIds.Num());
 	for (const FName EvidenceId : CollectedEvidenceIds)
 	{
 		if (const FHorrorEvidenceMetadata* Metadata = EvidenceMetadataById.Find(EvidenceId))

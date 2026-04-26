@@ -10,6 +10,9 @@ UParticleSpawner::UParticleSpawner()
 	// Performance optimization: Use timer-based cleanup instead of tick
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
+
+	// Memory optimization: Pre-allocate particle systems map
+	ParticleSystems.Reserve(8);
 }
 
 void UParticleSpawner::BeginPlay()

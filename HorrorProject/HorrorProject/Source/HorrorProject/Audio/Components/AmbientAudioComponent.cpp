@@ -9,6 +9,9 @@ UAmbientAudioComponent::UAmbientAudioComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 	bAutoActivate = false;
+
+	// Memory optimization: Pre-allocate layer components
+	LayerComponents.Reserve(4);
 }
 
 void UAmbientAudioComponent::BeginPlay()

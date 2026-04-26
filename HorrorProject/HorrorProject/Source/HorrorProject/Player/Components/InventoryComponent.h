@@ -47,6 +47,8 @@ class HORRORPROJECT_API UInventoryComponent : public UActorComponent
 public:
 	UInventoryComponent();
 
+	virtual void InitializeComponent() override;
+
 	UFUNCTION(BlueprintCallable, Category="Inventory|Evidence")
 	bool AddCollectedEvidenceId(FName EvidenceId);
 
