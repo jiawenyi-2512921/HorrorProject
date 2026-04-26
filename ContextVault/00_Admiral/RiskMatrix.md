@@ -9,6 +9,9 @@
 | R-05 | Content freeze happens too late | 2 | 2 | 4 | MUSE | lock story and puzzle scope by M1 | new narrative branches after Day 7 |
 | R-06 | Packaging or regression failures discovered too late | 2 | 3 | 6 | REAPER | regular package cadence, automated smoke checks | failed build or broken regression after Day 14 |
 
+| R-07 | High-concurrency agents overwrite or invalidate each other’s work | 2 | 3 | 6 | DISPATCHER | enforce one writer per file set, lane ownership, and integration sequencing via `07_Operations/ParallelExecutionLanes.md` | two active packets touch the same source path |
+| R-08 | Speed pressure weakens validation evidence | 2 | 3 | 6 | REAPER | enforce G0-G5 quality gates and EventBus evidence entries via `07_Operations/QualityGateProtocol.md` | packet marked done without build/test or explicit blocker |
+
 ## Escalation rule
 
 Any row with `Score > 6` requires immediate review and a new EventBus entry.
