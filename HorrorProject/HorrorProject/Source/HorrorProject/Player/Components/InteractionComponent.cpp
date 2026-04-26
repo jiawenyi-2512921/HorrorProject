@@ -61,6 +61,12 @@ bool UInteractionComponent::TryInteractWithHit(const FHitResult& Hit) const
 	return false;
 }
 
+/**
+ * Performs interaction raycast from player viewpoint
+ * First attempts line trace, then falls back to sphere sweep for narrow targets
+ * @param OutHit - Populated with hit information if successful
+ * @return True if a valid interactable object was found
+ */
 bool UInteractionComponent::FindInteractionHit(FHitResult& OutHit) const
 {
 	const AActor* OwnerActor = GetOwner();
