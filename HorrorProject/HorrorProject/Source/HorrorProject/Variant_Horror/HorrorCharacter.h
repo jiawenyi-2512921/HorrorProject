@@ -102,4 +102,8 @@ protected:
 
 	/** Called while sprinting at a fixed time interval */
 	void SprintFixedTick();
+
+public:
+	/** Returns the spot light component */
+	USpotLightComponent* GetSpotLight() const { return SpotLight; }
 };
