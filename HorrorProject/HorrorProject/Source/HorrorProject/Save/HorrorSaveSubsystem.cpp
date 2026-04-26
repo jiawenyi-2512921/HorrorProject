@@ -165,6 +165,11 @@ UHorrorSaveGame* UHorrorSaveSubsystem::CreateCheckpointSnapshot(UObject* WorldCo
 	SaveGame->PendingFirstAnomalySourceId = HorrorGameMode->GetPendingFirstAnomalySourceId();
 	SaveGame->CollectedEvidenceIds = Inventory->ExportCollectedEvidenceIds();
 	SaveGame->RecordedNoteIds = NoteRecorder->ExportRecordedNoteIds();
+	SaveGame->PlayerTransform = PlayerCharacter->GetActorTransform();
+	if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
+	{
+		SaveGame->PlayerControlRotation = PC->GetControlRotation();
+	}
 	return SaveGame;
 }
 
@@ -194,6 +199,12 @@ bool UHorrorSaveSubsystem::ApplyCheckpointSnapshot(UObject* WorldContextObject, 
 
 	Inventory->ImportCollectedEvidenceIds(SaveGame->CollectedEvidenceIds);
 	NoteRecorder->ImportRecordedNoteIds(SaveGame->RecordedNoteIds);
+
+	PlayerCharacter->SetActorTransform(SaveGame->PlayerTransform);
+	if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
+	{
+		PC->SetControlRotation(SaveGame->PlayerControlRotation);
+	}
 
 	if (AHorrorPlayerController* PlayerController = Cast<AHorrorPlayerController>(UGameplayStatics::GetPlayerController(World, 0)))
 	{

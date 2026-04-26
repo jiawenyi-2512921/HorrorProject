@@ -35,4 +35,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
 	TArray<FName> RecordedNoteIds;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	FTransform PlayerTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	FRotator PlayerControlRotation;
 };
