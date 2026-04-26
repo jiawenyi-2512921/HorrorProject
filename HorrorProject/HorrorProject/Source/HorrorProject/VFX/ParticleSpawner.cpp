@@ -51,8 +51,15 @@ UNiagaraComponent* UParticleSpawner::SpawnEffect(EParticleEffectType EffectType,
 	}
 	else
 	{
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ParticleSpawner: World is null in SpawnEffect"));
+			return nullptr;
+		}
+
 		NewEffect = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
+			World,
 			ParticleSystems[EffectType],
 			Settings.Location,
 			Settings.Rotation,

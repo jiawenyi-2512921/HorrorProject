@@ -16,7 +16,14 @@ void UScreenEffectManager::BeginPlay()
 	Super::BeginPlay();
 
 	// Get camera manager
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: World is null in BeginPlay"));
+		return;
+	}
+
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
 	{
 		CameraManager = PC->PlayerCameraManager;
 	}
@@ -31,8 +38,14 @@ void UScreenEffectManager::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 void UScreenEffectManager::ApplyCameraShake(ECameraShakeType ShakeType, float Intensity)
 {
-	if (!bEnableScreenEffects || !CameraManager)
+	if (!bEnableScreenEffects)
 	{
+		return;
+	}
+
+	if (!CameraManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: CameraManager is null in ApplyCameraShake"));
 		return;
 	}
 
@@ -45,8 +58,14 @@ void UScreenEffectManager::ApplyCameraShake(ECameraShakeType ShakeType, float In
 
 void UScreenEffectManager::ApplyCustomCameraShake(const FCameraShakeSettings& Settings)
 {
-	if (!bEnableScreenEffects || !CameraManager)
+	if (!bEnableScreenEffects)
 	{
+		return;
+	}
+
+	if (!CameraManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: CameraManager is null in ApplyCustomCameraShake"));
 		return;
 	}
 
@@ -56,10 +75,13 @@ void UScreenEffectManager::ApplyCustomCameraShake(const FCameraShakeSettings& Se
 
 void UScreenEffectManager::StopAllCameraShakes()
 {
-	if (CameraManager)
+	if (!CameraManager)
 	{
-		CameraManager->StopAllCameraShakes(true);
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: CameraManager is null in StopAllCameraShakes"));
+		return;
 	}
+
+	CameraManager->StopAllCameraShakes(true);
 }
 
 void UScreenEffectManager::ApplyImpactFeedback(FVector ImpactLocation, float Strength)
@@ -171,8 +193,17 @@ void UScreenEffectManager::UpdateScreenEffects(float DeltaTime)
 
 void UScreenEffectManager::ApplyShakeInternal(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale)
 {
-	if (CameraManager && ShakeClass)
+	if (!CameraManager)
 	{
-		CameraManager->StartCameraShake(ShakeClass, Scale);
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: CameraManager is null in ApplyShakeInternal"));
+		return;
 	}
+
+	if (!ShakeClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScreenEffectManager: ShakeClass is null in ApplyShakeInternal"));
+		return;
+	}
+
+	CameraManager->StartCameraShake(ShakeClass, Scale);
 }

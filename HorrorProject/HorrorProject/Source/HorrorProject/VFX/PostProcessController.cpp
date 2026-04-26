@@ -19,8 +19,15 @@ void UPostProcessController::BeginPlay()
 	// Find or create post process volume
 	if (!PostProcessVolume)
 	{
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PostProcessController: World is null in BeginPlay"));
+			return;
+		}
+
 		TArray<AActor*> FoundVolumes;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
+		UGameplayStatics::GetAllActorsOfClass(World, APostProcessVolume::StaticClass(), FoundVolumes);
 
 		if (FoundVolumes.Num() > 0)
 		{
@@ -224,7 +231,14 @@ void UPostProcessController::UpdateMaterialParameters(EPostProcessEffectType Eff
 
 	// Update common parameters
 	DynMat->SetScalarParameterValue(FName("Intensity"), Intensity);
-	DynMat->SetScalarParameterValue(FName("Time"), GetWorld()->GetTimeSeconds());
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PostProcessController: World is null in UpdateMaterialParameters"));
+		return;
+	}
+	DynMat->SetScalarParameterValue(FName("Time"), World->GetTimeSeconds());
 
 	// Update specific parameters based on effect type
 	switch (EffectType)
