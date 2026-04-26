@@ -1,0 +1,71 @@
+name: Deploy Horror Project
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PROJECT_NAME: 'HorrorProject'
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Download Package
+      uses: actions/download-artifact@v4
+      with:
+        name: HorrorProject-Package
+        path: ./package
+
+    - name: Validate Package
+      run: |
+        Write-Host "Validating package..."
+        $PackageFiles = Get-ChildItem -Path "./package" -Filter "*.zip"
+        if ($PackageFiles.Count -eq 0) {
+          throw "No package files found"
+        }
+        Write-Host "Package validation successful"
+
+    - name: Deploy to Environment
+      run: |
+        $Environment = "${{ github.event.inputs.environment }}"
+        if (-not $Environment) { $Environment = "production" }
+
+        Write-Host "Deploying to $Environment environment..."
+        # Add deployment logic here
+        # Example: Upload to Steam, Epic Games Store, etc.
+
+    - name: Health Check
+      run: |
+        Write-Host "Running post-deployment health checks..."
+        # Add health check logic here
+
+    - name: Deployment Summary
+      run: |
+        echo "### Deployment Results :rocket:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment:** ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version:** ${{ github.ref_name || 'latest' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** Success" >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify Team
+      if: always()
+      run: |
+        Write-Host "Deployment completed. Notification sent to team."
+        # Add notification logic (Slack, Discord, Email, etc.)

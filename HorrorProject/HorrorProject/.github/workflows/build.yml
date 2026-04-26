@@ -1,0 +1,68 @@
+name: Build Horror Project
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  UE_VERSION: '5.6'
+  PROJECT_NAME: 'HorrorProject'
+
+jobs:
+  build:
+    name: Build ${{ matrix.config }} - ${{ matrix.platform }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        config: [Development, Shipping]
+        platform: [Win64]
+      fail-fast: false
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+        submodules: recursive
+
+    - name: Setup Unreal Engine
+      run: |
+        echo "Setting up Unreal Engine ${{ env.UE_VERSION }}"
+        # Add UE setup steps here
+
+    - name: Generate Project Files
+      run: |
+        & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\GenerateProjectFiles.bat" `
+          -project="${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" `
+          -game -engine
+
+    - name: Build Project
+      run: |
+        & "C:\Program Files\Epic Games\UE_${{ env.UE_VERSION }}\Engine\Build\BatchFiles\Build.bat" `
+          ${{ env.PROJECT_NAME }}Editor `
+          ${{ matrix.platform }} `
+          ${{ matrix.config }} `
+          "${{ github.workspace }}\${{ env.PROJECT_NAME }}.uproject" `
+          -WaitMutex
+
+    - name: Upload Build Artifacts
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-${{ matrix.config }}-${{ matrix.platform }}
+        path: |
+          Binaries/
+          !Binaries/**/*.pdb
+        retention-days: 7
+
+    - name: Build Summary
+      if: always()
+      run: |
+        echo "### Build Results :rocket:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Configuration:** ${{ matrix.config }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Platform:** ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
