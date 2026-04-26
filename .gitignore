@@ -3,3 +3,13 @@ brainstorm-start.err
 brainstorm-start.out
 ContextVault/03_AI_Systems/LLM_runtime.log
 *.log
+
+# Local agent/runtime state
+.claude/
+
+# Unreal generated state
+HorrorProject/HorrorProject/.vs/
+HorrorProject/HorrorProject/Binaries/
+HorrorProject/HorrorProject/DerivedDataCache/
+HorrorProject/HorrorProject/Intermediate/
+HorrorProject/HorrorProject/Saved/
