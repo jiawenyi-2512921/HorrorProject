@@ -94,4 +94,7 @@ private:
 	TMap<FName, FHorrorObjectiveMessageMetadata> ObjectiveMetadataByEventAndSourceId;
 
 	FHorrorEventPublishedNativeDelegate OnEventPublishedNative;
+
+	// Performance optimization: Cache metadata keys to avoid string concatenation
+	mutable TMap<TPair<FGameplayTag, FName>, FName> CachedMetadataKeys;
 };

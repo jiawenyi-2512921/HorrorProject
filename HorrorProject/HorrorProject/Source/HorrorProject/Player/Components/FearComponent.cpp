@@ -6,8 +6,9 @@
 
 UFearComponent::UFearComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
+	// Performance optimization: Use timer-based updates instead of tick
+	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 void UFearComponent::BeginPlay()
@@ -16,12 +17,23 @@ void UFearComponent::BeginPlay()
 	FearValue = 0.0f;
 	CurrentFearLevel = EFearLevel::Calm;
 	TimeSinceLastFearIncrease = 0.0f;
+
+	// Performance optimization: Use timer instead of tick for decay updates
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(FearDecayTimerHandle, this, &UFearComponent::UpdateFearDecayTimer, 0.1f, true);
+	}
 }
 
 void UFearComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// Performance optimization: Tick disabled, using timer-based updates
+}
 
+void UFearComponent::UpdateFearDecayTimer()
+{
+	const float DeltaTime = 0.1f;
 	UpdateFearDecay(DeltaTime);
 	UpdateFearLevel();
 }

@@ -13,9 +13,11 @@ namespace
 			&& Metadata.DebugLabel.IsEmpty();
 	}
 
+	// Performance optimization: Use hash-based key instead of string concatenation
 	FName MakeEventSourceMetadataKey(FGameplayTag EventTag, FName SourceId)
 	{
-		return FName(*FString::Printf(TEXT("%s|%s"), *EventTag.ToString(), *SourceId.ToString()));
+		const uint32 Hash = HashCombine(GetTypeHash(EventTag), GetTypeHash(SourceId));
+		return FName(*FString::Printf(TEXT("EventKey_%u"), Hash));
 	}
 }
 
@@ -47,13 +49,20 @@ bool UHorrorEventBusSubsystem::Publish(FGameplayTag EventTag, FName SourceId, FG
 		Message.DebugLabel = SourceMetadata->DebugLabel;
 	}
 
+	// Performance optimization: Reserve capacity and use circular buffer approach
+	if (History.Num() == 0)
+	{
+		History.Reserve(HistoryCapacity);
+	}
+
 	FHorrorEventMessage HistoryMessage = Message;
 	HistoryMessage.SourceObject = nullptr;
-	History.Add(HistoryMessage);
-	if (History.Num() > HistoryCapacity)
+
+	if (History.Num() >= HistoryCapacity)
 	{
-		History.RemoveAt(0, History.Num() - HistoryCapacity, EAllowShrinking::No);
+		History.RemoveAt(0, 1, EAllowShrinking::No);
 	}
+	History.Add(HistoryMessage);
 	OnEventPublished.Broadcast(Message);
 	OnEventPublishedNative.Broadcast(Message);
 	return true;

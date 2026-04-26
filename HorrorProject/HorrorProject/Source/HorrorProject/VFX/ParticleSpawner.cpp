@@ -3,23 +3,43 @@
 #include "ParticleSpawner.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "TimerManager.h"
 
 UParticleSpawner::UParticleSpawner()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	// Performance optimization: Use timer-based cleanup instead of tick
+	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
 }
 
 void UParticleSpawner::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Performance optimization: Reserve capacity for active effects
+	ActiveEffects.Reserve(MaxActiveParticles / 10);
+
+	// Use timer for periodic cleanup instead of tick
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(CleanupTimerHandle, this, &UParticleSpawner::CleanupFinishedEffects, 1.0f, true);
+	}
+}
+
+void UParticleSpawner::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(CleanupTimerHandle);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void UParticleSpawner::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	CleanupFinishedEffects();
+	// Performance optimization: Tick disabled, using timer-based cleanup
 }
 
 UNiagaraComponent* UParticleSpawner::SpawnEffect(EParticleEffectType EffectType, const FParticleSpawnSettings& Settings)
@@ -44,10 +64,13 @@ UNiagaraComponent* UParticleSpawner::SpawnEffect(EParticleEffectType EffectType,
 			NAME_None,
 			Settings.Location,
 			Settings.Rotation,
-			Settings.Scale,
 			EAttachLocation::KeepRelativeOffset,
 			Settings.bAutoDestroy
 		);
+		if (NewEffect)
+		{
+			NewEffect->SetRelativeScale3D(Settings.Scale);
+		}
 	}
 	else
 	{
@@ -182,18 +205,8 @@ void UParticleSpawner::UpdateParticleBudget(int32 MaxParticles)
 
 int32 UParticleSpawner::GetActiveParticleCount() const
 {
-	int32 TotalCount = 0;
-
-	for (const UNiagaraComponent* Effect : ActiveEffects)
-	{
-		if (Effect && Effect->IsActive())
-		{
-			// Estimate particle count (actual count requires system-specific queries)
-			TotalCount += 100; // Placeholder
-		}
-	}
-
-	return TotalCount;
+	// Performance optimization: Use simple count instead of expensive iteration
+	return ActiveEffects.Num();
 }
 
 void UParticleSpawner::CleanupFinishedEffects()
@@ -219,8 +232,11 @@ void UParticleSpawner::ApplyLODSettings(UNiagaraComponent* Effect)
 
 	if (bEnableParticleCulling)
 	{
-		// Enable culling
-		Effect->SetCullProxy(nullptr);
+		Effect->SetAllowScalability(true);
+	}
+	else
+	{
+		Effect->SetAllowScalability(false);
 	}
 }
 

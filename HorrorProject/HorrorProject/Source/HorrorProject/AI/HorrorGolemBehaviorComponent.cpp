@@ -9,8 +9,10 @@
 
 UHorrorGolemBehaviorComponent::UHorrorGolemBehaviorComponent()
 {
+	// Performance optimization: Reduce tick frequency for AI behavior
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	PrimaryComponentTick.TickInterval = 0.1f; // Update at 10Hz instead of 60Hz
 }
 
 void UHorrorGolemBehaviorComponent::BeginPlay()
@@ -191,8 +193,10 @@ void UHorrorGolemBehaviorComponent::UpdateDistantSighting(float DeltaTime)
 		MoveTowardsTarget(DistantSightingMoveSpeed, DeltaTime);
 	}
 
-	// Face target
-	const FVector DirectionToTarget = (TargetActor->GetActorLocation() - OwnerThreat->GetActorLocation()).GetSafeNormal();
+	// Performance optimization: Cache locations to avoid multiple GetActorLocation calls
+	const FVector OwnerLocation = OwnerThreat->GetActorLocation();
+	const FVector TargetLocation = TargetActor->GetActorLocation();
+	const FVector DirectionToTarget = (TargetLocation - OwnerLocation).GetSafeNormal();
 	const FRotator TargetRotation = DirectionToTarget.Rotation();
 	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, 2.0f);
 	OwnerThreat->SetActorRotation(NewRotation);

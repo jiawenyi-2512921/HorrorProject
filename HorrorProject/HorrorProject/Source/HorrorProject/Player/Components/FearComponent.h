@@ -117,4 +117,8 @@ private:
 	EFearLevel CurrentFearLevel = EFearLevel::Calm;
 
 	float TimeSinceLastFearIncrease = 0.0f;
+
+	// Performance optimization: Timer handle for decay updates
+	FTimerHandle FearDecayTimerHandle;
+	void UpdateFearDecayTimer();
 };
