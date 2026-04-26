@@ -7,9 +7,12 @@
 #include "HorrorProjectGameMode.generated.h"
 
 /**
- *  Simple GameMode for a first person game
+ *  DEPRECATED: legacy template GameMode from the FirstPerson template.
+ *  Live GameMode is `AHorrorGameModeBase` (Game/HorrorGameModeBase.h),
+ *  bound via `[/Script/EngineSettings.GameMapsSettings] GlobalDefaultGameMode`.
+ *  Kept only as a graveyard so old BP class references don't fail to load.
  */
-UCLASS(abstract)
+UCLASS(abstract, Hidden, NotBlueprintable, NotPlaceable)
 class AHorrorProjectGameMode : public AGameModeBase
 {
 	GENERATED_BODY()

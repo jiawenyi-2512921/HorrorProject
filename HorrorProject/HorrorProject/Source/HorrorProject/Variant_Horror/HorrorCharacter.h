@@ -13,10 +13,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateSprintMeterDelegate, float, P
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSprintStateChangedDelegate, bool, bSprinting);
 
 /**
- *  Simple first person horror character
- *  Provides stamina-based sprinting
+ *  Sprint mechanic intermediate base in the production inheritance chain
+ *  (parent of AHorrorPlayerCharacter). Hidden so designers extend
+ *  AHorrorPlayerCharacter instead of this intermediate.
  */
-UCLASS(abstract)
+UCLASS(abstract, Hidden, NotBlueprintable, NotPlaceable)
 class HORRORPROJECT_API AHorrorCharacter : public AHorrorProjectCharacter
 {
 	GENERATED_BODY()

@@ -16,9 +16,13 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 /**
- *  A basic first person character
+ *  Base first-person Character from the FirstPerson template.
+ *  Production inheritance chain: BP_HorrorPlayerCharacter -> AHorrorPlayerCharacter
+ *  -> AHorrorCharacter (sprint) -> AHorrorProjectCharacter -> ACharacter.
+ *  Designers should extend AHorrorPlayerCharacter (canonical) — this base is
+ *  hidden from the editor BP class picker to prevent accidental forks.
  */
-UCLASS(abstract)
+UCLASS(abstract, Hidden, NotBlueprintable, NotPlaceable)
 class AHorrorProjectCharacter : public ACharacter
 {
 	GENERATED_BODY()

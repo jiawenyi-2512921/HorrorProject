@@ -7,10 +7,11 @@
 #include "HorrorProjectCameraManager.generated.h"
 
 /**
- *  Basic First Person camera manager.
- *  Limits min/max look pitch.
+ *  First-person camera manager. Spawned at runtime by AHorrorPlayerController
+ *  (Player/HorrorPlayerController.cpp) via PlayerCameraManagerClass.
+ *  Hidden from BP class picker; instantiated by C++ only.
  */
-UCLASS()
+UCLASS(Hidden, NotBlueprintable, NotPlaceable)
 class AHorrorProjectCameraManager : public APlayerCameraManager
 {
 	GENERATED_BODY()
