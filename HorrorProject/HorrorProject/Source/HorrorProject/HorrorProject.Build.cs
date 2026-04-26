@@ -24,7 +24,8 @@ public class HorrorProject : ModuleRules
 			"OnlineSubsystem",
 			"OnlineSubsystemUtils",
 			"Sockets",
-			"Networking"
+			"Networking",
+			"Slate"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
