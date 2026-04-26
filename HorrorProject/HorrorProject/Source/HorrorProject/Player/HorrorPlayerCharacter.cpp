@@ -6,6 +6,9 @@
 #include "Player/Components/VHSEffectComponent.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/FlashlightComponent.h"
+#include "Player/Components/FearComponent.h"
+#include "Player/Components/NoiseGeneratorComponent.h"
 
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
@@ -23,6 +26,7 @@ namespace HorrorPlayerCharacterDefaults
 	constexpr TCHAR TakePhotoActionAssetPath[] = TEXT("/Game/Input/Actions/IA_TakePhoto.IA_TakePhoto");
 	constexpr TCHAR RewindActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Rewind.IA_Rewind");
 	constexpr TCHAR OpenArchiveActionAssetPath[] = TEXT("/Game/Input/Actions/IA_OpenArchive.IA_OpenArchive");
+	constexpr TCHAR ToggleFlashlightActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Flashlight.IA_Flashlight");
 }
 
 namespace
@@ -63,6 +67,9 @@ AHorrorPlayerCharacter::AHorrorPlayerCharacter()
 	VHSEffect = CreateDefaultSubobject<UVHSEffectComponent>(TEXT("VHSEffect"));
 	NoteRecorder = CreateDefaultSubobject<UNoteRecorderComponent>(TEXT("NoteRecorder"));
 	QuantumCamera = CreateDefaultSubobject<UQuantumCameraComponent>(TEXT("QuantumCamera"));
+	Flashlight = CreateDefaultSubobject<UFlashlightComponent>(TEXT("Flashlight"));
+	Fear = CreateDefaultSubobject<UFearComponent>(TEXT("Fear"));
+	NoiseGenerator = CreateDefaultSubobject<UNoiseGeneratorComponent>(TEXT("NoiseGenerator"));
 	BindQuantumCameraDelegates();
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> InteractActionAsset(HorrorPlayerCharacterDefaults::InteractActionAssetPath);
@@ -70,6 +77,7 @@ AHorrorPlayerCharacter::AHorrorPlayerCharacter()
 	static ConstructorHelpers::FObjectFinder<UInputAction> TakePhotoActionAsset(HorrorPlayerCharacterDefaults::TakePhotoActionAssetPath);
 	static ConstructorHelpers::FObjectFinder<UInputAction> RewindActionAsset(HorrorPlayerCharacterDefaults::RewindActionAssetPath);
 	static ConstructorHelpers::FObjectFinder<UInputAction> OpenArchiveActionAsset(HorrorPlayerCharacterDefaults::OpenArchiveActionAssetPath);
+	static ConstructorHelpers::FObjectFinder<UInputAction> ToggleFlashlightActionAsset(HorrorPlayerCharacterDefaults::ToggleFlashlightActionAssetPath);
 
 	if (InteractActionAsset.Succeeded())
 	{
@@ -95,6 +103,11 @@ AHorrorPlayerCharacter::AHorrorPlayerCharacter()
 	{
 		OpenArchiveAction = OpenArchiveActionAsset.Object;
 	}
+
+	if (ToggleFlashlightActionAsset.Succeeded())
+	{
+		ToggleFlashlightAction = ToggleFlashlightActionAsset.Object;
+	}
 }
 
 UInputAction* AHorrorPlayerCharacter::ResolveInteractAction()
@@ -111,6 +124,11 @@ void AHorrorPlayerCharacter::BeginPlay()
 	{
 		VHSEffect->ResolveDefaultPostProcessMaterial();
 		VHSEffect->BindPostProcessCamera(GetFirstPersonCameraComponent());
+	}
+
+	if (Flashlight && GetSpotLight())
+	{
+		Flashlight->BindSpotLight(GetSpotLight());
 	}
 
 	AHorrorGameModeBase* HorrorGameMode = Cast<AHorrorGameModeBase>(UGameplayStatics::GetGameMode(this));
@@ -228,6 +246,9 @@ void AHorrorPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		const UInputAction* ResolvedOpenArchiveAction = ResolveInputAction(&AHorrorPlayerCharacter::OpenArchiveAction, HorrorPlayerCharacterDefaults::OpenArchiveActionAssetPath, TEXT("OpenArchiveAction"));
 		BindActionAndStoreHandle(EnhancedInputComponent, ResolvedOpenArchiveAction, ETriggerEvent::Started, this, &AHorrorPlayerCharacter::DoOpenArchive, OpenArchiveStartedBindingHandle);
+
+		const UInputAction* ResolvedToggleFlashlightAction = ResolveInputAction(&AHorrorPlayerCharacter::ToggleFlashlightAction, HorrorPlayerCharacterDefaults::ToggleFlashlightActionAssetPath, TEXT("ToggleFlashlightAction"));
+		BindActionAndStoreHandle(EnhancedInputComponent, ResolvedToggleFlashlightAction, ETriggerEvent::Started, this, &AHorrorPlayerCharacter::DoToggleFlashlight, ToggleFlashlightStartedBindingHandle);
 	}
 }
 
@@ -306,4 +327,12 @@ void AHorrorPlayerCharacter::DoStopRewind()
 void AHorrorPlayerCharacter::DoOpenArchive()
 {
 	BP_OpenArchive();
+}
+
+void AHorrorPlayerCharacter::DoToggleFlashlight()
+{
+	if (Flashlight)
+	{
+		Flashlight->ToggleFlashlight();
+	}
 }

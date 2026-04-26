@@ -15,6 +15,9 @@ class UInventoryComponent;
 class UNoteRecorderComponent;
 class UQuantumCameraComponent;
 class UVHSEffectComponent;
+class UFlashlightComponent;
+class UFearComponent;
+class UNoiseGeneratorComponent;
 
 UCLASS()
 class HORRORPROJECT_API AHorrorPlayerCharacter : public AHorrorCharacter
@@ -29,6 +32,9 @@ public:
 	UVHSEffectComponent* GetVHSEffectComponent() const { return VHSEffect; }
 	UNoteRecorderComponent* GetNoteRecorderComponent() const { return NoteRecorder; }
 	UQuantumCameraComponent* GetQuantumCameraComponent() const { return QuantumCamera; }
+	UFlashlightComponent* GetFlashlightComponent() const { return Flashlight; }
+	UFearComponent* GetFearComponent() const { return Fear; }
+	UNoiseGeneratorComponent* GetNoiseGeneratorComponent() const { return NoiseGenerator; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
@@ -45,6 +51,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<UInputAction> OpenArchiveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<UInputAction> ToggleFlashlightAction;
 
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
@@ -70,6 +79,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoOpenArchive();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DoToggleFlashlight();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Input", meta=(DisplayName="Open Archive"))
 	void BP_OpenArchive();
@@ -100,6 +112,7 @@ private:
 	uint32 RewindCompletedBindingHandle = 0;
 	uint32 RewindCanceledBindingHandle = 0;
 	uint32 OpenArchiveStartedBindingHandle = 0;
+	uint32 ToggleFlashlightStartedBindingHandle = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UInteractionComponent> Interaction;
@@ -115,4 +128,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UQuantumCameraComponent> QuantumCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UFlashlightComponent> Flashlight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UFearComponent> Fear;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UNoiseGeneratorComponent> NoiseGenerator;
 };
