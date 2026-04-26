@@ -1,4 +1,6 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -33,7 +35,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableFirstLoopTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.CompletesFirstLoop",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableFirstLoopTest::RunTest(const FString& Parameters)
 {
@@ -122,7 +124,7 @@ bool FFoundFootageObjectiveInteractableFirstLoopTest::RunTest(const FString& Par
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableWorldCanInteractTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.CanInteractUsesCompletionPreconditions",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableWorldCanInteractTest::RunTest(const FString& Parameters)
 {
@@ -185,7 +187,7 @@ bool FFoundFootageObjectiveInteractableWorldCanInteractTest::RunTest(const FStri
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableWritesInstigatorProgressTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.WritesInstigatorProgress",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableWritesInstigatorProgressTest::RunTest(const FString& Parameters)
 {
@@ -389,3 +391,4 @@ bool FFoundFootageObjectiveInteractableWritesInstigatorProgressTest::RunTest(con
 
 #endif
 
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

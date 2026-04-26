@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "../SubtitleSystem.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemBasicTest, "HorrorProject.Accessibility.SubtitleBasic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemBasicTest, "HorrorProject.Accessibility.SubtitleBasic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemBasicTest::RunTest(const FString& Parameters)
 {
@@ -23,7 +25,7 @@ bool FSubtitleSystemBasicTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemQueueTest, "HorrorProject.Accessibility.SubtitleQueue", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemQueueTest, "HorrorProject.Accessibility.SubtitleQueue", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemQueueTest::RunTest(const FString& Parameters)
 {
@@ -45,7 +47,7 @@ bool FSubtitleSystemQueueTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemUpdateTest, "HorrorProject.Accessibility.SubtitleUpdate", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemUpdateTest, "HorrorProject.Accessibility.SubtitleUpdate", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemUpdateTest::RunTest(const FString& Parameters)
 {
@@ -66,7 +68,7 @@ bool FSubtitleSystemUpdateTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemClearTest, "HorrorProject.Accessibility.SubtitleClear", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemClearTest, "HorrorProject.Accessibility.SubtitleClear", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemClearTest::RunTest(const FString& Parameters)
 {
@@ -84,7 +86,7 @@ bool FSubtitleSystemClearTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemFormatTest, "HorrorProject.Accessibility.SubtitleFormat", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemFormatTest, "HorrorProject.Accessibility.SubtitleFormat", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemFormatTest::RunTest(const FString& Parameters)
 {
@@ -107,7 +109,7 @@ bool FSubtitleSystemFormatTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemPriorityTest, "HorrorProject.Accessibility.SubtitlePriority", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemPriorityTest, "HorrorProject.Accessibility.SubtitlePriority", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemPriorityTest::RunTest(const FString& Parameters)
 {
@@ -130,7 +132,7 @@ bool FSubtitleSystemPriorityTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemEnvironmentalTest, "HorrorProject.Accessibility.SubtitleEnvironmental", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemEnvironmentalTest, "HorrorProject.Accessibility.SubtitleEnvironmental", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSubtitleSystemEnvironmentalTest::RunTest(const FString& Parameters)
 {
@@ -145,3 +147,5 @@ bool FSubtitleSystemEnvironmentalTest::RunTest(const FString& Parameters)
 
     return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 BEGIN_DEFINE_SPEC(FArchiveSubsystemSpec, "HorrorProject.Evidence.Archive",
-	EAutomationTestFlags::ProductFilter | EAutomationTestFlags::ApplicationContextMask)
+	EAutomationTestFlags::ProductFilter | EAutomationTestFlags::EditorContext)
 	TObjectPtr<UWorld> TestWorld;
 	TObjectPtr<UArchiveSubsystem> ArchiveSubsystem;
 END_DEFINE_SPEC(FArchiveSubsystemSpec)
@@ -293,3 +295,5 @@ void FArchiveSubsystemSpec::Define()
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

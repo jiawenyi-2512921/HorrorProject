@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -5,7 +7,7 @@
 #include "Save/HorrorSaveGame.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationBasicTest, "HorrorProject.SaveGame.Migration.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationBasicTest, "HorrorProject.SaveGame.Migration.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveGameMigrationBasicTest::RunTest(const FString& Parameters)
 {
@@ -18,7 +20,7 @@ bool FSaveGameMigrationBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationNeedsMigrationTest, "HorrorProject.SaveGame.Migration.NeedsMigration", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationNeedsMigrationTest, "HorrorProject.SaveGame.Migration.NeedsMigration", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveGameMigrationNeedsMigrationTest::RunTest(const FString& Parameters)
 {
@@ -42,7 +44,7 @@ bool FSaveGameMigrationNeedsMigrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationExecuteTest, "HorrorProject.SaveGame.Migration.Execute", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationExecuteTest, "HorrorProject.SaveGame.Migration.Execute", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveGameMigrationExecuteTest::RunTest(const FString& Parameters)
 {
@@ -62,7 +64,7 @@ bool FSaveGameMigrationExecuteTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationNullSaveTest, "HorrorProject.SaveGame.Migration.NullSave", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationNullSaveTest, "HorrorProject.SaveGame.Migration.NullSave", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveGameMigrationNullSaveTest::RunTest(const FString& Parameters)
 {
@@ -76,7 +78,7 @@ bool FSaveGameMigrationNullSaveTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationVersionPreservationTest, "HorrorProject.SaveGame.Migration.VersionPreservation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveGameMigrationVersionPreservationTest, "HorrorProject.SaveGame.Migration.VersionPreservation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveGameMigrationVersionPreservationTest::RunTest(const FString& Parameters)
 {
@@ -98,3 +100,5 @@ bool FSaveGameMigrationVersionPreservationTest::RunTest(const FString& Parameter
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

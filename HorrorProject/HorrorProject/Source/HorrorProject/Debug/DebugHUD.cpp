@@ -5,8 +5,11 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/PlatformMemory.h"
+#include "EngineUtils.h"
+#include "DynamicRHI.h"
 
 ADebugHUD::ADebugHUD()
 {
@@ -191,7 +194,7 @@ void ADebugHUD::DrawFrameTiming()
 
 	float GameThreadTime = FPlatformTime::ToMilliseconds(GGameThreadTime);
 	float RenderThreadTime = FPlatformTime::ToMilliseconds(GRenderThreadTime);
-	float GPUFrameTime = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+	float GPUFrameTime = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 
 	DrawDebugText(FString::Printf(TEXT("Game Thread: %.2f ms"), GameThreadTime));
 	DrawDebugText(FString::Printf(TEXT("Render Thread: %.2f ms"), RenderThreadTime));

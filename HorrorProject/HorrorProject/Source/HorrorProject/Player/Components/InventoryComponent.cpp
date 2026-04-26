@@ -1,10 +1,6 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/InventoryComponent.h"
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-#include "Misc/AutomationTest.h"
 
 void UInventoryEvidenceDelegateProbe::HandleEvidenceCollected(FName EvidenceId, int32 TotalEvidenceCount)
 {
@@ -15,10 +11,14 @@ void UInventoryEvidenceDelegateProbe::HandleEvidenceCollected(FName EvidenceId, 
 	TotalEvidenceCounts.Add(TotalEvidenceCount);
 }
 
+#if WITH_DEV_AUTOMATION_TESTS
+
+#include "Misc/AutomationTest.h"
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInventoryComponentStoresUniqueEvidenceIdsTest,
 	"HorrorProject.Player.Inventory.StoresUniqueEvidenceIds",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInventoryComponentStoresUniqueEvidenceIdsTest::RunTest(const FString& Parameters)
 {
@@ -90,7 +90,7 @@ bool FInventoryComponentStoresUniqueEvidenceIdsTest::RunTest(const FString& Para
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInventoryComponentImportDoesNotBroadcastTest,
 	"HorrorProject.Player.Inventory.ImportDoesNotBroadcast",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInventoryComponentImportDoesNotBroadcastTest::RunTest(const FString& Parameters)
 {

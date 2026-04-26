@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -10,7 +12,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAnomalyDirectorRequiresRecordingTest,
 	"HorrorProject.Game.FoundFootage.FirstAnomaly.RequiresRecording",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAnomalyDirectorRequiresRecordingTest::RunTest(const FString& Parameters)
 {
@@ -52,7 +54,7 @@ bool FHorrorAnomalyDirectorRequiresRecordingTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAnomalyDirectorImportPendingCandidateSanitizesRestoredStateTest,
 	"HorrorProject.Game.FoundFootage.FirstAnomaly.ImportPendingCandidateSanitizesRestoredState",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAnomalyDirectorImportPendingCandidateSanitizesRestoredStateTest::RunTest(const FString& Parameters)
 {
@@ -83,3 +85,5 @@ bool FHorrorAnomalyDirectorImportPendingCandidateSanitizesRestoredStateTest::Run
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -3,6 +3,7 @@
 #include "GraphicsSettings.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Engine/Engine.h"
+#include "HAL/IConsoleManager.h"
 #include "RHI.h"
 
 UGraphicsSettings::UGraphicsSettings()
@@ -24,7 +25,7 @@ UGraphicsSettings::UGraphicsSettings()
 	bDynamicShadows = true;
 	ShadowDistance = 5000.0f;
 
-	AntiAliasingMethod = EAntiAliasingMethod::TAA;
+	AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 	AntiAliasingQuality = 3;
 
 	bMotionBlur = true;
@@ -67,7 +68,7 @@ void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 		FoliageQuality = 0;
 		ShadingQuality = 0;
 		ShadowQuality = EShadowQuality::Low;
-		AntiAliasingMethod = EAntiAliasingMethod::FXAA;
+		AntiAliasingMethod = EHorrorAntiAliasingMethod::FXAA;
 		bMotionBlur = false;
 		bAmbientOcclusion = false;
 		bRayTracingEnabled = false;
@@ -81,7 +82,7 @@ void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 		FoliageQuality = 1;
 		ShadingQuality = 1;
 		ShadowQuality = EShadowQuality::Medium;
-		AntiAliasingMethod = EAntiAliasingMethod::TAA;
+		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 		bMotionBlur = true;
 		bAmbientOcclusion = true;
 		bRayTracingEnabled = false;
@@ -95,7 +96,7 @@ void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 		FoliageQuality = 2;
 		ShadingQuality = 2;
 		ShadowQuality = EShadowQuality::High;
-		AntiAliasingMethod = EAntiAliasingMethod::TAA;
+		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 		bMotionBlur = true;
 		bAmbientOcclusion = true;
 		bRayTracingEnabled = false;
@@ -109,7 +110,7 @@ void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 		FoliageQuality = 3;
 		ShadingQuality = 3;
 		ShadowQuality = EShadowQuality::Ultra;
-		AntiAliasingMethod = EAntiAliasingMethod::TAA;
+		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 		bMotionBlur = true;
 		bAmbientOcclusion = true;
 		bRayTracingEnabled = IsRayTracingSupported();
@@ -123,7 +124,7 @@ void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 		FoliageQuality = 4;
 		ShadingQuality = 4;
 		ShadowQuality = EShadowQuality::Ultra;
-		AntiAliasingMethod = EAntiAliasingMethod::TAA;
+		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 		bMotionBlur = true;
 		bAmbientOcclusion = true;
 		bRayTracingEnabled = IsRayTracingSupported();
@@ -163,9 +164,9 @@ TArray<FIntPoint> UGraphicsSettings::GetSupportedResolutions() const
 		FScreenResolutionArray ResolutionArray;
 		if (RHIGetAvailableResolutions(ResolutionArray, true))
 		{
-			for (const FScreenResolutionRHI& Resolution : ResolutionArray)
+			for (const FScreenResolutionRHI& AvailableResolution : ResolutionArray)
 			{
-				Resolutions.Add(FIntPoint(Resolution.Width, Resolution.Height));
+				Resolutions.Add(FIntPoint(AvailableResolution.Width, AvailableResolution.Height));
 			}
 		}
 	}
@@ -228,9 +229,14 @@ void UGraphicsSettings::ApplyQualitySettings()
 
 void UGraphicsSettings::ApplyAdvancedSettings()
 {
-	if (GEngine)
+	if (IConsoleVariable* MotionBlurQualityCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MotionBlurQuality")))
 	{
-		GEngine->SetMotionBlurEnabled(bMotionBlur);
+		MotionBlurQualityCVar->Set(bMotionBlur ? 4 : 0, ECVF_SetByGameSetting);
+	}
+
+	if (IConsoleVariable* MotionBlurAmountCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MotionBlur.Amount")))
+	{
+		MotionBlurAmountCVar->Set(bMotionBlur ? MotionBlurAmount : 0.0f, ECVF_SetByGameSetting);
 	}
 }
 

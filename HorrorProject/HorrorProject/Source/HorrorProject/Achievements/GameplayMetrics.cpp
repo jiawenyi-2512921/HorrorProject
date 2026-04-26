@@ -1,13 +1,13 @@
 #include "GameplayMetrics.h"
 
-FGameplayMetrics UGameplayMetrics::CreateMetrics()
+FHorrorGameplayMetrics UHorrorGameplayMetricsLibrary::CreateMetrics()
 {
-	FGameplayMetrics Metrics;
+	FHorrorGameplayMetrics Metrics;
 	Metrics.SessionStartTime = FDateTime::Now();
 	return Metrics;
 }
 
-void UGameplayMetrics::UpdateFPSMetrics(FGameplayMetrics& Metrics, float CurrentFPS)
+void UHorrorGameplayMetricsLibrary::UpdateFPSMetrics(FHorrorGameplayMetrics& Metrics, float CurrentFPS)
 {
 	if (Metrics.MinFPS == 0.0f || CurrentFPS < Metrics.MinFPS)
 	{
@@ -30,7 +30,7 @@ void UGameplayMetrics::UpdateFPSMetrics(FGameplayMetrics& Metrics, float Current
 	}
 }
 
-void UGameplayMetrics::UpdateSanityMetrics(FGameplayMetrics& Metrics, float CurrentSanity)
+void UHorrorGameplayMetricsLibrary::UpdateSanityMetrics(FHorrorGameplayMetrics& Metrics, float CurrentSanity)
 {
 	if (CurrentSanity < Metrics.MinSanity)
 	{
@@ -48,7 +48,7 @@ void UGameplayMetrics::UpdateSanityMetrics(FGameplayMetrics& Metrics, float Curr
 	}
 }
 
-void UGameplayMetrics::RecordJumpScare(FGameplayMetrics& Metrics, float Intensity)
+void UHorrorGameplayMetricsLibrary::RecordJumpScare(FHorrorGameplayMetrics& Metrics, float Intensity)
 {
 	Metrics.JumpScareCount++;
 	Metrics.TotalScareIntensity += Intensity;
@@ -57,7 +57,7 @@ void UGameplayMetrics::RecordJumpScare(FGameplayMetrics& Metrics, float Intensit
 	Metrics.AverageHeartRate += Intensity * 10.0f;
 }
 
-void UGameplayMetrics::RecordInteraction(FGameplayMetrics& Metrics, bool bSuccess)
+void UHorrorGameplayMetricsLibrary::RecordInteraction(FHorrorGameplayMetrics& Metrics, bool bSuccess)
 {
 	Metrics.TotalInteractions++;
 
@@ -67,7 +67,7 @@ void UGameplayMetrics::RecordInteraction(FGameplayMetrics& Metrics, bool bSucces
 	}
 }
 
-FString UGameplayMetrics::GenerateMetricsReport(const FGameplayMetrics& Metrics)
+FString UHorrorGameplayMetricsLibrary::GenerateMetricsReport(const FHorrorGameplayMetrics& Metrics)
 {
 	FString Report;
 

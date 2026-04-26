@@ -65,9 +65,9 @@ void UMemoryTracker::SetTrackingEnabled(bool bEnabled)
 	}
 }
 
-FMemoryStats UMemoryTracker::GetMemoryStats() const
+FHorrorMemoryTrackerStats UMemoryTracker::GetMemoryStats() const
 {
-	FMemoryStats Stats;
+	FHorrorMemoryTrackerStats Stats;
 
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
 
@@ -101,19 +101,19 @@ void UMemoryTracker::SetMemoryBudgetMB(float BudgetMB)
 
 bool UMemoryTracker::IsMemoryWithinBudget() const
 {
-	const FMemoryStats Stats = GetMemoryStats();
+	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 	return Stats.UsedPhysicalMB <= MemoryBudgetMB;
 }
 
 float UMemoryTracker::GetMemoryBudgetPercent() const
 {
-	const FMemoryStats Stats = GetMemoryStats();
+	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 	return MemoryBudgetMB > 0.0f ? (Stats.UsedPhysicalMB / MemoryBudgetMB) * 100.0f : 0.0f;
 }
 
 void UMemoryTracker::MarkCheckpoint(const FString& CheckpointName)
 {
-	const FMemoryStats Stats = GetMemoryStats();
+	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 	CheckpointMemoryMB = Stats.UsedPhysicalMB;
 	LastCheckpointName = CheckpointName;
 
@@ -122,7 +122,7 @@ void UMemoryTracker::MarkCheckpoint(const FString& CheckpointName)
 
 float UMemoryTracker::GetMemoryDeltaSinceCheckpoint() const
 {
-	const FMemoryStats Stats = GetMemoryStats();
+	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 	return Stats.UsedPhysicalMB - CheckpointMemoryMB;
 }
 
@@ -182,7 +182,7 @@ void UMemoryTracker::UpdateMemoryStats()
 		return;
 	}
 
-	const FMemoryStats Stats = GetMemoryStats();
+	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 
 	// Update peaks
 	PeakPhysicalMB = FMath::Max(PeakPhysicalMB, Stats.UsedPhysicalMB);
@@ -216,7 +216,7 @@ void UMemoryTracker::CheckMemoryBudget()
 {
 	if (!IsMemoryWithinBudget() && !bBudgetExceededWarningShown)
 	{
-		const FMemoryStats Stats = GetMemoryStats();
+		const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
 
 		UE_LOG(LogTemp, Warning, TEXT("Memory budget exceeded! Current: %.2f MB, Budget: %.2f MB"),
 			Stats.UsedPhysicalMB, MemoryBudgetMB);

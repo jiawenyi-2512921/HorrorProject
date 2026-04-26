@@ -25,13 +25,23 @@ public class HorrorProject : ModuleRules
 			"OnlineSubsystemUtils",
 			"Sockets",
 			"Networking",
-			"Slate"
+			"Slate",
+			"EngineSettings",
+			"RHI",
+			"RenderCore",
+			"NavigationSystem",
+			"Json",
+			"JsonUtilities"
 		});
+
+		PublicDefinitions.Add("HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0");
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PrivateIncludePaths.AddRange(new string[] {
-			"HorrorProject"
+			"HorrorProject",
+			"HorrorProject/Analytics/Public",
+			"HorrorProject/Settings/Public"
 		});
 	}
 }

@@ -9,8 +9,9 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $ProjectFile = Join-Path $ProjectRoot "HorrorProject.uproject"
-$UE5Path = "D:\UnrealEngine\UE_5.6"
-$Editor = Join-Path $UE5Path "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+$UE5Path = $UE5Root
+$Editor = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 $ReportDir = Join-Path $ProjectRoot "Saved\Automation"
 
 Write-Host "=== HorrorProject Test Runner ===" -ForegroundColor Cyan

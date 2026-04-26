@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "AudioSettings.generated.h"
+#include "HorrorAudioSettings.generated.h"
 
 class USoundClass;
 class USoundMix;
@@ -14,12 +14,12 @@ class USoundMix;
  * Manages all audio-related settings
  */
 UCLASS(BlueprintType, Config=GameUserSettings)
-class HORRORPROJECT_API UAudioSettings : public UObject
+class HORRORPROJECT_API UHorrorAudioSettings : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UAudioSettings();
+	UHorrorAudioSettings();
 
 	// Volume Settings
 	UPROPERTY(Config, BlueprintReadWrite, Category = "Volume")

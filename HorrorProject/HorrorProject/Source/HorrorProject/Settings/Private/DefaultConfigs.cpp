@@ -2,7 +2,7 @@
 
 #include "DefaultConfigs.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 #include "GameFramework/GameUserSettings.h"
@@ -32,7 +32,7 @@ void UDefaultConfigs::ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings)
 	Settings->bDynamicShadows = true;
 	Settings->ShadowDistance = 5000.0f;
 
-	Settings->AntiAliasingMethod = EAntiAliasingMethod::TAA;
+	Settings->AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 	Settings->AntiAliasingQuality = 3;
 
 	Settings->bMotionBlur = true;
@@ -49,7 +49,7 @@ void UDefaultConfigs::ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings)
 	Settings->bRayTracedGlobalIllumination = false;
 }
 
-void UDefaultConfigs::ApplyDefaultAudioSettings(UAudioSettings* Settings)
+void UDefaultConfigs::ApplyDefaultAudioSettings(UHorrorAudioSettings* Settings)
 {
 	if (!Settings)
 	{
@@ -159,7 +159,7 @@ void UDefaultConfigs::ApplyRecommendedGraphicsSettings(UGraphicsSettings* Settin
 	Settings->ApplyQualityPreset(QualityLevel);
 }
 
-void UDefaultConfigs::ApplyRecommendedAudioSettings(UAudioSettings* Settings)
+void UDefaultConfigs::ApplyRecommendedAudioSettings(UHorrorAudioSettings* Settings)
 {
 	if (!Settings)
 	{

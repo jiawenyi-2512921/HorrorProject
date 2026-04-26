@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "GameFramework/GameUserSettings.h"
+#include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "JsonObjectConverter.h"
@@ -218,23 +219,15 @@ bool UAccessibilitySubsystem::ValidateWCAGCompliance() const
 
 void UAccessibilitySubsystem::ApplyColorBlindShader()
 {
-    UGameUserSettings* Settings = UGameUserSettings::GetGameUserSettings();
-    if (Settings)
-    {
-        // Apply color blind mode through post-process settings
-        int32 ColorBlindMode = static_cast<int32>(CurrentSettings.ColorBlindMode);
-        Settings->SetColorBlindMode(ColorBlindMode);
-        Settings->ApplySettings(false);
-    }
+    UE_LOG(LogTemp, Log, TEXT("Color blind mode set to %d; bind post-process/UI materials to consume this setting."),
+        static_cast<int32>(CurrentSettings.ColorBlindMode));
 }
 
 void UAccessibilitySubsystem::ApplyMotionSettings()
 {
-    UGameUserSettings* Settings = UGameUserSettings::GetGameUserSettings();
-    if (Settings)
+    if (IConsoleVariable* MotionBlurQuality = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MotionBlurQuality")))
     {
-        Settings->SetMotionBlurQuality(CurrentSettings.bMotionBlurEnabled ? 3 : 0);
-        Settings->ApplySettings(false);
+        MotionBlurQuality->Set(CurrentSettings.bMotionBlurEnabled ? 3 : 0, ECVF_SetByGameSetting);
     }
 }
 

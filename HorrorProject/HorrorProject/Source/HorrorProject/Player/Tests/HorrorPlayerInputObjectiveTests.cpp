@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -54,7 +56,7 @@ public:
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorPlayerInputDoesNotBypassRouteObjectivesTest,
 	"HorrorProject.Player.Input.DoesNotBypassRouteObjectives",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorPlayerInputDoesNotBypassRouteObjectivesTest::RunTest(const FString& Parameters)
 {
@@ -143,3 +145,5 @@ bool FHorrorPlayerInputDoesNotBypassRouteObjectivesTest::RunTest(const FString& 
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

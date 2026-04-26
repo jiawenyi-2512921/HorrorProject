@@ -7,7 +7,7 @@
 #include "ConfigValidator.generated.h"
 
 class UGraphicsSettings;
-class UAudioSettings;
+class UHorrorAudioSettings;
 class UControlSettings;
 class UGameplaySettings;
 
@@ -45,7 +45,7 @@ public:
 	bool ValidateGraphicsSettings(UGraphicsSettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Validation")
-	bool ValidateAudioSettings(UAudioSettings* Settings);
+	bool ValidateAudioSettings(UHorrorAudioSettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Validation")
 	bool ValidateControlSettings(UControlSettings* Settings);
@@ -54,7 +54,7 @@ public:
 	bool ValidateGameplaySettings(UGameplaySettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Validation")
-	FValidationResult ValidateAllSettings(UGraphicsSettings* Graphics, UAudioSettings* Audio,
+	FValidationResult ValidateAllSettings(UGraphicsSettings* Graphics, UHorrorAudioSettings* Audio,
 		UControlSettings* Controls, UGameplaySettings* Gameplay);
 
 	// Get last validation result

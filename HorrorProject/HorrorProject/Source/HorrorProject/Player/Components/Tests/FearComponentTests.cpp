@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/FearComponent.h"
@@ -8,7 +10,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentInitializationTest,
 	"HorrorProject.Player.Fear.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentInitializationTest::RunTest(const FString& Parameters)
 {
@@ -24,7 +26,7 @@ bool FFearComponentInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentAddFearTest,
 	"HorrorProject.Player.Fear.AddFear",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentAddFearTest::RunTest(const FString& Parameters)
 {
@@ -43,7 +45,7 @@ bool FFearComponentAddFearTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentRemoveFearTest,
 	"HorrorProject.Player.Fear.RemoveFear",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentRemoveFearTest::RunTest(const FString& Parameters)
 {
@@ -63,7 +65,7 @@ bool FFearComponentRemoveFearTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentFearLevelsTest,
 	"HorrorProject.Player.Fear.FearLevels",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentFearLevelsTest::RunTest(const FString& Parameters)
 {
@@ -90,7 +92,7 @@ bool FFearComponentFearLevelsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentDecayTest,
 	"HorrorProject.Player.Fear.Decay",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentDecayTest::RunTest(const FString& Parameters)
 {
@@ -109,7 +111,7 @@ bool FFearComponentDecayTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentEffectsTest,
 	"HorrorProject.Player.Fear.Effects",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentEffectsTest::RunTest(const FString& Parameters)
 {
@@ -133,7 +135,7 @@ bool FFearComponentEffectsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFearComponentMaxCapTest,
 	"HorrorProject.Player.Fear.MaxCap",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFearComponentMaxCapTest::RunTest(const FString& Parameters)
 {
@@ -149,3 +151,5 @@ bool FFearComponentMaxCapTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

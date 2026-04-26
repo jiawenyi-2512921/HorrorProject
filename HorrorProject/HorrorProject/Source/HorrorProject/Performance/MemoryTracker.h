@@ -10,7 +10,7 @@
  * Memory usage statistics
  */
 USTRUCT(BlueprintType)
-struct HORRORPROJECT_API FMemoryStats
+struct HORRORPROJECT_API FHorrorMemoryTrackerStats
 {
 	GENERATED_BODY()
 
@@ -82,7 +82,7 @@ public:
 
 	// Get current memory statistics
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	FMemoryStats GetMemoryStats() const;
+	FHorrorMemoryTrackerStats GetMemoryStats() const;
 
 	// Set memory budget warning threshold (MB)
 	UFUNCTION(BlueprintCallable, Category = "Performance")

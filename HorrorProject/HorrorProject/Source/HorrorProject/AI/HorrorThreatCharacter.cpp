@@ -3,7 +3,6 @@
 #include "AI/HorrorThreatCharacter.h"
 #include "AI/HorrorGolemBehaviorComponent.h"
 
-#if WITH_DEV_AUTOMATION_TESTS
 void UHorrorThreatDelegateProbe::HandleThreatActiveChanged(bool bIsActive)
 {
 	ActiveValues.Add(bIsActive);
@@ -13,7 +12,6 @@ void UHorrorThreatDelegateProbe::HandleDetectedTargetChanged(AActor* DetectedTar
 {
 	TargetValues.Add(DetectedTarget);
 }
-#endif
 
 AHorrorThreatCharacter::AHorrorThreatCharacter()
 {

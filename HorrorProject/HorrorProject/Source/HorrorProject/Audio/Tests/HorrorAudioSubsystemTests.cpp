@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Audio/HorrorAudioSubsystem.h"
@@ -11,7 +13,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioSubsystemInitializationTest,
 	"HorrorProject.Audio.Subsystem.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAudioSubsystemInitializationTest::RunTest(const FString& Parameters)
 {
@@ -30,7 +32,7 @@ bool FHorrorAudioSubsystemInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioSubsystemCategoryVolumeTest,
 	"HorrorProject.Audio.Subsystem.CategoryVolume",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAudioSubsystemCategoryVolumeTest::RunTest(const FString& Parameters)
 {
@@ -53,7 +55,7 @@ bool FHorrorAudioSubsystemCategoryVolumeTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioSubsystemZoneConfigTest,
 	"HorrorProject.Audio.Subsystem.ZoneConfig",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAudioSubsystemZoneConfigTest::RunTest(const FString& Parameters)
 {
@@ -87,7 +89,7 @@ bool FHorrorAudioSubsystemZoneConfigTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioSubsystemEventMappingTest,
 	"HorrorProject.Audio.Subsystem.EventMapping",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAudioSubsystemEventMappingTest::RunTest(const FString& Parameters)
 {
@@ -113,7 +115,7 @@ bool FHorrorAudioSubsystemEventMappingTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioSubsystemZoneTransitionTest,
 	"HorrorProject.Audio.Subsystem.ZoneTransition",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAudioSubsystemZoneTransitionTest::RunTest(const FString& Parameters)
 {
@@ -144,3 +146,5 @@ bool FHorrorAudioSubsystemZoneTransitionTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

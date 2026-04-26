@@ -7,7 +7,7 @@
 #include "GameplayTelemetry.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGameplayMetrics
+struct FGameplayTelemetryMetrics
 {
 	GENERATED_BODY()
 
@@ -75,7 +75,7 @@ public:
 	int32 GetAchievementsUnlocked() const { return Metrics.AchievementsUnlocked; }
 
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
-	FGameplayMetrics GetMetrics() const { return Metrics; }
+	FGameplayTelemetryMetrics GetMetrics() const { return Metrics; }
 
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	TMap<FString, int32> GetLevelCompletionCounts() const { return LevelCompletions; }
@@ -85,7 +85,7 @@ public:
 
 protected:
 	UPROPERTY()
-	FGameplayMetrics Metrics;
+	FGameplayTelemetryMetrics Metrics;
 
 	UPROPERTY()
 	TMap<FString, int32> LevelCompletions;

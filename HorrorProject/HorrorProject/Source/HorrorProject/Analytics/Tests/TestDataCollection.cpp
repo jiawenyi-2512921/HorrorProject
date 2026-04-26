@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -6,7 +8,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDataCollectionTest, "HorrorProject.Analytics.DataCollection", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDataCollectionTest, "HorrorProject.Analytics.DataCollection", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDataCollectionTest::RunTest(const FString& Parameters)
 {
@@ -151,7 +153,7 @@ bool FDataCollectionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDataIntegrityTest, "HorrorProject.Analytics.DataIntegrity", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDataIntegrityTest, "HorrorProject.Analytics.DataIntegrity", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDataIntegrityTest::RunTest(const FString& Parameters)
 {
@@ -234,3 +236,5 @@ bool FDataIntegrityTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

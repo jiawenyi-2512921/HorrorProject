@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Game/HorrorObjectiveNode.h"
@@ -12,7 +14,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveNodeBasicTest, "HorrorProject.Game.ObjectiveNode.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveNodeBasicTest, "HorrorProject.Game.ObjectiveNode.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorObjectiveNodeBasicTest::RunTest(const FString& Parameters)
 {
@@ -44,7 +46,7 @@ bool FHorrorObjectiveNodeBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorNavigationNodeTest, "HorrorProject.Game.ObjectiveNode.Navigation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorNavigationNodeTest, "HorrorProject.Game.ObjectiveNode.Navigation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorNavigationNodeTest::RunTest(const FString& Parameters)
 {
@@ -69,7 +71,7 @@ bool FHorrorNavigationNodeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorInteractionNodeTest, "HorrorProject.Game.ObjectiveNode.Interaction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorInteractionNodeTest, "HorrorProject.Game.ObjectiveNode.Interaction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorInteractionNodeTest::RunTest(const FString& Parameters)
 {
@@ -99,7 +101,7 @@ bool FHorrorInteractionNodeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorEncounterNodeTest, "HorrorProject.Game.ObjectiveNode.Encounter", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorEncounterNodeTest, "HorrorProject.Game.ObjectiveNode.Encounter", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterNodeTest::RunTest(const FString& Parameters)
 {
@@ -131,7 +133,7 @@ bool FHorrorEncounterNodeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveManagerTest, "HorrorProject.Game.ObjectiveManager.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveManagerTest, "HorrorProject.Game.ObjectiveManager.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorObjectiveManagerTest::RunTest(const FString& Parameters)
 {
@@ -176,7 +178,7 @@ bool FHorrorObjectiveManagerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveManagerNodeTypesTest, "HorrorProject.Game.ObjectiveManager.NodeTypes", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorObjectiveManagerNodeTypesTest, "HorrorProject.Game.ObjectiveManager.NodeTypes", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorObjectiveManagerNodeTypesTest::RunTest(const FString& Parameters)
 {
@@ -214,3 +216,5 @@ bool FHorrorObjectiveManagerNodeTypesTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

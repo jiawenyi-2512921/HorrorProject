@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "VHSEffectComponent.generated.h"
+#include "VHSVisualEffectComponent.generated.h"
 
 /**
  * VHS visual effect component for post-process effects
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class HORRORPROJECT_API UVHSEffectComponent : public UActorComponent
+class HORRORPROJECT_API UVHSVisualEffectComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UVHSEffectComponent();
+	UVHSVisualEffectComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

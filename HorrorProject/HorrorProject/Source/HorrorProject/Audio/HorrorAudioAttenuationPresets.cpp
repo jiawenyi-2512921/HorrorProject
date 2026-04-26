@@ -10,7 +10,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateAmbientAttenuati
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(5000.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 4000.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Linear;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Linear;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 1000.0f;
@@ -29,7 +29,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateFootstepAttenuat
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(1500.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 1200.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Logarithmic;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 800.0f;
@@ -48,7 +48,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateInteractionAtten
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(800.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 600.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Logarithmic;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 600.0f;
@@ -67,7 +67,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateHorrorEffectAtte
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(3000.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 2500.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::NaturalSound;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::NaturalSound;
 	Settings.bEnableOcclusion = false;
 	Settings.bEnableReverbSend = true;
 	Settings.ReverbWetLevelMin = 0.5f;
@@ -92,7 +92,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateDistantAttenuati
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(10000.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 8000.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Linear;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Linear;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 500.0f;
@@ -111,7 +111,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateCloseRangeAttenu
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(500.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 400.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Logarithmic;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 700.0f;
@@ -130,7 +130,7 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateUnderwaterAttenu
 	Settings.AttenuationShape = EAttenuationShape::Sphere;
 	Settings.AttenuationShapeExtents = FVector(2000.0f, 0.0f, 0.0f);
 	Settings.FalloffDistance = 1500.0f;
-	Settings.DistanceAlgorithm = ESoundDistanceModel::Linear;
+	Settings.DistanceAlgorithm = EAttenuationDistanceModel::Linear;
 	Settings.bEnableOcclusion = true;
 	Settings.OcclusionTraceChannel = ECC_Visibility;
 	Settings.OcclusionLowPassFilterFrequency = 400.0f;
@@ -138,7 +138,10 @@ FSoundAttenuationSettings UHorrorAudioAttenuationPresets::CreateUnderwaterAttenu
 	Settings.bEnableReverbSend = true;
 	Settings.ReverbWetLevelMin = 0.6f;
 	Settings.ReverbWetLevelMax = 1.0f;
-	Settings.bEnableLowPassFilter = true;
-	Settings.LowPassFilterFrequency = 800.0f;
+	Settings.bAttenuateWithLPF = true;
+	Settings.LPFRadiusMin = 0.0f;
+	Settings.LPFRadiusMax = Settings.FalloffDistance;
+	Settings.LPFFrequencyAtMin = 800.0f;
+	Settings.LPFFrequencyAtMax = 400.0f;
 	return Settings;
 }

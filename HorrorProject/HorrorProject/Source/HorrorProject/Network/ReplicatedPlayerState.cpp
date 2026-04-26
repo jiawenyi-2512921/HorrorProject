@@ -5,8 +5,8 @@
 
 AReplicatedPlayerState::AReplicatedPlayerState()
 {
-	NetUpdateFrequency = 10.0f;
-	MinNetUpdateFrequency = 2.0f;
+	SetNetUpdateFrequency(10.0f);
+	SetMinNetUpdateFrequency(2.0f);
 
 	Health = 100.0f;
 	MaxHealth = 100.0f;

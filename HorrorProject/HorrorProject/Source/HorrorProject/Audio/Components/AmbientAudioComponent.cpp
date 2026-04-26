@@ -25,7 +25,7 @@ void UAmbientAudioComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bIsPlaying)
+	if (!bIsAmbientPlaying)
 	{
 		return;
 	}
@@ -48,12 +48,12 @@ void UAmbientAudioComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void UAmbientAudioComponent::StartAmbient()
 {
-	if (bIsPlaying)
+	if (bIsAmbientPlaying)
 	{
 		return;
 	}
 
-	bIsPlaying = true;
+	bIsAmbientPlaying = true;
 
 	if (AmbientType == EAmbientAudioType::Static && AudioLayers.Num() > 0)
 	{
@@ -97,12 +97,12 @@ void UAmbientAudioComponent::StartAmbient()
 
 void UAmbientAudioComponent::StopAmbient(float FadeOutDuration)
 {
-	if (!bIsPlaying)
+	if (!bIsAmbientPlaying)
 	{
 		return;
 	}
 
-	bIsPlaying = false;
+	bIsAmbientPlaying = false;
 
 	if (AmbientType == EAmbientAudioType::Static)
 	{
@@ -125,7 +125,7 @@ void UAmbientAudioComponent::AddLayer(const FAmbientAudioLayer& Layer)
 {
 	AudioLayers.Add(Layer);
 
-	if (bIsPlaying && AmbientType == EAmbientAudioType::Layered && Layer.Sound)
+	if (bIsAmbientPlaying && AmbientType == EAmbientAudioType::Layered && Layer.Sound)
 	{
 		UAudioComponent* LayerComp = UGameplayStatics::SpawnSoundAttached(
 			Layer.Sound,
@@ -157,7 +157,7 @@ void UAmbientAudioComponent::RemoveLayer(int32 LayerIndex)
 		return;
 	}
 
-	if (bIsPlaying && LayerComponents.IsValidIndex(LayerIndex))
+	if (bIsAmbientPlaying && LayerComponents.IsValidIndex(LayerIndex))
 	{
 		UAudioComponent* LayerComp = LayerComponents[LayerIndex];
 		if (LayerComp && LayerComp->IsPlaying())

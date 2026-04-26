@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLoadingTimesTest,
     "HorrorProject.Integration.Performance.LoadingTimes",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLoadingTimesTest::RunTest(const FString& Parameters)
 {
@@ -122,7 +124,7 @@ bool FLoadingTimesTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLoadingBottleneckTest,
     "HorrorProject.Integration.Performance.LoadingBottlenecks",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLoadingBottleneckTest::RunTest(const FString& Parameters)
 {
@@ -171,3 +173,5 @@ bool FLoadingBottleneckTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

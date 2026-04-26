@@ -3,7 +3,7 @@
 
 param(
     [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject\HorrorProject.uproject",
-    [string]$EngineDir = "C:\Program Files\Epic Games\UE_5.6\Engine",
+    [string]$EngineDir = "",
     [string]$TestFilter = "HorrorProject.Integration",
     [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Automation\Reports",
     [switch]$GenerateReport,
@@ -12,6 +12,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+if (-not $EngineDir) {
+    $EngineDir = Join-Path $UE5Root "Engine"
+}
 
 # Configuration
 $EditorExe = Join-Path $EngineDir "Binaries\Win64\UnrealEditor-Cmd.exe"

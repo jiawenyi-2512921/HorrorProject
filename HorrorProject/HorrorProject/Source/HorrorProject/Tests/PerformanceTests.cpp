@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -8,7 +10,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFrameRateStabilityTest, "HorrorProject.Performance.FrameRateStability", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFrameRateStabilityTest, "HorrorProject.Performance.FrameRateStability", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFrameRateStabilityTest::RunTest(const FString& Parameters)
 {
@@ -50,7 +52,7 @@ bool FFrameRateStabilityTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMemoryLeakTest, "HorrorProject.Performance.MemoryLeak", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMemoryLeakTest, "HorrorProject.Performance.MemoryLeak", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FMemoryLeakTest::RunTest(const FString& Parameters)
 {
@@ -81,7 +83,7 @@ bool FMemoryLeakTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAssetLoadingPerformanceTest, "HorrorProject.Performance.AssetLoading", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAssetLoadingPerformanceTest, "HorrorProject.Performance.AssetLoading", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAssetLoadingPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -120,7 +122,7 @@ bool FAssetLoadingPerformanceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXPerformanceBenchmarkTest, "HorrorProject.Performance.VFXBenchmark", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXPerformanceBenchmarkTest, "HorrorProject.Performance.VFXBenchmark", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 {
@@ -145,7 +147,7 @@ bool FVFXPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioPerformanceBenchmarkTest, "HorrorProject.Performance.AudioBenchmark", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioPerformanceBenchmarkTest, "HorrorProject.Performance.AudioBenchmark", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 {
@@ -170,7 +172,7 @@ bool FAudioPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIPerformanceBenchmarkTest, "HorrorProject.Performance.UIBenchmark", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIPerformanceBenchmarkTest, "HorrorProject.Performance.UIBenchmark", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 {
@@ -194,7 +196,7 @@ bool FUIPerformanceBenchmarkTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceSystemPerformanceTest, "HorrorProject.Performance.EvidenceSystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceSystemPerformanceTest, "HorrorProject.Performance.EvidenceSystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceSystemPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -218,7 +220,7 @@ bool FEvidenceSystemPerformanceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInteractionSystemPerformanceTest, "HorrorProject.Performance.InteractionSystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInteractionSystemPerformanceTest, "HorrorProject.Performance.InteractionSystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionSystemPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -243,3 +245,5 @@ bool FInteractionSystemPerformanceTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

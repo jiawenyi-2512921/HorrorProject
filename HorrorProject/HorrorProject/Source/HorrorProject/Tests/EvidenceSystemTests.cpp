@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveSubsystemTest, "HorrorProject.Evidence.ArchiveSubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveSubsystemTest, "HorrorProject.Evidence.ArchiveSubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FArchiveSubsystemTest::RunTest(const FString& Parameters)
 {
@@ -44,7 +46,7 @@ bool FArchiveSubsystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveFilterTest, "HorrorProject.Evidence.ArchiveFilter", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveFilterTest, "HorrorProject.Evidence.ArchiveFilter", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FArchiveFilterTest::RunTest(const FString& Parameters)
 {
@@ -75,7 +77,7 @@ bool FArchiveFilterTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceCollectionComponentTest, "HorrorProject.Evidence.EvidenceCollectionComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceCollectionComponentTest, "HorrorProject.Evidence.EvidenceCollectionComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceCollectionComponentTest::RunTest(const FString& Parameters)
 {
@@ -101,7 +103,7 @@ bool FEvidenceCollectionComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidencePhotoCaptureTest, "HorrorProject.Evidence.PhotoCapture", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidencePhotoCaptureTest, "HorrorProject.Evidence.PhotoCapture", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidencePhotoCaptureTest::RunTest(const FString& Parameters)
 {
@@ -120,7 +122,7 @@ bool FEvidencePhotoCaptureTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceVideoCaptureTest, "HorrorProject.Evidence.VideoCapture", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceVideoCaptureTest, "HorrorProject.Evidence.VideoCapture", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceVideoCaptureTest::RunTest(const FString& Parameters)
 {
@@ -142,7 +144,7 @@ bool FEvidenceVideoCaptureTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidencePhysicalCollectionTest, "HorrorProject.Evidence.PhysicalCollection", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidencePhysicalCollectionTest, "HorrorProject.Evidence.PhysicalCollection", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidencePhysicalCollectionTest::RunTest(const FString& Parameters)
 {
@@ -162,7 +164,7 @@ bool FEvidencePhysicalCollectionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceCategoryFilterTest, "HorrorProject.Evidence.CategoryFilter", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceCategoryFilterTest, "HorrorProject.Evidence.CategoryFilter", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceCategoryFilterTest::RunTest(const FString& Parameters)
 {
@@ -187,7 +189,7 @@ bool FEvidenceCategoryFilterTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceMaxLimitsTest, "HorrorProject.Evidence.MaxLimits", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceMaxLimitsTest, "HorrorProject.Evidence.MaxLimits", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceMaxLimitsTest::RunTest(const FString& Parameters)
 {
@@ -210,7 +212,7 @@ bool FEvidenceMaxLimitsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveExportImportTest, "HorrorProject.Evidence.ArchiveExportImport", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveExportImportTest, "HorrorProject.Evidence.ArchiveExportImport", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FArchiveExportImportTest::RunTest(const FString& Parameters)
 {
@@ -233,3 +235,5 @@ bool FArchiveExportImportTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "../AccessibilitySubsystem.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilitySubsystemTest, "HorrorProject.Accessibility.SubsystemTest", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilitySubsystemTest, "HorrorProject.Accessibility.SubsystemTest", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAccessibilitySubsystemTest::RunTest(const FString& Parameters)
 {
@@ -34,7 +36,7 @@ bool FAccessibilitySubsystemTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityWCAGComplianceTest, "HorrorProject.Accessibility.WCAGCompliance", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityWCAGComplianceTest, "HorrorProject.Accessibility.WCAGCompliance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAccessibilityWCAGComplianceTest::RunTest(const FString& Parameters)
 {
@@ -62,7 +64,7 @@ bool FAccessibilityWCAGComplianceTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityColorBlindTest, "HorrorProject.Accessibility.ColorBlindMode", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityColorBlindTest, "HorrorProject.Accessibility.ColorBlindMode", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAccessibilityColorBlindTest::RunTest(const FString& Parameters)
 {
@@ -83,7 +85,7 @@ bool FAccessibilityColorBlindTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityMotionSettingsTest, "HorrorProject.Accessibility.MotionSettings", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityMotionSettingsTest, "HorrorProject.Accessibility.MotionSettings", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAccessibilityMotionSettingsTest::RunTest(const FString& Parameters)
 {
@@ -108,7 +110,7 @@ bool FAccessibilityMotionSettingsTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityUIScaleTest, "HorrorProject.Accessibility.UIScale", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityUIScaleTest, "HorrorProject.Accessibility.UIScale", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAccessibilityUIScaleTest::RunTest(const FString& Parameters)
 {
@@ -127,3 +129,5 @@ bool FAccessibilityUIScaleTest::RunTest(const FString& Parameters)
 
     return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

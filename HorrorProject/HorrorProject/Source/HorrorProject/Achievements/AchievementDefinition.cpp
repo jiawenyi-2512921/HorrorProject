@@ -1,12 +1,12 @@
 #include "AchievementDefinition.h"
 
-TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefinitions()
+TArray<FHorrorAchievementDefinition> UAchievementDefinitionCatalog::GetAllAchievementDefinitions()
 {
-	TArray<FAchievementDefinition> Definitions;
+	TArray<FHorrorAchievementDefinition> Definitions;
 
 	// EXPLORATION ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_FirstSteps");
 		Def.Name = FText::FromString("First Steps");
 		Def.Description = FText::FromString("Enter the haunted mansion for the first time");
@@ -16,7 +16,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Explorer");
 		Def.Name = FText::FromString("Explorer");
 		Def.Description = FText::FromString("Discover 10 different rooms");
@@ -28,7 +28,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_MasterExplorer");
 		Def.Name = FText::FromString("Master Explorer");
 		Def.Description = FText::FromString("Discover all rooms in the mansion");
@@ -40,7 +40,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_SecretPassage");
 		Def.Name = FText::FromString("Secret Passage");
 		Def.Description = FText::FromString("Find a hidden passage");
@@ -52,7 +52,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// COLLECTION ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_FirstClue");
 		Def.Name = FText::FromString("First Clue");
 		Def.Description = FText::FromString("Collect your first evidence");
@@ -62,7 +62,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Detective");
 		Def.Name = FText::FromString("Detective");
 		Def.Description = FText::FromString("Collect 10 pieces of evidence");
@@ -74,7 +74,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_MasterDetective");
 		Def.Name = FText::FromString("Master Detective");
 		Def.Description = FText::FromString("Collect all evidence in the game");
@@ -86,7 +86,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Archivist");
 		Def.Name = FText::FromString("Archivist");
 		Def.Description = FText::FromString("Read all documents and notes");
@@ -99,7 +99,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// SURVIVAL ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_FirstEncounter");
 		Def.Name = FText::FromString("First Encounter");
 		Def.Description = FText::FromString("Survive your first ghost encounter");
@@ -109,7 +109,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Survivor");
 		Def.Name = FText::FromString("Survivor");
 		Def.Description = FText::FromString("Survive 5 ghost encounters");
@@ -121,7 +121,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Fearless");
 		Def.Name = FText::FromString("Fearless");
 		Def.Description = FText::FromString("Complete the game without dying");
@@ -131,7 +131,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_NervesOfSteel");
 		Def.Name = FText::FromString("Nerves of Steel");
 		Def.Description = FText::FromString("Keep sanity above 50% throughout the game");
@@ -142,7 +142,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// SPEEDRUN ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_SpeedRunner");
 		Def.Name = FText::FromString("Speed Runner");
 		Def.Description = FText::FromString("Complete the game in under 2 hours");
@@ -152,7 +152,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_LightningFast");
 		Def.Name = FText::FromString("Lightning Fast");
 		Def.Description = FText::FromString("Complete the game in under 1 hour");
@@ -163,7 +163,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// STORY ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_TheBeginning");
 		Def.Name = FText::FromString("The Beginning");
 		Def.Description = FText::FromString("Complete Chapter 1");
@@ -173,7 +173,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_DeeperIntoMadness");
 		Def.Name = FText::FromString("Deeper Into Madness");
 		Def.Description = FText::FromString("Complete Chapter 2");
@@ -183,7 +183,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_TheTruth");
 		Def.Name = FText::FromString("The Truth");
 		Def.Description = FText::FromString("Uncover the mansion's dark secret");
@@ -193,7 +193,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Escape");
 		Def.Name = FText::FromString("Escape");
 		Def.Description = FText::FromString("Complete the game");
@@ -204,7 +204,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// SECRET ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_TheWatcher");
 		Def.Name = FText::FromString("The Watcher");
 		Def.Description = FText::FromString("???");
@@ -215,7 +215,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_BrokenMirror");
 		Def.Name = FText::FromString("Broken Mirror");
 		Def.Description = FText::FromString("???");
@@ -226,7 +226,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_MidnightVisitor");
 		Def.Name = FText::FromString("Midnight Visitor");
 		Def.Description = FText::FromString("???");
@@ -238,7 +238,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 
 	// CHALLENGE ACHIEVEMENTS
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_NoFlashlight");
 		Def.Name = FText::FromString("Darkness Embraced");
 		Def.Description = FText::FromString("Complete a chapter without using flashlight");
@@ -248,7 +248,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Minimalist");
 		Def.Name = FText::FromString("Minimalist");
 		Def.Description = FText::FromString("Complete the game using only essential items");
@@ -258,7 +258,7 @@ TArray<FAchievementDefinition> UAchievementDefinition::GetAllAchievementDefiniti
 	}
 
 	{
-		FAchievementDefinition Def;
+		FHorrorAchievementDefinition Def;
 		Def.ID = FName("ACH_Perfectionist");
 		Def.Name = FText::FromString("Perfectionist");
 		Def.Description = FText::FromString("Unlock all other achievements");

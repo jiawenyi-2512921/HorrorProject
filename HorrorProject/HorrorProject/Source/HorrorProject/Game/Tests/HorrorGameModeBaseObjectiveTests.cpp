@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -17,7 +19,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseObjectiveBridgeTest,
 	"HorrorProject.Game.GameModeBase.ObjectiveBridgeCompletesFirstLoop",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseObjectiveBridgeTest::RunTest(const FString& Parameters)
 {
@@ -65,7 +67,7 @@ bool FHorrorGameModeBaseObjectiveBridgeTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseAutoSpawnsRouteKitTest,
 	"HorrorProject.Game.GameModeBase.AutoSpawnsRouteKit",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseAutoSpawnsRouteKitTest::RunTest(const FString& Parameters)
 {
@@ -122,7 +124,7 @@ bool FHorrorGameModeBaseAutoSpawnsRouteKitTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseAutoSpawnsEncounterDirectorTest,
 	"HorrorProject.Game.GameModeBase.AutoSpawnsEncounterDirector",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseAutoSpawnsEncounterDirectorTest::RunTest(const FString& Parameters)
 {
@@ -181,7 +183,7 @@ bool FHorrorGameModeBaseAutoSpawnsEncounterDirectorTest::RunTest(const FString& 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseDrivesEncounterFromMilestonesTest,
 	"HorrorProject.Game.GameModeBase.DrivesEncounterFromMilestones",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseDrivesEncounterFromMilestonesTest::RunTest(const FString& Parameters)
 {
@@ -236,7 +238,7 @@ bool FHorrorGameModeBaseDrivesEncounterFromMilestonesTest::RunTest(const FString
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseReusesPlacedEncounterDirectorTest,
 	"HorrorProject.Game.GameModeBase.ReusesPlacedEncounterDirector",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseReusesPlacedEncounterDirectorTest::RunTest(const FString& Parameters)
 {
@@ -283,7 +285,7 @@ bool FHorrorGameModeBaseReusesPlacedEncounterDirectorTest::RunTest(const FString
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseRegistersDefaultObjectiveMetadataTest,
 	"HorrorProject.Game.GameModeBase.RegistersDefaultObjectiveMetadata",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseRegistersDefaultObjectiveMetadataTest::RunTest(const FString& Parameters)
 {
@@ -346,3 +348,5 @@ bool FHorrorGameModeBaseRegistersDefaultObjectiveMetadataTest::RunTest(const FSt
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

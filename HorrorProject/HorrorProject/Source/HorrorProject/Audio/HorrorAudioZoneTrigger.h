@@ -41,7 +41,7 @@ public:
 	float SphereRadius = 500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Audio")
-	bool bAutoActivate = true;
+	bool bAutoActivateTrigger = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Audio")
 	bool bTriggerOnce = false;
@@ -53,7 +53,7 @@ public:
 	void DeactivateTrigger();
 
 	UFUNCTION(BlueprintPure, Category="Horror|Audio")
-	bool IsActive() const { return bIsActive; }
+	bool IsTriggerActive() const { return bTriggerActive; }
 
 protected:
 	UFUNCTION()
@@ -67,7 +67,7 @@ private:
 	TObjectPtr<UShapeComponent> TriggerComponent;
 
 	UPROPERTY(Transient)
-	bool bIsActive = false;
+	bool bTriggerActive = false;
 
 	UPROPERTY(Transient)
 	bool bHasTriggered = false;

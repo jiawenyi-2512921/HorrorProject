@@ -10,12 +10,12 @@ void UObjectiveToastWidget::ShowObjectiveToast(FGameplayTag EventTag, const FTex
 
 void UObjectiveToastWidget::ShowObjectiveWithHint(FGameplayTag EventTag, const FText& ObjectiveText, const FText& HintText)
 {
-	if (bIsVisible)
+	if (bToastVisible)
 	{
 		DismissToast();
 	}
 
-	bIsVisible = true;
+	bToastVisible = true;
 	CurrentEventTag = EventTag;
 
 	BP_ShowToast(EventTag, ObjectiveText, HintText);
@@ -38,7 +38,7 @@ void UObjectiveToastWidget::ShowObjectiveWithHint(FGameplayTag EventTag, const F
 
 void UObjectiveToastWidget::DismissToast()
 {
-	if (!bIsVisible)
+	if (!bToastVisible)
 	{
 		return;
 	}
@@ -48,7 +48,7 @@ void UObjectiveToastWidget::DismissToast()
 		World->GetTimerManager().ClearTimer(DismissTimerHandle);
 	}
 
-	bIsVisible = false;
+	bToastVisible = false;
 	CurrentEventTag = FGameplayTag::EmptyTag;
 	BP_PlaySlideOut();
 	BP_DismissToast();

@@ -8,15 +8,15 @@ namespace HorrorVHSNoise
 	constexpr float MinBatteryThreshold = 0.2f;
 	constexpr float NoiseBlendSpeed = 2.0f;
 	constexpr float ChromaticBlendSpeed = 3.0f;
-	constexpr float PI = 3.14159265359f;
-	constexpr float TAU = PI * 2.0f;
+	constexpr float Pi = 3.14159265359f;
+	constexpr float Tau = Pi * 2.0f;
 }
 
 void UVHSNoiseGenerator::Initialize(UMaterialInstanceDynamic* MaterialInstance)
 {
 	DynamicMaterial = MaterialInstance;
 	AccumulatedTime = 0.0f;
-	NoisePhase = FMath::FRandRange(0.0f, HorrorVHSNoise::TAU);
+	NoisePhase = FMath::FRandRange(0.0f, HorrorVHSNoise::Tau);
 	ScanlineOffset = 0.0f;
 	CurrentNoiseIntensity = NoiseParams.BaseNoiseIntensity;
 	CurrentChromaticAberration = NoiseParams.ChromaticAberration;
@@ -35,10 +35,10 @@ void UVHSNoiseGenerator::UpdateNoise(float DeltaTime, float StressLevel, float B
 	}
 
 	AccumulatedTime += DeltaTime;
-	NoisePhase += DeltaTime * NoiseParams.NoiseSpeed * HorrorVHSNoise::TAU;
-	if (NoisePhase > HorrorVHSNoise::TAU)
+	NoisePhase += DeltaTime * NoiseParams.NoiseSpeed * HorrorVHSNoise::Tau;
+	if (NoisePhase > HorrorVHSNoise::Tau)
 	{
-		NoisePhase -= HorrorVHSNoise::TAU;
+		NoisePhase -= HorrorVHSNoise::Tau;
 	}
 
 	ScanlineOffset += DeltaTime * NoiseParams.ScanlineSpeed;

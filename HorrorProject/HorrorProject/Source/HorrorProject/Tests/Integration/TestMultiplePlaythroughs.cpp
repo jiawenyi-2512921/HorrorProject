@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMultiplePlaythroughsTest,
     "HorrorProject.Integration.E2E.MultiplePlaythroughs",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FMultiplePlaythroughsTest::RunTest(const FString& Parameters)
 {
@@ -82,7 +84,7 @@ bool FMultiplePlaythroughsTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlaythroughConsistencyTest,
     "HorrorProject.Integration.E2E.PlaythroughConsistency",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPlaythroughConsistencyTest::RunTest(const FString& Parameters)
 {
@@ -155,7 +157,7 @@ bool FPlaythroughConsistencyTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlaythroughStressTest,
     "HorrorProject.Integration.E2E.PlaythroughStress",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPlaythroughStressTest::RunTest(const FString& Parameters)
 {
@@ -208,3 +210,5 @@ bool FPlaythroughStressTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

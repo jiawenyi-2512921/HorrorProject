@@ -10,6 +10,11 @@
 class AActor;
 class UObject;
 
+/**
+ * Component that handles player interaction with world objects
+ * Supports both modern IInteractable interface and legacy interaction methods
+ * Uses raycasting with optional sphere sweep fallback for narrow targets
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UInteractionComponent : public UActorComponent
 {
@@ -18,6 +23,11 @@ class HORRORPROJECT_API UInteractionComponent : public UActorComponent
 public:
 	UInteractionComponent();
 
+	/**
+	 * Attempts to interact with an object in front of the player
+	 * Performs raycast from camera/viewpoint and invokes interaction if valid target found
+	 * @return True if interaction was successful
+	 */
 	UFUNCTION(BlueprintCallable, Category="Interaction")
 	bool TryInteract();
 
@@ -27,24 +37,31 @@ public:
 	float CalculatePerpendicularDistanceToTraceForTests(const FVector& Start, const FVector& End, const FVector& Point) const;
 
 protected:
+	/** Maximum distance for interaction raycasts (in cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction", meta=(ClampMin="1.0", Units="cm"))
 	float TraceDistance = 250.0f;
 
+	/** Radius for sphere sweep fallback when line trace misses narrow targets (in cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction", meta=(ClampMin="0.0", Units="cm"))
 	float NarrowTargetTraceRadius = 12.0f;
 
+	/** Collision channel used for interaction traces */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
 
+	/** Use complex collision for more accurate interaction detection */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction")
 	bool bTraceComplex = true;
 
+	/** Enable sphere sweep fallback for small/narrow interactable objects */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction")
 	bool bEnableNarrowTargetSweepFallback = true;
 
+	/** Support legacy blueprint interaction functions (deprecated) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction|Compatibility")
 	bool bEnableLegacyFunctionFallback = false;
 
+	/** Support legacy door timeline system (deprecated) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction|Compatibility")
 	bool bEnableLegacyDoorTimelineFallback = false;
 

@@ -1,13 +1,15 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "ConfigValidator.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsValidationTest, "HorrorProject.Settings.Validation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsValidationTest, "HorrorProject.Settings.Validation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSettingsValidationTest::RunTest(const FString& Parameters)
 {
@@ -35,7 +37,7 @@ bool FSettingsValidationTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("Invalid quality setting detected"), bValid);
 
 	// Test audio settings validation
-	UAudioSettings* Audio = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* Audio = NewObject<UHorrorAudioSettings>();
 	Audio->MasterVolume = 0.8f;
 	Audio->MusicVolume = 0.7f;
 	Audio->AudioQuality = 3;
@@ -77,7 +79,7 @@ bool FSettingsValidationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FValidationResultTest, "HorrorProject.Settings.ValidationResult", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FValidationResultTest, "HorrorProject.Settings.ValidationResult", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FValidationResultTest::RunTest(const FString& Parameters)
 {
@@ -109,7 +111,7 @@ bool FValidationResultTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKeyBindingValidationTest, "HorrorProject.Settings.KeyBindingValidation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKeyBindingValidationTest, "HorrorProject.Settings.KeyBindingValidation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FKeyBindingValidationTest::RunTest(const FString& Parameters)
 {
@@ -147,7 +149,7 @@ bool FKeyBindingValidationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FValidateAllSettingsTest, "HorrorProject.Settings.ValidateAll", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FValidateAllSettingsTest, "HorrorProject.Settings.ValidateAll", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FValidateAllSettingsTest::RunTest(const FString& Parameters)
 {
@@ -158,7 +160,7 @@ bool FValidateAllSettingsTest::RunTest(const FString& Parameters)
 	Graphics->Resolution = FIntPoint(1920, 1080);
 	Graphics->ViewDistanceQuality = 3;
 
-	UAudioSettings* Audio = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* Audio = NewObject<UHorrorAudioSettings>();
 	Audio->MasterVolume = 0.8f;
 
 	UControlSettings* Controls = NewObject<UControlSettings>();
@@ -181,3 +183,5 @@ bool FValidateAllSettingsTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "../ColorBlindMode.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindTransformTest, "HorrorProject.Accessibility.ColorBlindTransform", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindTransformTest, "HorrorProject.Accessibility.ColorBlindTransform", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FColorBlindTransformTest::RunTest(const FString& Parameters)
 {
@@ -26,7 +28,7 @@ bool FColorBlindTransformTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindSeverityTest, "HorrorProject.Accessibility.ColorBlindSeverity", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindSeverityTest, "HorrorProject.Accessibility.ColorBlindSeverity", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FColorBlindSeverityTest::RunTest(const FString& Parameters)
 {
@@ -46,7 +48,7 @@ bool FColorBlindSeverityTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorDistinguishabilityTest, "HorrorProject.Accessibility.ColorDistinguishability", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorDistinguishabilityTest, "HorrorProject.Accessibility.ColorDistinguishability", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FColorDistinguishabilityTest::RunTest(const FString& Parameters)
 {
@@ -68,7 +70,7 @@ bool FColorDistinguishabilityTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorAccessibleAlternativeTest, "HorrorProject.Accessibility.AccessibleAlternative", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorAccessibleAlternativeTest, "HorrorProject.Accessibility.AccessibleAlternative", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FColorAccessibleAlternativeTest::RunTest(const FString& Parameters)
 {
@@ -85,7 +87,7 @@ bool FColorAccessibleAlternativeTest::RunTest(const FString& Parameters)
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindSimulationTest, "HorrorProject.Accessibility.ColorBlindSimulation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindSimulationTest, "HorrorProject.Accessibility.ColorBlindSimulation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FColorBlindSimulationTest::RunTest(const FString& Parameters)
 {
@@ -109,3 +111,5 @@ bool FColorBlindSimulationTest::RunTest(const FString& Parameters)
 
     return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

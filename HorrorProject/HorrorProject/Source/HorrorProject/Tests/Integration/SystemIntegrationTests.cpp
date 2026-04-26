@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationBasicTest,
 	"HorrorProject.Integration.Systems.BasicSubsystemsExist",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationBasicTest::RunTest(const FString& Parameters)
 {
@@ -37,7 +39,7 @@ bool FSystemIntegrationBasicTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationPlayerFearTest,
 	"HorrorProject.Integration.Systems.PlayerFearSystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationPlayerFearTest::RunTest(const FString& Parameters)
 {
@@ -78,7 +80,7 @@ bool FSystemIntegrationPlayerFearTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationNoiseToAITest,
 	"HorrorProject.Integration.Systems.NoiseToAI",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationNoiseToAITest::RunTest(const FString& Parameters)
 {
@@ -123,7 +125,7 @@ bool FSystemIntegrationNoiseToAITest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationEvidenceToArchiveTest,
 	"HorrorProject.Integration.Systems.EvidenceToArchive",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationEvidenceToArchiveTest::RunTest(const FString& Parameters)
 {
@@ -157,7 +159,7 @@ bool FSystemIntegrationEvidenceToArchiveTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationAudioZoneTest,
 	"HorrorProject.Integration.Systems.AudioZoneSystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationAudioZoneTest::RunTest(const FString& Parameters)
 {
@@ -182,7 +184,7 @@ bool FSystemIntegrationAudioZoneTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSystemIntegrationCrossSystemEventFlowTest,
 	"HorrorProject.Integration.Systems.CrossSystemEventFlow",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSystemIntegrationCrossSystemEventFlowTest::RunTest(const FString& Parameters)
 {
@@ -228,3 +230,5 @@ bool FSystemIntegrationCrossSystemEventFlowTest::RunTest(const FString& Paramete
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

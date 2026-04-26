@@ -1,38 +1,19 @@
 ﻿# Compilation Issues
 
-## Critical Issues
+Generated: 2026-04-27 01:17:14
 
-### 1. Missing Niagara Module
-**Severity**: Critical
-**File**: Source/HorrorProject/HorrorProject.Build.cs
-**Description**: ParticleSpawner.cpp uses Niagara types but module not declared
-**Fix**:
-\\\csharp
-PublicDependencyModuleNames.AddRange(new string[] {
-    "Core",
-    "CoreUObject",
-    "Engine",
-    "InputCore",
-    "EnhancedInput",
-    "GameplayTags",
-    "AIModule",
-    "StateTreeModule",
-    "GameplayStateTreeModule",
-    "UMG",
-    "SlateCore",
-    "Niagara"  // ADD THIS LINE
-});
-\\\
+## Blocking Build Issues
 
-## Warnings
+- None reported by this static report generator. Run Scripts\Validation\ValidateCompilation.ps1 and Scripts\Validation\ValidateCompilation.ps1 -EditorOnly for fresh build proof.
 
-### 1. Optional Audio Modules
-**Severity**: Low
-**Description**: AudioMixer and AudioExtensions modules could enhance audio system
-**Recommendation**: Consider adding for advanced audio features
+## Known Engineering Debt
 
-## Resolved Issues
-None yet - first validation run
+- Legacy automation tests are disabled behind HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0.
+- PowerShell syntax scan reports 370 syntax errors across 38 files.
+- Several older utility scripts still contain machine-specific paths and should be normalized to shared validation helpers or project-root-relative defaults.
 
-## Testing Issues
-All test files need to be verified for compilation
+## Quality Gate Direction
+
+- Compilation must remain zero-warning for Game and Editor targets.
+- Script syntax issues should trend to zero before these tools are used as release gates.
+- Re-enable automation tests only after each suite is migrated and verified.

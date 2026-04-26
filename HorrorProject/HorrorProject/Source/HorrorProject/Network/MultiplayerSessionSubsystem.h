@@ -7,11 +7,11 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MultiplayerSessionSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCreateSessionComplete, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFindSessionsComplete, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinSessionComplete, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDestroySessionComplete);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStartSessionComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorCreateSessionComplete, bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorFindSessionsComplete, bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorJoinSessionComplete, bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHorrorDestroySessionComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHorrorStartSessionComplete);
 
 UCLASS()
 class HORRORPROJECT_API UMultiplayerSessionSubsystem : public UGameInstanceSubsystem
@@ -58,19 +58,19 @@ public:
 
 	// Delegates
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
-	FOnCreateSessionComplete OnCreateSessionComplete;
+	FHorrorCreateSessionComplete OnCreateSessionComplete;
 
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
-	FOnFindSessionsComplete OnFindSessionsComplete;
+	FHorrorFindSessionsComplete OnFindSessionsComplete;
 
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
-	FOnJoinSessionComplete OnJoinSessionComplete;
+	FHorrorJoinSessionComplete OnJoinSessionComplete;
 
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
-	FOnDestroySessionComplete OnDestroySessionComplete;
+	FHorrorDestroySessionComplete OnDestroySessionComplete;
 
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
-	FOnStartSessionComplete OnStartSessionComplete;
+	FHorrorStartSessionComplete OnStartSessionComplete;
 
 protected:
 	IOnlineSessionPtr SessionInterface;

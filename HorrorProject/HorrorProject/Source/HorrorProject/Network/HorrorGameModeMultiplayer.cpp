@@ -132,8 +132,9 @@ void AHorrorGameModeMultiplayer::RestartMultiplayerGame()
 {
 	EndMultiplayerGame(false);
 
+	FTimerHandle RestartTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
-		FTimerHandle(),
+		RestartTimerHandle,
 		[this]()
 		{
 			if (AReplicatedGameState* GS = GetGameState<AReplicatedGameState>())
@@ -171,12 +172,12 @@ void AHorrorGameModeMultiplayer::KickPlayer(APlayerController* PlayerToKick, con
 
 void AHorrorGameModeMultiplayer::HandleMatchHasStarted()
 {
-	Super::HandleMatchHasStarted();
+	UE_LOG(LogTemp, Verbose, TEXT("Multiplayer match state entered Started"));
 }
 
 void AHorrorGameModeMultiplayer::HandleMatchHasEnded()
 {
-	Super::HandleMatchHasEnded();
+	UE_LOG(LogTemp, Verbose, TEXT("Multiplayer match state entered Ended"));
 }
 
 void AHorrorGameModeMultiplayer::UpdateLobby(float DeltaTime)

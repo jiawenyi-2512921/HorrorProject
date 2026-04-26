@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/VHSNoiseGenerator.h"
@@ -9,7 +11,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorInitializationTest,
 	"HorrorProject.Player.VHSNoise.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorInitializationTest::RunTest(const FString& Parameters)
 {
@@ -25,7 +27,7 @@ bool FVHSNoiseGeneratorInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorParamsTest,
 	"HorrorProject.Player.VHSNoise.Params",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorParamsTest::RunTest(const FString& Parameters)
 {
@@ -51,7 +53,7 @@ bool FVHSNoiseGeneratorParamsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorUpdateTest,
 	"HorrorProject.Player.VHSNoise.Update",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorUpdateTest::RunTest(const FString& Parameters)
 {
@@ -71,7 +73,7 @@ bool FVHSNoiseGeneratorUpdateTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorBatteryEffectTest,
 	"HorrorProject.Player.VHSNoise.BatteryEffect",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorBatteryEffectTest::RunTest(const FString& Parameters)
 {
@@ -91,7 +93,7 @@ bool FVHSNoiseGeneratorBatteryEffectTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorChromaticAberrationTest,
 	"HorrorProject.Player.VHSNoise.ChromaticAberration",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorChromaticAberrationTest::RunTest(const FString& Parameters)
 {
@@ -112,7 +114,7 @@ bool FVHSNoiseGeneratorChromaticAberrationTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorScanlineTest,
 	"HorrorProject.Player.VHSNoise.Scanline",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorScanlineTest::RunTest(const FString& Parameters)
 {
@@ -128,7 +130,7 @@ bool FVHSNoiseGeneratorScanlineTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSNoiseGeneratorBaseIntensityTest,
 	"HorrorProject.Player.VHSNoise.BaseIntensity",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSNoiseGeneratorBaseIntensityTest::RunTest(const FString& Parameters)
 {
@@ -142,3 +144,5 @@ bool FVHSNoiseGeneratorBaseIntensityTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

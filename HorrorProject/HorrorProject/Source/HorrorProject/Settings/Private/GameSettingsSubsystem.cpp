@@ -2,7 +2,7 @@
 
 #include "GameSettingsSubsystem.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 #include "ConfigManager.h"
@@ -34,7 +34,7 @@ void UGameSettingsSubsystem::Deinitialize()
 void UGameSettingsSubsystem::InitializeSettings()
 {
 	GraphicsSettings = NewObject<UGraphicsSettings>(this);
-	AudioSettings = NewObject<UAudioSettings>(this);
+	AudioSettings = NewObject<UHorrorAudioSettings>(this);
 	ControlSettings = NewObject<UControlSettings>(this);
 	GameplaySettings = NewObject<UGameplaySettings>(this);
 	ConfigManager = NewObject<UConfigManager>(this);

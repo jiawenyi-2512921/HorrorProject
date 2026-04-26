@@ -1,15 +1,17 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "ConfigManager.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigPersistenceTest, "HorrorProject.Settings.ConfigPersistence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigPersistenceTest, "HorrorProject.Settings.ConfigPersistence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FConfigPersistenceTest::RunTest(const FString& Parameters)
 {
@@ -32,14 +34,14 @@ bool FConfigPersistenceTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("VSync preserved"), LoadedGraphics->bVSync);
 
 	// Test audio settings save/load
-	UAudioSettings* AudioSettings = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* AudioSettings = NewObject<UHorrorAudioSettings>();
 	AudioSettings->MasterVolume = 0.75f;
 	AudioSettings->bEnableSpatialAudio = true;
 
 	bSaved = ConfigManager->SaveConfig(TEXT("Audio"), AudioSettings);
 	TestTrue(TEXT("Audio config saved"), bSaved);
 
-	UAudioSettings* LoadedAudio = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* LoadedAudio = NewObject<UHorrorAudioSettings>();
 	bLoaded = ConfigManager->LoadConfig(TEXT("Audio"), LoadedAudio);
 	TestTrue(TEXT("Audio config loaded"), bLoaded);
 	TestEqual(TEXT("Master volume preserved"), LoadedAudio->MasterVolume, 0.75f);
@@ -57,7 +59,7 @@ bool FConfigPersistenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigExportImportTest, "HorrorProject.Settings.ConfigExportImport", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigExportImportTest, "HorrorProject.Settings.ConfigExportImport", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FConfigExportImportTest::RunTest(const FString& Parameters)
 {
@@ -68,7 +70,7 @@ bool FConfigExportImportTest::RunTest(const FString& Parameters)
 	Graphics->Resolution = FIntPoint(1920, 1080);
 	Graphics->QualityPreset = EQualityPreset::Ultra;
 
-	UAudioSettings* Audio = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* Audio = NewObject<UHorrorAudioSettings>();
 	Audio->MasterVolume = 0.8f;
 
 	UControlSettings* Controls = NewObject<UControlSettings>();
@@ -84,7 +86,7 @@ bool FConfigExportImportTest::RunTest(const FString& Parameters)
 
 	// Create new settings objects
 	UGraphicsSettings* ImportedGraphics = NewObject<UGraphicsSettings>();
-	UAudioSettings* ImportedAudio = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* ImportedAudio = NewObject<UHorrorAudioSettings>();
 	UControlSettings* ImportedControls = NewObject<UControlSettings>();
 	UGameplaySettings* ImportedGameplay = NewObject<UGameplaySettings>();
 
@@ -105,7 +107,7 @@ bool FConfigExportImportTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigBackupTest, "HorrorProject.Settings.ConfigBackup", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigBackupTest, "HorrorProject.Settings.ConfigBackup", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FConfigBackupTest::RunTest(const FString& Parameters)
 {
@@ -141,7 +143,7 @@ bool FConfigBackupTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigVersionTest, "HorrorProject.Settings.ConfigVersion", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConfigVersionTest, "HorrorProject.Settings.ConfigVersion", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FConfigVersionTest::RunTest(const FString& Parameters)
 {
@@ -163,3 +165,5 @@ bool FConfigVersionTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

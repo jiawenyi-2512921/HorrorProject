@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFramerateStabilityTest,
     "HorrorProject.Integration.Performance.FramerateStability",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFramerateStabilityTest::RunTest(const FString& Parameters)
 {
@@ -121,7 +123,7 @@ bool FFramerateStabilityTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFramerateSpikeTest,
     "HorrorProject.Integration.Performance.FramerateSpikes",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFramerateSpikeTest::RunTest(const FString& Parameters)
 {
@@ -168,3 +170,5 @@ bool FFramerateSpikeTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

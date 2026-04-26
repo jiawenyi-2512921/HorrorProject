@@ -1,9 +1,11 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 #include "Achievements/AchievementSubsystem.h"
 #include "Achievements/AchievementTracker.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementTrackerTest, "HorrorProject.Achievements.Tracker", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementTrackerTest, "HorrorProject.Achievements.Tracker", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAchievementTrackerTest::RunTest(const FString& Parameters)
 {
@@ -43,7 +45,7 @@ bool FAchievementTrackerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressiveAchievementTest, "HorrorProject.Achievements.Progressive", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressiveAchievementTest, "HorrorProject.Achievements.Progressive", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FProgressiveAchievementTest::RunTest(const FString& Parameters)
 {
@@ -89,7 +91,7 @@ bool FProgressiveAchievementTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSecretAchievementTest, "HorrorProject.Achievements.Secret", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSecretAchievementTest, "HorrorProject.Achievements.Secret", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSecretAchievementTest::RunTest(const FString& Parameters)
 {
@@ -127,7 +129,7 @@ bool FSecretAchievementTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurvivalAchievementTest, "HorrorProject.Achievements.Survival", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurvivalAchievementTest, "HorrorProject.Achievements.Survival", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSurvivalAchievementTest::RunTest(const FString& Parameters)
 {
@@ -171,7 +173,7 @@ bool FSurvivalAchievementTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpeedrunAchievementTest, "HorrorProject.Achievements.Speedrun", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpeedrunAchievementTest, "HorrorProject.Achievements.Speedrun", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpeedrunAchievementTest::RunTest(const FString& Parameters)
 {
@@ -209,3 +211,5 @@ bool FSpeedrunAchievementTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

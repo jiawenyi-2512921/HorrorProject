@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "SaveGame/AutoSaveComponent.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentBasicTest, "HorrorProject.SaveGame.AutoSave.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentBasicTest, "HorrorProject.SaveGame.AutoSave.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAutoSaveComponentBasicTest::RunTest(const FString& Parameters)
 {
@@ -19,7 +21,7 @@ bool FAutoSaveComponentBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentEnableDisableTest, "HorrorProject.SaveGame.AutoSave.EnableDisable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentEnableDisableTest, "HorrorProject.SaveGame.AutoSave.EnableDisable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAutoSaveComponentEnableDisableTest::RunTest(const FString& Parameters)
 {
@@ -36,7 +38,7 @@ bool FAutoSaveComponentEnableDisableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentIntervalTest, "HorrorProject.SaveGame.AutoSave.Interval", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentIntervalTest, "HorrorProject.SaveGame.AutoSave.Interval", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAutoSaveComponentIntervalTest::RunTest(const FString& Parameters)
 {
@@ -58,7 +60,7 @@ bool FAutoSaveComponentIntervalTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentSlotTest, "HorrorProject.SaveGame.AutoSave.Slot", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentSlotTest, "HorrorProject.SaveGame.AutoSave.Slot", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAutoSaveComponentSlotTest::RunTest(const FString& Parameters)
 {
@@ -75,7 +77,7 @@ bool FAutoSaveComponentSlotTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentNotificationTest, "HorrorProject.SaveGame.AutoSave.Notification", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveComponentNotificationTest, "HorrorProject.SaveGame.AutoSave.Notification", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAutoSaveComponentNotificationTest::RunTest(const FString& Parameters)
 {
@@ -91,3 +93,5 @@ bool FAutoSaveComponentNotificationTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationBasicTest,
 	"HorrorProject.Integration.Audio.BasicAudioSystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationBasicTest::RunTest(const FString& Parameters)
 {
@@ -30,7 +32,7 @@ bool FAudioIntegrationBasicTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationFootstepTest,
 	"HorrorProject.Integration.Audio.FootstepComponent",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationFootstepTest::RunTest(const FString& Parameters)
 {
@@ -54,7 +56,7 @@ bool FAudioIntegrationFootstepTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationBreathingTest,
 	"HorrorProject.Integration.Audio.BreathingComponent",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationBreathingTest::RunTest(const FString& Parameters)
 {
@@ -78,7 +80,7 @@ bool FAudioIntegrationBreathingTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationEventResponseTest,
 	"HorrorProject.Integration.Audio.EventResponse",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationEventResponseTest::RunTest(const FString& Parameters)
 {
@@ -110,7 +112,7 @@ bool FAudioIntegrationEventResponseTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegration3DPositioningTest,
 	"HorrorProject.Integration.Audio.3DPositioning",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegration3DPositioningTest::RunTest(const FString& Parameters)
 {
@@ -138,7 +140,7 @@ bool FAudioIntegration3DPositioningTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationPriorityTest,
 	"HorrorProject.Integration.Audio.PrioritySystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationPriorityTest::RunTest(const FString& Parameters)
 {
@@ -164,7 +166,7 @@ bool FAudioIntegrationPriorityTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationMultipleSourcesTest,
 	"HorrorProject.Integration.Audio.MultipleSources",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioIntegrationMultipleSourcesTest::RunTest(const FString& Parameters)
 {
@@ -197,3 +199,5 @@ bool FAudioIntegrationMultipleSourcesTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,20 +1,20 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "VHSEffectComponent.h"
+#include "VHSVisualEffectComponent.h"
 
-UVHSEffectComponent::UVHSEffectComponent()
+UVHSVisualEffectComponent::UVHSVisualEffectComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
-void UVHSEffectComponent::BeginPlay()
+void UVHSVisualEffectComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrentIntensity = bEffectEnabled ? BaseIntensity : 0.0f;
 }
 
-void UVHSEffectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UVHSVisualEffectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -35,7 +35,7 @@ void UVHSEffectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	}
 }
 
-void UVHSEffectComponent::SetEffectIntensity(float Intensity)
+void UVHSVisualEffectComponent::SetEffectIntensity(float Intensity)
 {
 	BaseIntensity = FMath::Clamp(Intensity, 0.0f, 1.0f);
 	if (GlitchTimer <= 0.0f)
@@ -44,7 +44,7 @@ void UVHSEffectComponent::SetEffectIntensity(float Intensity)
 	}
 }
 
-void UVHSEffectComponent::EnableEffect(bool bEnable)
+void UVHSVisualEffectComponent::EnableEffect(bool bEnable)
 {
 	if (bEffectEnabled != bEnable)
 	{
@@ -54,7 +54,7 @@ void UVHSEffectComponent::EnableEffect(bool bEnable)
 	}
 }
 
-void UVHSEffectComponent::TriggerGlitch(float Duration, float Intensity)
+void UVHSVisualEffectComponent::TriggerGlitch(float Duration, float Intensity)
 {
 	if (!bEffectEnabled)
 	{

@@ -2,7 +2,10 @@
 # Validates Build.cs files have all required modules
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
+
+. (Join-Path $PSScriptRoot "Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot
 
 Write-Host "=== Dependency Check ===" -ForegroundColor Cyan
 
@@ -16,6 +19,10 @@ $RequiredModules = @{
 
 # Check HorrorProject.Build.cs
 $BuildFile = Join-Path $ProjectRoot "Source\HorrorProject\HorrorProject.Build.cs"
+if (-not (Test-Path -LiteralPath $BuildFile)) {
+    Write-Host "  [ERROR] Build file missing: $BuildFile" -ForegroundColor Red
+    exit 1
+}
 $BuildContent = Get-Content $BuildFile -Raw
 
 Write-Host "`nChecking HorrorProject.Build.cs..." -ForegroundColor Yellow
@@ -43,6 +50,10 @@ if ($BuildContent -match "UMG") {
 
 # Check HorrorProjectEditor.Build.cs
 $EditorBuildFile = Join-Path $ProjectRoot "Source\HorrorProjectEditor\HorrorProjectEditor.Build.cs"
+if (-not (Test-Path -LiteralPath $EditorBuildFile)) {
+    Write-Host "  [ERROR] Editor build file missing: $EditorBuildFile" -ForegroundColor Red
+    exit 1
+}
 $EditorBuildContent = Get-Content $EditorBuildFile -Raw
 
 Write-Host "`nChecking HorrorProjectEditor.Build.cs..." -ForegroundColor Yellow

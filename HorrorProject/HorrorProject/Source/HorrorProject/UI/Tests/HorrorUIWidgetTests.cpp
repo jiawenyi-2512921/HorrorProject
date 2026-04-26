@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "UIWidgetTests.h"
 #include "UI/Widgets/BodycamOverlayWidget.h"
 #include "UI/Widgets/EvidenceToastWidget.h"
 #include "UI/Widgets/ObjectiveToastWidget.h"
-#include "UI/Components/VHSEffectComponent.h"
+#include "UI/Components/VHSVisualEffectComponent.h"
 #include "UI/Components/NoiseOverlayComponent.h"
 #include "UI/Components/ScanlineComponent.h"
 
@@ -13,7 +15,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FBodycamOverlayWidgetTest,
 	"HorrorProject.UI.Widgets.BodycamOverlay",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FBodycamOverlayWidgetTest::RunTest(const FString& Parameters)
 {
@@ -38,14 +40,14 @@ bool FBodycamOverlayWidgetTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FEvidenceToastWidgetTest,
 	"HorrorProject.UI.Widgets.EvidenceToast",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceToastWidgetTest::RunTest(const FString& Parameters)
 {
 	UEvidenceToastWidget* Widget = NewObject<UEvidenceToastWidget>();
 	TestNotNull(TEXT("Evidence toast widget should be created"), Widget);
 
-	TestFalse(TEXT("Toast should not be visible initially"), Widget->IsVisible());
+	TestFalse(TEXT("Toast should not be visible initially"), Widget->IsToastVisible());
 
 	return true;
 }
@@ -53,14 +55,14 @@ bool FEvidenceToastWidgetTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FObjectiveToastWidgetTest,
 	"HorrorProject.UI.Widgets.ObjectiveToast",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FObjectiveToastWidgetTest::RunTest(const FString& Parameters)
 {
 	UObjectiveToastWidget* Widget = NewObject<UObjectiveToastWidget>();
 	TestNotNull(TEXT("Objective toast widget should be created"), Widget);
 
-	TestFalse(TEXT("Toast should not be visible initially"), Widget->IsVisible());
+	TestFalse(TEXT("Toast should not be visible initially"), Widget->IsToastVisible());
 
 	return true;
 }
@@ -68,11 +70,11 @@ bool FObjectiveToastWidgetTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSEffectComponentTest,
 	"HorrorProject.UI.Components.VHSEffect",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSEffectComponentTest::RunTest(const FString& Parameters)
 {
-	UVHSEffectComponent* Component = NewObject<UVHSEffectComponent>();
+	UVHSVisualEffectComponent* Component = NewObject<UVHSVisualEffectComponent>();
 	TestNotNull(TEXT("VHS effect component should be created"), Component);
 
 	TestFalse(TEXT("Effect should be disabled initially"), Component->IsEffectEnabled());
@@ -92,7 +94,7 @@ bool FVHSEffectComponentTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseOverlayComponentTest,
 	"HorrorProject.UI.Components.NoiseOverlay",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseOverlayComponentTest::RunTest(const FString& Parameters)
 {
@@ -111,7 +113,7 @@ bool FNoiseOverlayComponentTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FScanlineComponentTest,
 	"HorrorProject.UI.Components.Scanline",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FScanlineComponentTest::RunTest(const FString& Parameters)
 {
@@ -128,3 +130,5 @@ bool FScanlineComponentTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

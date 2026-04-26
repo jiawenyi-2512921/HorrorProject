@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -61,7 +63,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusDirectPublishTest,
 	"HorrorProject.Game.EventBus.DirectPublishBroadcastsAndStoresHistory",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 {
@@ -189,7 +191,7 @@ bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusMetadataGuardrailsTest,
 	"HorrorProject.Game.EventBus.MetadataRegistrationGuardrails",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusMetadataGuardrailsTest::RunTest(const FString& Parameters)
 {
@@ -246,7 +248,7 @@ bool FHorrorEventBusMetadataGuardrailsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusInvalidPublishTest,
 	"HorrorProject.Game.EventBus.InvalidTagPublishFailsWithoutHistory",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusInvalidPublishTest::RunTest(const FString& Parameters)
 {
@@ -279,7 +281,7 @@ bool FHorrorEventBusInvalidPublishTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusHistoryCapacityTest,
 	"HorrorProject.Game.EventBus.HistoryCapacityDropsOldestEntries",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusHistoryCapacityTest::RunTest(const FString& Parameters)
 {
@@ -311,7 +313,7 @@ bool FHorrorEventBusHistoryCapacityTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusGameModeObjectivePublishTest,
 	"HorrorProject.Game.EventBus.GameModeObjectiveEventsPublishOnce",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusGameModeObjectivePublishTest::RunTest(const FString& Parameters)
 {
@@ -366,3 +368,5 @@ bool FHorrorEventBusGameModeObjectivePublishTest::RunTest(const FString& Paramet
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

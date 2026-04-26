@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/CameraBatteryComponent.h"
@@ -8,7 +10,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentInitializationTest,
 	"HorrorProject.Player.CameraBattery.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentInitializationTest::RunTest(const FString& Parameters)
 {
@@ -27,7 +29,7 @@ bool FCameraBatteryComponentInitializationTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentRecordingDrainTest,
 	"HorrorProject.Player.CameraBattery.RecordingDrain",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentRecordingDrainTest::RunTest(const FString& Parameters)
 {
@@ -57,7 +59,7 @@ bool FCameraBatteryComponentRecordingDrainTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentFlashlightDrainTest,
 	"HorrorProject.Player.CameraBattery.FlashlightDrain",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentFlashlightDrainTest::RunTest(const FString& Parameters)
 {
@@ -82,7 +84,7 @@ bool FCameraBatteryComponentFlashlightDrainTest::RunTest(const FString& Paramete
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentCombinedDrainTest,
 	"HorrorProject.Player.CameraBattery.CombinedDrain",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentCombinedDrainTest::RunTest(const FString& Parameters)
 {
@@ -119,7 +121,7 @@ bool FCameraBatteryComponentCombinedDrainTest::RunTest(const FString& Parameters
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentChargingTest,
 	"HorrorProject.Player.CameraBattery.Charging",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentChargingTest::RunTest(const FString& Parameters)
 {
@@ -144,7 +146,7 @@ bool FCameraBatteryComponentChargingTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentDepletionTest,
 	"HorrorProject.Player.CameraBattery.Depletion",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentDepletionTest::RunTest(const FString& Parameters)
 {
@@ -165,7 +167,7 @@ bool FCameraBatteryComponentDepletionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentLowWarningTest,
 	"HorrorProject.Player.CameraBattery.LowWarning",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentLowWarningTest::RunTest(const FString& Parameters)
 {
@@ -186,7 +188,7 @@ bool FCameraBatteryComponentLowWarningTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraBatteryComponentFullChargeTest,
 	"HorrorProject.Player.CameraBattery.FullCharge",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraBatteryComponentFullChargeTest::RunTest(const FString& Parameters)
 {
@@ -205,3 +207,5 @@ bool FCameraBatteryComponentFullChargeTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

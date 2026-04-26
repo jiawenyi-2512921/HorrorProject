@@ -5,6 +5,7 @@
 #include "HAL/PlatformTime.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "DynamicRHI.h"
 
 void UPerformanceBudget::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -205,7 +206,7 @@ void UPerformanceBudget::UpdateAutomaticBudgets()
 	UpdateBudgetValue(FName("RenderThread"), RenderThreadMs);
 
 	// Update GPU time
-	const float GPUMs = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+	const float GPUMs = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 	UpdateBudgetValue(FName("GPU"), GPUMs);
 
 	// Memory would need to be updated from MemoryTracker

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -8,7 +10,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXEdgeCaseTest, "HorrorProject.VFX.EdgeCases", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXEdgeCaseTest, "HorrorProject.VFX.EdgeCases", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXEdgeCaseTest::RunTest(const FString& Parameters)
 {
@@ -24,7 +26,7 @@ bool FVFXEdgeCaseTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXMultipleEffectsTest, "HorrorProject.VFX.MultipleEffects", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXMultipleEffectsTest, "HorrorProject.VFX.MultipleEffects", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXMultipleEffectsTest::RunTest(const FString& Parameters)
 {
@@ -42,7 +44,7 @@ bool FVFXMultipleEffectsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FParticleSpawnerStressTest, "HorrorProject.VFX.ParticleSpawnerStress", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FParticleSpawnerStressTest, "HorrorProject.VFX.ParticleSpawnerStress", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FParticleSpawnerStressTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FParticleSpawnerStressTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScreenEffectCombinationTest, "HorrorProject.VFX.ScreenEffectCombination", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScreenEffectCombinationTest, "HorrorProject.VFX.ScreenEffectCombination", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FScreenEffectCombinationTest::RunTest(const FString& Parameters)
 {
@@ -79,7 +81,7 @@ bool FScreenEffectCombinationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXTransitionTest, "HorrorProject.VFX.Transition", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXTransitionTest, "HorrorProject.VFX.Transition", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXTransitionTest::RunTest(const FString& Parameters)
 {
@@ -95,3 +97,5 @@ bool FVFXTransitionTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

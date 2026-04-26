@@ -7,6 +7,7 @@
 #include "NavigationSystem.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
 
 UDebugConsoleCommands::UDebugConsoleCommands()
 	: bGodModeEnabled(false)
@@ -29,10 +30,7 @@ void UDebugConsoleCommands::DebugShowCollision(bool bShow)
 void UDebugConsoleCommands::DebugShowNavMesh(bool bShow)
 {
 	bShowNavMesh = bShow;
-	if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
-	{
-		NavSys->SetDrawDistanceScale(bShow ? 1.0f : 0.0f);
-	}
+	GetWorld()->Exec(GetWorld(), *FString::Printf(TEXT("show Navigation %d"), bShow ? 1 : 0));
 	UE_LOG(LogTemp, Log, TEXT("Debug NavMesh: %s"), bShow ? TEXT("ON") : TEXT("OFF"));
 }
 

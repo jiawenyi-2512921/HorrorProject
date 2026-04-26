@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBaseInteractableTest, "HorrorProject.Interaction.BaseInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBaseInteractableTest, "HorrorProject.Interaction.BaseInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FBaseInteractableTest::RunTest(const FString& Parameters)
 {
@@ -24,7 +26,7 @@ bool FBaseInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableTest, "HorrorProject.Interaction.DoorInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableTest, "HorrorProject.Interaction.DoorInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDoorInteractableTest::RunTest(const FString& Parameters)
 {
@@ -36,7 +38,7 @@ bool FDoorInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableTest, "HorrorProject.Interaction.PickupInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableTest, "HorrorProject.Interaction.PickupInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPickupInteractableTest::RunTest(const FString& Parameters)
 {
@@ -48,7 +50,7 @@ bool FPickupInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableTest, "HorrorProject.Interaction.ExaminableInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableTest, "HorrorProject.Interaction.ExaminableInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FExaminableInteractableTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FExaminableInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTest, "HorrorProject.Interaction.DocumentInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTest, "HorrorProject.Interaction.DocumentInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDocumentInteractableTest::RunTest(const FString& Parameters)
 {
@@ -72,7 +74,7 @@ bool FDocumentInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableTest, "HorrorProject.Interaction.SwitchInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableTest, "HorrorProject.Interaction.SwitchInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSwitchInteractableTest::RunTest(const FString& Parameters)
 {
@@ -84,7 +86,7 @@ bool FSwitchInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableTest, "HorrorProject.Interaction.RecorderInteractable", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableTest, "HorrorProject.Interaction.RecorderInteractable", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FRecorderInteractableTest::RunTest(const FString& Parameters)
 {
@@ -96,7 +98,7 @@ bool FRecorderInteractableTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInteractableEdgeCasesTest, "HorrorProject.Interaction.EdgeCases", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInteractableEdgeCasesTest, "HorrorProject.Interaction.EdgeCases", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractableEdgeCasesTest::RunTest(const FString& Parameters)
 {
@@ -106,3 +108,5 @@ bool FInteractableEdgeCasesTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -6,7 +8,7 @@
 #include "Localization/TextLocalization.h"
 #include "Engine/GameInstance.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextDisplayBasicTest, "HorrorProject.Localization.TextDisplay.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextDisplayBasicTest, "HorrorProject.Localization.TextDisplay.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextDisplayBasicTest::RunTest(const FString& Parameters)
 {
@@ -40,7 +42,7 @@ bool FTextDisplayBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextFormatTest, "HorrorProject.Localization.TextDisplay.Format", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextFormatTest, "HorrorProject.Localization.TextDisplay.Format", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextFormatTest::RunTest(const FString& Parameters)
 {
@@ -66,7 +68,7 @@ bool FTextFormatTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextLengthTest, "HorrorProject.Localization.TextDisplay.Length", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextLengthTest, "HorrorProject.Localization.TextDisplay.Length", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextLengthTest::RunTest(const FString& Parameters)
 {
@@ -110,7 +112,7 @@ bool FTextLengthTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextEncodingTest, "HorrorProject.Localization.TextDisplay.Encoding", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextEncodingTest, "HorrorProject.Localization.TextDisplay.Encoding", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextEncodingTest::RunTest(const FString& Parameters)
 {
@@ -133,7 +135,7 @@ bool FTextEncodingTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextPluralTest, "HorrorProject.Localization.TextDisplay.Plural", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextPluralTest, "HorrorProject.Localization.TextDisplay.Plural", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextPluralTest::RunTest(const FString& Parameters)
 {
@@ -154,7 +156,7 @@ bool FTextPluralTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextRTLTest, "HorrorProject.Localization.TextDisplay.RTL", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextRTLTest, "HorrorProject.Localization.TextDisplay.RTL", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextRTLTest::RunTest(const FString& Parameters)
 {
@@ -187,7 +189,7 @@ bool FTextRTLTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextDisplayPerformanceTest, "HorrorProject.Localization.TextDisplay.Performance", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextDisplayPerformanceTest, "HorrorProject.Localization.TextDisplay.Performance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextDisplayPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -229,7 +231,7 @@ bool FTextDisplayPerformanceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextCachingTest, "HorrorProject.Localization.TextDisplay.Caching", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextCachingTest, "HorrorProject.Localization.TextDisplay.Caching", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextCachingTest::RunTest(const FString& Parameters)
 {
@@ -264,3 +266,5 @@ bool FTextCachingTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

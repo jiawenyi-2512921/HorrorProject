@@ -1,14 +1,16 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "GameSettingsSubsystem.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsSystemTest, "HorrorProject.Settings.SettingsSystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsSystemTest, "HorrorProject.Settings.SettingsSystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSettingsSystemTest::RunTest(const FString& Parameters)
 {
@@ -31,7 +33,7 @@ bool FSettingsSystemTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Ultra preset view distance"), GraphicsSettings->ViewDistanceQuality, 3);
 
 	// Test audio settings
-	UAudioSettings* AudioSettings = NewObject<UAudioSettings>();
+	UHorrorAudioSettings* AudioSettings = NewObject<UHorrorAudioSettings>();
 	TestNotNull(TEXT("Audio settings created"), AudioSettings);
 	TestEqual(TEXT("Default master volume"), AudioSettings->MasterVolume, 1.0f);
 	TestEqual(TEXT("Default music volume"), AudioSettings->MusicVolume, 0.8f);
@@ -71,7 +73,7 @@ bool FSettingsSystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FQualityPresetTest, "HorrorProject.Settings.QualityPresets", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FQualityPresetTest, "HorrorProject.Settings.QualityPresets", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FQualityPresetTest::RunTest(const FString& Parameters)
 {
@@ -80,13 +82,13 @@ bool FQualityPresetTest::RunTest(const FString& Parameters)
 	// Test Low preset
 	Settings->ApplyQualityPreset(0);
 	TestEqual(TEXT("Low preset quality"), Settings->ViewDistanceQuality, 0);
-	TestEqual(TEXT("Low preset AA"), Settings->AntiAliasingMethod, EAntiAliasingMethod::FXAA);
+	TestEqual(TEXT("Low preset AA"), Settings->AntiAliasingMethod, EHorrorAntiAliasingMethod::FXAA);
 	TestFalse(TEXT("Low preset motion blur"), Settings->bMotionBlur);
 
 	// Test Medium preset
 	Settings->ApplyQualityPreset(1);
 	TestEqual(TEXT("Medium preset quality"), Settings->ViewDistanceQuality, 1);
-	TestEqual(TEXT("Medium preset AA"), Settings->AntiAliasingMethod, EAntiAliasingMethod::TAA);
+	TestEqual(TEXT("Medium preset AA"), Settings->AntiAliasingMethod, EHorrorAntiAliasingMethod::TAA);
 	TestTrue(TEXT("Medium preset motion blur"), Settings->bMotionBlur);
 
 	// Test High preset
@@ -106,7 +108,7 @@ bool FQualityPresetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResolutionTest, "HorrorProject.Settings.Resolution", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResolutionTest, "HorrorProject.Settings.Resolution", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FResolutionTest::RunTest(const FString& Parameters)
 {
@@ -131,3 +133,5 @@ bool FResolutionTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

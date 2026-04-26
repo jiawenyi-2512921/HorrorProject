@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableConstructionTest, "HorrorProject.Interaction.Examinable.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableConstructionTest, "HorrorProject.Interaction.Examinable.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -23,7 +25,7 @@ bool FExaminableInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStartExamineTest, "HorrorProject.Interaction.Examinable.StartExamine", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStartExamineTest, "HorrorProject.Interaction.Examinable.StartExamine", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableStartExamineTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -36,7 +38,7 @@ bool FExaminableInteractableStartExamineTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStopExamineTest, "HorrorProject.Interaction.Examinable.StopExamine", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStopExamineTest, "HorrorProject.Interaction.Examinable.StopExamine", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableStopExamineTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -52,7 +54,7 @@ bool FExaminableInteractableStopExamineTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableRotationTest, "HorrorProject.Interaction.Examinable.Rotation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableRotationTest, "HorrorProject.Interaction.Examinable.Rotation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableRotationTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -68,7 +70,7 @@ bool FExaminableInteractableRotationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableZoomTest, "HorrorProject.Interaction.Examinable.Zoom", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableZoomTest, "HorrorProject.Interaction.Examinable.Zoom", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableZoomTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -84,7 +86,7 @@ bool FExaminableInteractableZoomTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Examinable.MultipleInteractions", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Examinable.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -98,7 +100,7 @@ bool FExaminableInteractableMultipleInteractionsTest::RunTest(const FString& Par
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableCannotExamineWhileExaminingTest, "HorrorProject.Interaction.Examinable.CannotExamineWhileExamining", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableCannotExamineWhileExaminingTest, "HorrorProject.Interaction.Examinable.CannotExamineWhileExamining", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableCannotExamineWhileExaminingTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -114,7 +116,7 @@ bool FExaminableInteractableCannotExamineWhileExaminingTest::RunTest(const FStri
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableComponentsTest, "HorrorProject.Interaction.Examinable.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableComponentsTest, "HorrorProject.Interaction.Examinable.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -131,7 +133,7 @@ bool FExaminableInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableNullControllerTest, "HorrorProject.Interaction.Examinable.NullController", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableNullControllerTest, "HorrorProject.Interaction.Examinable.NullController", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableNullControllerTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -143,7 +145,7 @@ bool FExaminableInteractableNullControllerTest::RunTest(const FString& Parameter
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableTickTest, "HorrorProject.Interaction.Examinable.Tick", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableTickTest, "HorrorProject.Interaction.Examinable.Tick", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableTickTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -164,3 +166,5 @@ bool FExaminableInteractableTickTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

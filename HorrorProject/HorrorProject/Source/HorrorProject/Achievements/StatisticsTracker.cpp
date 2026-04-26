@@ -21,7 +21,7 @@ void UStatisticsTracker::BeginPlay()
 		StatisticsSubsystem->StartSession();
 	}
 
-	CurrentMetrics = UGameplayMetrics::CreateMetrics();
+	CurrentMetrics = UHorrorGameplayMetricsLibrary::CreateMetrics();
 	LastPosition = GetOwner()->GetActorLocation();
 	LastPositionUpdateTime = UGameplayStatics::GetTimeSeconds(GetWorld());
 }
@@ -76,7 +76,7 @@ void UStatisticsTracker::TrackSanityChange(float OldSanity, float NewSanity)
 		StatisticsSubsystem->IncrementStatistic(FName("SanityLost"), SanityLost);
 	}
 
-	UGameplayMetrics::UpdateSanityMetrics(CurrentMetrics, NewSanity);
+	UHorrorGameplayMetricsLibrary::UpdateSanityMetrics(CurrentMetrics, NewSanity);
 }
 
 void UStatisticsTracker::TrackJumpScare(float Intensity)
@@ -86,7 +86,7 @@ void UStatisticsTracker::TrackJumpScare(float Intensity)
 		StatisticsSubsystem->IncrementStatistic(FName("JumpScares"));
 	}
 
-	UGameplayMetrics::RecordJumpScare(CurrentMetrics, Intensity);
+	UHorrorGameplayMetricsLibrary::RecordJumpScare(CurrentMetrics, Intensity);
 }
 
 void UStatisticsTracker::TrackSaveGame()
@@ -101,12 +101,12 @@ void UStatisticsTracker::TrackLoadGame()
 
 void UStatisticsTracker::TrackFPS(float CurrentFPS)
 {
-	UGameplayMetrics::UpdateFPSMetrics(CurrentMetrics, CurrentFPS);
+	UHorrorGameplayMetricsLibrary::UpdateFPSMetrics(CurrentMetrics, CurrentFPS);
 }
 
 void UStatisticsTracker::TrackInteraction(bool bSuccess)
 {
-	UGameplayMetrics::RecordInteraction(CurrentMetrics, bSuccess);
+	UHorrorGameplayMetricsLibrary::RecordInteraction(CurrentMetrics, bSuccess);
 }
 
 void UStatisticsTracker::UpdateDarknessTime(float DeltaTime, bool bInDarkness)
@@ -132,7 +132,7 @@ FString UStatisticsTracker::GenerateSessionReport() const
 	Report += TEXT("\n");
 
 	// Metrics Report
-	Report += UGameplayMetrics::GenerateMetricsReport(CurrentMetrics);
+	Report += UHorrorGameplayMetricsLibrary::GenerateMetricsReport(CurrentMetrics);
 
 	return Report;
 }

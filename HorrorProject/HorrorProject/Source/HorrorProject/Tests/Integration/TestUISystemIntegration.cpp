@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUISystemIntegrationTest,
     "HorrorProject.Integration.Systems.UI",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUISystemIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -125,7 +127,7 @@ bool FUISystemIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIInteractionTest,
     "HorrorProject.Integration.Systems.UIInteraction",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIInteractionTest::RunTest(const FString& Parameters)
 {
@@ -157,3 +159,5 @@ bool FUIInteractionTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

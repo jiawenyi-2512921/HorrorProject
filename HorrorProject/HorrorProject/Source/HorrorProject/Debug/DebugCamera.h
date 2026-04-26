@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "DebugCamera.generated.h"
 
 /**
  * Free-flying debug camera for level inspection
  */
 UCLASS()
-class HORRORPROJECT_API ADebugCamera : public AActor
+class HORRORPROJECT_API ADebugCamera : public APawn
 {
 	GENERATED_BODY()
 

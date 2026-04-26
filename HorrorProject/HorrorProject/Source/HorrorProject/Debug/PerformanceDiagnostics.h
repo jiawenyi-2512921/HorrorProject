@@ -7,7 +7,7 @@
 #include "PerformanceDiagnostics.generated.h"
 
 USTRUCT(BlueprintType)
-struct FPerformanceSnapshot
+struct FHorrorPerformanceDiagnosticsSnapshot
 {
 	GENERATED_BODY()
 
@@ -34,7 +34,7 @@ struct FPerformanceSnapshot
 };
 
 USTRUCT(BlueprintType)
-struct FPerformanceStats
+struct FHorrorPerformanceDiagnosticsStats
 {
 	GENERATED_BODY()
 
@@ -81,7 +81,7 @@ public:
 	void StopMonitoring();
 
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	FPerformanceStats GetCurrentStats() const;
+	FHorrorPerformanceDiagnosticsStats GetCurrentStats() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Performance")
 	void GeneratePerformanceReport(const FString& FilePath = TEXT(""));
@@ -102,14 +102,14 @@ public:
 	bool IsMonitoring() const { return bIsMonitoring; }
 
 	UFUNCTION(BlueprintPure, Category = "Performance")
-	TArray<FPerformanceSnapshot> GetPerformanceHistory() const { return PerformanceHistory; }
+	TArray<FHorrorPerformanceDiagnosticsSnapshot> GetPerformanceHistory() const { return PerformanceHistory; }
 
 protected:
 	void CollectPerformanceData();
-	void CheckPerformanceThresholds(const FPerformanceSnapshot& Snapshot);
+	void CheckPerformanceThresholds(const FHorrorPerformanceDiagnosticsSnapshot& Snapshot);
 
 	UPROPERTY()
-	TArray<FPerformanceSnapshot> PerformanceHistory;
+	TArray<FHorrorPerformanceDiagnosticsSnapshot> PerformanceHistory;
 
 	UPROPERTY()
 	TArray<float> FrameTimeHistory;

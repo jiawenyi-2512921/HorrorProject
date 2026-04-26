@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Achievements/GameplayMetrics.h"
 #include "Components/ActorComponent.h"
 #include "StatisticsTracker.generated.h"
 
@@ -57,7 +58,7 @@ private:
 	class UStatisticsSubsystem* StatisticsSubsystem;
 
 	UPROPERTY()
-	struct FGameplayMetrics CurrentMetrics;
+	struct FHorrorGameplayMetrics CurrentMetrics;
 
 	float LastPositionUpdateTime;
 	FVector LastPosition;

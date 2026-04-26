@@ -94,9 +94,9 @@ void USubtitleWidget::UpdateSubtitleAppearance(const FAccessibilitySettings& Set
     ApplySubtitleStyling();
 }
 
-void USubtitleWidget::OnSubtitleDisplayed(const FText& SubtitleText, float Duration)
+void USubtitleWidget::OnSubtitleDisplayed(const FText& InSubtitleText, float Duration)
 {
-    DisplaySubtitle(SubtitleText, Duration);
+    DisplaySubtitle(InSubtitleText, Duration);
 }
 
 void USubtitleWidget::OnAccessibilitySettingsChanged(const FAccessibilitySettings& NewSettings)

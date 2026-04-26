@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableConstructionTest, "HorrorProject.Interaction.Door.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableConstructionTest, "HorrorProject.Interaction.Door.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -24,7 +26,7 @@ bool FDoorInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableOpenCloseTest, "HorrorProject.Interaction.Door.OpenClose", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableOpenCloseTest, "HorrorProject.Interaction.Door.OpenClose", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableOpenCloseTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -40,7 +42,7 @@ bool FDoorInteractableOpenCloseTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableLockedTest, "HorrorProject.Interaction.Door.Locked", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableLockedTest, "HorrorProject.Interaction.Door.Locked", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableLockedTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -65,7 +67,7 @@ bool FDoorInteractableLockedTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableSaveLoadTest, "HorrorProject.Interaction.Door.SaveLoad", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableSaveLoadTest, "HorrorProject.Interaction.Door.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -90,7 +92,7 @@ bool FDoorInteractableSaveLoadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAnimationTest, "HorrorProject.Interaction.Door.Animation", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAnimationTest, "HorrorProject.Interaction.Door.Animation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableAnimationTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -111,7 +113,7 @@ bool FDoorInteractableAnimationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Door.MultipleInteractions", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Door.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -129,7 +131,7 @@ bool FDoorInteractableMultipleInteractionsTest::RunTest(const FString& Parameter
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableNullInstigatorTest, "HorrorProject.Interaction.Door.NullInstigator", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableNullInstigatorTest, "HorrorProject.Interaction.Door.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -142,7 +144,7 @@ bool FDoorInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAutoCloseTest, "HorrorProject.Interaction.Door.AutoClose", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAutoCloseTest, "HorrorProject.Interaction.Door.AutoClose", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableAutoCloseTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -160,7 +162,7 @@ bool FDoorInteractableAutoCloseTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableComponentsTest, "HorrorProject.Interaction.Door.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableComponentsTest, "HorrorProject.Interaction.Door.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -178,7 +180,7 @@ bool FDoorInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableStateTransitionsTest, "HorrorProject.Interaction.Door.StateTransitions", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableStateTransitionsTest, "HorrorProject.Interaction.Door.StateTransitions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableStateTransitionsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -197,3 +199,5 @@ bool FDoorInteractableStateTransitionsTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -55,7 +55,9 @@ class HORRORPROJECT_API UMetricsCollector : public UObject
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
-	void RecordMetric(const FString& MetricName, float Value, const TMap<FString, FString>& Tags = TMap<FString, FString>());
+	void RecordMetric(const FString& MetricName, float Value, const TMap<FString, FString>& Tags);
+
+	void RecordMetric(const FString& MetricName, float Value);
 
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
 	void RecordTimingMetric(const FString& MetricName, float DurationMs);
@@ -75,7 +77,6 @@ public:
 	void ExportMetrics(const FString& OutputPath);
 
 protected:
-	UPROPERTY()
 	TMap<FString, TArray<FMetricData>> MetricsByName;
 
 	UPROPERTY()

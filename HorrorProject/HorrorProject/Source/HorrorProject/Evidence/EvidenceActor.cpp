@@ -22,24 +22,24 @@ void AEvidenceActor::BeginPlay()
 	}
 }
 
-void AEvidenceActor::Interact_Implementation(AActor* Interactor)
+bool AEvidenceActor::Interact_Implementation(AActor* InstigatorActor, const FHitResult& Hit)
 {
-	if (!Interactor || bIsCollected)
+	if (!InstigatorActor || bIsCollected)
 	{
-		return;
+		return false;
 	}
 
-	UEvidenceCollectionComponent* EvidenceCollection = Interactor->FindComponentByClass<UEvidenceCollectionComponent>();
+	UEvidenceCollectionComponent* EvidenceCollection = InstigatorActor->FindComponentByClass<UEvidenceCollectionComponent>();
 	if (!EvidenceCollection)
 	{
-		return;
+		return false;
 	}
 
 	if (EvidenceCollection->CollectPhysicalEvidence(EvidenceMetadata.EvidenceId, EvidenceMetadata))
 	{
 		SetCollected(true);
-		OnEvidenceCollected(Interactor);
-		BP_OnEvidenceCollected(Interactor);
+		OnEvidenceCollected(InstigatorActor);
+		BP_OnEvidenceCollected(InstigatorActor);
 
 		if (bDestroyOnCollect)
 		{
@@ -50,10 +50,14 @@ void AEvidenceActor::Interact_Implementation(AActor* Interactor)
 			SetActorHiddenInGame(true);
 			SetActorEnableCollision(false);
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
-FText AEvidenceActor::GetInteractionPrompt_Implementation() const
+FText AEvidenceActor::GetInteractionPrompt() const
 {
 	if (!InteractionPromptOverride.IsEmpty())
 	{
@@ -68,19 +72,19 @@ FText AEvidenceActor::GetInteractionPrompt_Implementation() const
 	return FText::FromString(TEXT("Collect Evidence"));
 }
 
-bool AEvidenceActor::CanInteract_Implementation(AActor* Interactor) const
+bool AEvidenceActor::CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const
 {
 	if (bIsCollected)
 	{
 		return false;
 	}
 
-	if (!Interactor)
+	if (!InstigatorActor)
 	{
 		return false;
 	}
 
-	UEvidenceCollectionComponent* EvidenceCollection = Interactor->FindComponentByClass<UEvidenceCollectionComponent>();
+	UEvidenceCollectionComponent* EvidenceCollection = InstigatorActor->FindComponentByClass<UEvidenceCollectionComponent>();
 	return EvidenceCollection != nullptr;
 }
 

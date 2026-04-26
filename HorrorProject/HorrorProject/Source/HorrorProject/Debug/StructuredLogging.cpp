@@ -29,9 +29,15 @@ void UStructuredLogging::Deinitialize()
 	Super::Deinitialize();
 }
 
+// Consolidated logging functions - eliminates code duplication
 void UStructuredLogging::LogTrace(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
 {
 	WriteLog(ELogLevel::Trace, Category, Message, Metadata);
+}
+
+void UStructuredLogging::LogTrace(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Trace, Category, Message, TMap<FString, FString>());
 }
 
 void UStructuredLogging::LogDebug(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
@@ -39,9 +45,19 @@ void UStructuredLogging::LogDebug(const FString& Category, const FString& Messag
 	WriteLog(ELogLevel::Debug, Category, Message, Metadata);
 }
 
+void UStructuredLogging::LogDebug(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Debug, Category, Message, TMap<FString, FString>());
+}
+
 void UStructuredLogging::LogInfo(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
 {
 	WriteLog(ELogLevel::Info, Category, Message, Metadata);
+}
+
+void UStructuredLogging::LogInfo(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Info, Category, Message, TMap<FString, FString>());
 }
 
 void UStructuredLogging::LogWarning(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
@@ -49,9 +65,19 @@ void UStructuredLogging::LogWarning(const FString& Category, const FString& Mess
 	WriteLog(ELogLevel::Warning, Category, Message, Metadata);
 }
 
+void UStructuredLogging::LogWarning(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Warning, Category, Message, TMap<FString, FString>());
+}
+
 void UStructuredLogging::LogError(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
 {
 	WriteLog(ELogLevel::Error, Category, Message, Metadata);
+}
+
+void UStructuredLogging::LogError(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Error, Category, Message, TMap<FString, FString>());
 }
 
 void UStructuredLogging::LogFatal(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
@@ -59,6 +85,18 @@ void UStructuredLogging::LogFatal(const FString& Category, const FString& Messag
 	WriteLog(ELogLevel::Fatal, Category, Message, Metadata);
 }
 
+void UStructuredLogging::LogFatal(const FString& Category, const FString& Message)
+{
+	WriteLog(ELogLevel::Fatal, Category, Message, TMap<FString, FString>());
+}
+
+/**
+ * Core logging function that processes and routes log entries
+ * @param Level - Severity level of the log entry
+ * @param Category - Logical category for filtering and organization
+ * @param Message - Human-readable log message
+ * @param Metadata - Optional key-value pairs for structured data
+ */
 void UStructuredLogging::WriteLog(ELogLevel Level, const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata)
 {
 	if (!ShouldLog(Level, Category))
@@ -76,7 +114,7 @@ void UStructuredLogging::WriteLog(ELogLevel Level, const FString& Category, cons
 
 	LogEntries.Add(Entry);
 
-	// Limit log entries
+	// Maintain circular buffer to prevent unbounded memory growth
 	if (LogEntries.Num() > MaxLogEntries)
 	{
 		LogEntries.RemoveAt(0, LogEntries.Num() - MaxLogEntries);
@@ -120,6 +158,10 @@ void UStructuredLogging::WriteToConsole(const FStructuredLogEntry& Entry)
 	}
 }
 
+/**
+ * Formats a log entry into a human-readable string
+ * Format: [Timestamp] [Level] [Category] Message key1=value1 key2=value2
+ */
 FString UStructuredLogging::FormatLogEntry(const FStructuredLogEntry& Entry) const
 {
 	FString MetadataStr;

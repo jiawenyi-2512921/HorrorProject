@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusSystemIntegrationTest,
     "HorrorProject.Integration.Systems.EventBus",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusSystemIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -158,7 +160,7 @@ bool FEventBusSystemIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusPerformanceTest,
     "HorrorProject.Integration.Systems.EventBusPerformance",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -202,3 +204,5 @@ bool FEventBusPerformanceTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -2,7 +2,7 @@
 
 #include "ConfigValidator.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 
@@ -61,7 +61,7 @@ bool UConfigValidator::ValidateGraphicsSettings(UGraphicsSettings* Settings)
 	return LastValidationResult.bIsValid;
 }
 
-bool UConfigValidator::ValidateAudioSettings(UAudioSettings* Settings)
+bool UConfigValidator::ValidateAudioSettings(UHorrorAudioSettings* Settings)
 {
 	ClearResults();
 
@@ -204,7 +204,7 @@ bool UConfigValidator::ValidateGameplaySettings(UGameplaySettings* Settings)
 }
 
 FValidationResult UConfigValidator::ValidateAllSettings(UGraphicsSettings* Graphics,
-	UAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
+	UHorrorAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
 {
 	ClearResults();
 

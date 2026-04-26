@@ -6,7 +6,8 @@ param(
     [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Assets\ValidationReport.json"
 )
 
-$UEEditorCmd = "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+$UEEditorCmd = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 $ProjectFile = "$ProjectPath\HorrorProject.uproject"
 
 Write-Host "=== Asset Validation Tool ===" -ForegroundColor Cyan

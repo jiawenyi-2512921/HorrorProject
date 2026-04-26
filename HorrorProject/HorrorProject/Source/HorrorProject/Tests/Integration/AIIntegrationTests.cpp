@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationBasicTest,
 	"HorrorProject.Integration.AI.BasicAISystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationBasicTest::RunTest(const FString& Parameters)
 {
@@ -34,7 +36,7 @@ bool FAIIntegrationBasicTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationNoisePerceptionTest,
 	"HorrorProject.Integration.AI.NoisePerception",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationNoisePerceptionTest::RunTest(const FString& Parameters)
 {
@@ -77,7 +79,7 @@ bool FAIIntegrationNoisePerceptionTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationStateTransitionTest,
 	"HorrorProject.Integration.AI.StateTransition",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationStateTransitionTest::RunTest(const FString& Parameters)
 {
@@ -113,7 +115,7 @@ bool FAIIntegrationStateTransitionTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationEncounterDirectorTest,
 	"HorrorProject.Integration.AI.EncounterDirector",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationEncounterDirectorTest::RunTest(const FString& Parameters)
 {
@@ -143,7 +145,7 @@ bool FAIIntegrationEncounterDirectorTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationPlayerDetectionTest,
 	"HorrorProject.Integration.AI.PlayerDetection",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationPlayerDetectionTest::RunTest(const FString& Parameters)
 {
@@ -182,7 +184,7 @@ bool FAIIntegrationPlayerDetectionTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationMultipleAITest,
 	"HorrorProject.Integration.AI.MultipleAI",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAIIntegrationMultipleAITest::RunTest(const FString& Parameters)
 {
@@ -215,3 +217,5 @@ bool FAIIntegrationMultipleAITest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

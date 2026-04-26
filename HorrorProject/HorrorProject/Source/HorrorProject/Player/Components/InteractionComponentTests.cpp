@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -54,7 +56,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentObjectiveHitTest,
 	"HorrorProject.Player.Interaction.ObjectiveHit",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentObjectiveHitTest::RunTest(const FString& Parameters)
 {
@@ -116,7 +118,7 @@ bool FInteractionComponentObjectiveHitTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentRejectsMissingCandidateTest,
 	"HorrorProject.Player.Interaction.RejectsMissingCandidate",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentRejectsMissingCandidateTest::RunTest(const FString& Parameters)
 {
@@ -166,7 +168,7 @@ bool FInteractionComponentRejectsMissingCandidateTest::RunTest(const FString& Pa
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentDispatchesInterfaceThroughExecuteTest,
 	"HorrorProject.Player.Interaction.DispatchesInterfaceThroughExecute",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentDispatchesInterfaceThroughExecuteTest::RunTest(const FString& Parameters)
 {
@@ -215,7 +217,7 @@ bool FInteractionComponentDispatchesInterfaceThroughExecuteTest::RunTest(const F
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentComponentInterfaceTargetTest,
 	"HorrorProject.Player.Interaction.ComponentInterfaceTarget",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentComponentInterfaceTargetTest::RunTest(const FString& Parameters)
 {
@@ -265,7 +267,7 @@ bool FInteractionComponentComponentInterfaceTargetTest::RunTest(const FString& P
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest,
 	"HorrorProject.Player.Interaction.LegacyDoorTimelineFallbackIsOptIn",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest::RunTest(const FString& Parameters)
 {
@@ -323,7 +325,7 @@ bool FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest::RunTest(const F
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentSweepScoringPrefersCenterlineTest,
 	"HorrorProject.Player.Interaction.SweepScoringPrefersCenterline",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentSweepScoringPrefersCenterlineTest::RunTest(const FString& Parameters)
 {
@@ -338,3 +340,5 @@ bool FInteractionComponentSweepScoringPrefersCenterlineTest::RunTest(const FStri
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -2,7 +2,7 @@
 
 #include "ConfigManager.h"
 #include "GraphicsSettings.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 #include "Misc/FileHelper.h"
@@ -83,7 +83,7 @@ bool UConfigManager::ConfigExists(const FString& Category) const
 }
 
 bool UConfigManager::ExportSettings(const FString& FilePath, UGraphicsSettings* Graphics,
-	UAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
+	UHorrorAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
 {
 	TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
 
@@ -137,7 +137,7 @@ bool UConfigManager::ExportSettings(const FString& FilePath, UGraphicsSettings* 
 }
 
 bool UConfigManager::ImportSettings(const FString& FilePath, UGraphicsSettings* Graphics,
-	UAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
+	UHorrorAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay)
 {
 	FString JsonString;
 	if (!FFileHelper::LoadFileToString(JsonString, *FilePath))
@@ -326,7 +326,7 @@ bool UConfigManager::DeserializeFromJson(const TSharedPtr<FJsonObject>& Json, UO
 		}
 		else if (FEnumProperty* EnumProp = CastField<FEnumProperty>(Property))
 		{
-			EnumProp->GetUnderlyingProperty()->SetIntPropertyValue(ValuePtr, Json->GetIntegerField(PropertyName));
+			EnumProp->GetUnderlyingProperty()->SetIntPropertyValue(ValuePtr, static_cast<int64>(Json->GetIntegerField(PropertyName)));
 		}
 	}
 

@@ -58,7 +58,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category="Footstep Audio")
-	void PlayFootstep(bool bIsLeftFoot);
+	void PlayFootstep(bool bInIsLeftFoot);
 
 	UFUNCTION(BlueprintCallable, Category="Footstep Audio")
 	void PlayJumpSound();

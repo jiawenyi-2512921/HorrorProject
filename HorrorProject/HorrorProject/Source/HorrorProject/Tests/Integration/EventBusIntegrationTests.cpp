@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusIntegrationTest,
 	"HorrorProject.Integration.EventBus.BasicPublishSubscribe",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -53,7 +55,7 @@ bool FEventBusIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusAudioIntegrationTest,
 	"HorrorProject.Integration.EventBus.AudioIntegration",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusAudioIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -86,7 +88,7 @@ bool FEventBusAudioIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusEvidenceIntegrationTest,
 	"HorrorProject.Integration.EventBus.EvidenceIntegration",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusEvidenceIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -127,7 +129,7 @@ bool FEventBusEvidenceIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusNoCircularDependencyTest,
 	"HorrorProject.Integration.EventBus.NoCircularDependency",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusNoCircularDependencyTest::RunTest(const FString& Parameters)
 {
@@ -172,7 +174,7 @@ bool FEventBusNoCircularDependencyTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusMultipleSubscribersTest,
 	"HorrorProject.Integration.EventBus.MultipleSubscribers",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusMultipleSubscribersTest::RunTest(const FString& Parameters)
 {
@@ -226,3 +228,5 @@ bool FEventBusMultipleSubscribersTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

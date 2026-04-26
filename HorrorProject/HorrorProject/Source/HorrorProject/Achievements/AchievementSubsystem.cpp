@@ -31,9 +31,9 @@ void UAchievementSubsystem::Deinitialize()
 void UAchievementSubsystem::InitializeAchievements()
 {
 	// Load all achievement definitions
-	TArray<FAchievementDefinition> Definitions = UAchievementDefinition::GetAllAchievementDefinitions();
+	TArray<FHorrorAchievementDefinition> Definitions = UAchievementDefinitionCatalog::GetAllAchievementDefinitions();
 
-	for (const FAchievementDefinition& Def : Definitions)
+	for (const FHorrorAchievementDefinition& Def : Definitions)
 	{
 		FAchievementData Data;
 		Data.ID = Def.ID;

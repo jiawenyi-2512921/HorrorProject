@@ -5,6 +5,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformTime.h"
+#include "DynamicRHI.h"
 
 void UFrameTimeTracker::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -82,7 +83,7 @@ FFrameTimeStats UFrameTimeTracker::GetFrameTimeStats() const
 	{
 		Stats.GameThreadTimeMs = FPlatformTime::ToMilliseconds(GGameThreadTime);
 		Stats.RenderThreadTimeMs = FPlatformTime::ToMilliseconds(GRenderThreadTime);
-		Stats.GPUTimeMs = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+		Stats.GPUTimeMs = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 	}
 
 	return Stats;

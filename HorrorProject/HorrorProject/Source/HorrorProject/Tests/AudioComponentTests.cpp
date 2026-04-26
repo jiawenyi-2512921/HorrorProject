@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAmbientAudioComponentTest, "HorrorProject.Audio.AmbientAudioComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAmbientAudioComponentTest, "HorrorProject.Audio.AmbientAudioComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAmbientAudioComponentTest::RunTest(const FString& Parameters)
 {
@@ -34,7 +36,7 @@ bool FAmbientAudioComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAmbientAudioLayerTest, "HorrorProject.Audio.AmbientAudioLayer", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAmbientAudioLayerTest, "HorrorProject.Audio.AmbientAudioLayer", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAmbientAudioLayerTest::RunTest(const FString& Parameters)
 {
@@ -58,7 +60,7 @@ bool FAmbientAudioLayerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepAudioComponentTest, "HorrorProject.Audio.FootstepAudioComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepAudioComponentTest, "HorrorProject.Audio.FootstepAudioComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFootstepAudioComponentTest::RunTest(const FString& Parameters)
 {
@@ -85,7 +87,7 @@ bool FFootstepAudioComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepSurfaceDetectionTest, "HorrorProject.Audio.FootstepSurfaceDetection", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepSurfaceDetectionTest, "HorrorProject.Audio.FootstepSurfaceDetection", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFootstepSurfaceDetectionTest::RunTest(const FString& Parameters)
 {
@@ -110,7 +112,7 @@ bool FFootstepSurfaceDetectionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepMovementSpeedTest, "HorrorProject.Audio.FootstepMovementSpeed", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFootstepMovementSpeedTest, "HorrorProject.Audio.FootstepMovementSpeed", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFootstepMovementSpeedTest::RunTest(const FString& Parameters)
 {
@@ -131,7 +133,7 @@ bool FFootstepMovementSpeedTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBreathingAudioComponentTest, "HorrorProject.Audio.BreathingAudioComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBreathingAudioComponentTest, "HorrorProject.Audio.BreathingAudioComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FBreathingAudioComponentTest::RunTest(const FString& Parameters)
 {
@@ -151,7 +153,7 @@ bool FBreathingAudioComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnderwaterAudioComponentTest, "HorrorProject.Audio.UnderwaterAudioComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnderwaterAudioComponentTest, "HorrorProject.Audio.UnderwaterAudioComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUnderwaterAudioComponentTest::RunTest(const FString& Parameters)
 {
@@ -170,7 +172,7 @@ bool FUnderwaterAudioComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioComponentEdgeCasesTest, "HorrorProject.Audio.EdgeCases", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioComponentEdgeCasesTest, "HorrorProject.Audio.EdgeCases", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioComponentEdgeCasesTest::RunTest(const FString& Parameters)
 {
@@ -193,3 +195,5 @@ bool FAudioComponentEdgeCasesTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

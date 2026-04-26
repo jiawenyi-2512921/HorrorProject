@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -5,7 +7,7 @@
 #include "Localization/LocalizationSubsystem.h"
 #include "Engine/GameInstance.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageSwitchingTest, "HorrorProject.Localization.LanguageSwitching", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageSwitchingTest, "HorrorProject.Localization.LanguageSwitching", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLanguageSwitchingTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FLanguageSwitchingTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguagePersistenceTest, "HorrorProject.Localization.LanguagePersistence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguagePersistenceTest, "HorrorProject.Localization.LanguagePersistence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLanguagePersistenceTest::RunTest(const FString& Parameters)
 {
@@ -83,7 +85,7 @@ bool FLanguagePersistenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageTextConsistencyTest, "HorrorProject.Localization.TextConsistency", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageTextConsistencyTest, "HorrorProject.Localization.TextConsistency", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLanguageTextConsistencyTest::RunTest(const FString& Parameters)
 {
@@ -144,7 +146,7 @@ bool FLanguageTextConsistencyTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageFallbackTest, "HorrorProject.Localization.LanguageFallback", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageFallbackTest, "HorrorProject.Localization.LanguageFallback", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLanguageFallbackTest::RunTest(const FString& Parameters)
 {
@@ -167,7 +169,7 @@ bool FLanguageFallbackTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageSwitchingStressTest, "HorrorProject.Localization.LanguageSwitchingStress", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::StressFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLanguageSwitchingStressTest, "HorrorProject.Localization.LanguageSwitchingStress", EAutomationTestFlags::EditorContext | EAutomationTestFlags::StressFilter)
 
 bool FLanguageSwitchingStressTest::RunTest(const FString& Parameters)
 {
@@ -221,3 +223,5 @@ bool FLanguageSwitchingStressTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

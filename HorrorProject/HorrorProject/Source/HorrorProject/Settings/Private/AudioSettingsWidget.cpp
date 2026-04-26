@@ -1,14 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "AudioSettingsWidget.h"
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "GameSettingsSubsystem.h"
 #include "Components/Slider.h"
 #include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
 #include "Kismet/GameplayStatics.h"
 
-void UAudioSettingsWidget::NativeConstruct()
+void UHorrorAudioSettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
@@ -27,58 +27,58 @@ void UAudioSettingsWidget::NativeConstruct()
 	// Bind events
 	if (MasterVolumeSlider)
 	{
-		MasterVolumeSlider->OnValueChanged.AddDynamic(this, &UAudioSettingsWidget::OnMasterVolumeChanged);
+		MasterVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnMasterVolumeChanged);
 	}
 
 	if (MusicVolumeSlider)
 	{
-		MusicVolumeSlider->OnValueChanged.AddDynamic(this, &UAudioSettingsWidget::OnMusicVolumeChanged);
+		MusicVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnMusicVolumeChanged);
 	}
 
 	if (SFXVolumeSlider)
 	{
-		SFXVolumeSlider->OnValueChanged.AddDynamic(this, &UAudioSettingsWidget::OnSFXVolumeChanged);
+		SFXVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnSFXVolumeChanged);
 	}
 
 	if (DialogueVolumeSlider)
 	{
-		DialogueVolumeSlider->OnValueChanged.AddDynamic(this, &UAudioSettingsWidget::OnDialogueVolumeChanged);
+		DialogueVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnDialogueVolumeChanged);
 	}
 
 	if (AmbienceVolumeSlider)
 	{
-		AmbienceVolumeSlider->OnValueChanged.AddDynamic(this, &UAudioSettingsWidget::OnAmbienceVolumeChanged);
+		AmbienceVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnAmbienceVolumeChanged);
 	}
 
 	if (ReverbCheckBox)
 	{
-		ReverbCheckBox->OnCheckStateChanged.AddDynamic(this, &UAudioSettingsWidget::OnReverbChanged);
+		ReverbCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnReverbChanged);
 	}
 
 	if (OcclusionCheckBox)
 	{
-		OcclusionCheckBox->OnCheckStateChanged.AddDynamic(this, &UAudioSettingsWidget::OnOcclusionChanged);
+		OcclusionCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnOcclusionChanged);
 	}
 
 	if (SpatialAudioCheckBox)
 	{
-		SpatialAudioCheckBox->OnCheckStateChanged.AddDynamic(this, &UAudioSettingsWidget::OnSpatialAudioChanged);
+		SpatialAudioCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnSpatialAudioChanged);
 	}
 
 	if (OutputDeviceComboBox)
 	{
-		OutputDeviceComboBox->OnSelectionChanged.AddDynamic(this, &UAudioSettingsWidget::OnOutputDeviceChanged);
+		OutputDeviceComboBox->OnSelectionChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnOutputDeviceChanged);
 	}
 
 	if (SubtitlesCheckBox)
 	{
-		SubtitlesCheckBox->OnCheckStateChanged.AddDynamic(this, &UAudioSettingsWidget::OnSubtitlesChanged);
+		SubtitlesCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnSubtitlesChanged);
 	}
 
 	RefreshSettings();
 }
 
-void UAudioSettingsWidget::RefreshSettings()
+void UHorrorAudioSettingsWidget::RefreshSettings()
 {
 	if (!AudioSettings)
 	{
@@ -134,7 +134,7 @@ void UAudioSettingsWidget::RefreshSettings()
 	}
 }
 
-void UAudioSettingsWidget::OnMasterVolumeChanged(float Value)
+void UHorrorAudioSettingsWidget::OnMasterVolumeChanged(float Value)
 {
 	if (AudioSettings)
 	{
@@ -142,7 +142,7 @@ void UAudioSettingsWidget::OnMasterVolumeChanged(float Value)
 	}
 }
 
-void UAudioSettingsWidget::OnMusicVolumeChanged(float Value)
+void UHorrorAudioSettingsWidget::OnMusicVolumeChanged(float Value)
 {
 	if (AudioSettings)
 	{
@@ -150,7 +150,7 @@ void UAudioSettingsWidget::OnMusicVolumeChanged(float Value)
 	}
 }
 
-void UAudioSettingsWidget::OnSFXVolumeChanged(float Value)
+void UHorrorAudioSettingsWidget::OnSFXVolumeChanged(float Value)
 {
 	if (AudioSettings)
 	{
@@ -158,7 +158,7 @@ void UAudioSettingsWidget::OnSFXVolumeChanged(float Value)
 	}
 }
 
-void UAudioSettingsWidget::OnDialogueVolumeChanged(float Value)
+void UHorrorAudioSettingsWidget::OnDialogueVolumeChanged(float Value)
 {
 	if (AudioSettings)
 	{
@@ -166,7 +166,7 @@ void UAudioSettingsWidget::OnDialogueVolumeChanged(float Value)
 	}
 }
 
-void UAudioSettingsWidget::OnAmbienceVolumeChanged(float Value)
+void UHorrorAudioSettingsWidget::OnAmbienceVolumeChanged(float Value)
 {
 	if (AudioSettings)
 	{
@@ -174,7 +174,7 @@ void UAudioSettingsWidget::OnAmbienceVolumeChanged(float Value)
 	}
 }
 
-void UAudioSettingsWidget::OnReverbChanged(bool bIsChecked)
+void UHorrorAudioSettingsWidget::OnReverbChanged(bool bIsChecked)
 {
 	if (AudioSettings)
 	{
@@ -182,7 +182,7 @@ void UAudioSettingsWidget::OnReverbChanged(bool bIsChecked)
 	}
 }
 
-void UAudioSettingsWidget::OnOcclusionChanged(bool bIsChecked)
+void UHorrorAudioSettingsWidget::OnOcclusionChanged(bool bIsChecked)
 {
 	if (AudioSettings)
 	{
@@ -190,7 +190,7 @@ void UAudioSettingsWidget::OnOcclusionChanged(bool bIsChecked)
 	}
 }
 
-void UAudioSettingsWidget::OnSpatialAudioChanged(bool bIsChecked)
+void UHorrorAudioSettingsWidget::OnSpatialAudioChanged(bool bIsChecked)
 {
 	if (AudioSettings)
 	{
@@ -198,7 +198,7 @@ void UAudioSettingsWidget::OnSpatialAudioChanged(bool bIsChecked)
 	}
 }
 
-void UAudioSettingsWidget::OnOutputDeviceChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
+void UHorrorAudioSettingsWidget::OnOutputDeviceChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
 	if (AudioSettings)
 	{
@@ -206,7 +206,7 @@ void UAudioSettingsWidget::OnOutputDeviceChanged(FString SelectedItem, ESelectIn
 	}
 }
 
-void UAudioSettingsWidget::OnSubtitlesChanged(bool bIsChecked)
+void UHorrorAudioSettingsWidget::OnSubtitlesChanged(bool bIsChecked)
 {
 	if (AudioSettings)
 	{
@@ -214,7 +214,7 @@ void UAudioSettingsWidget::OnSubtitlesChanged(bool bIsChecked)
 	}
 }
 
-void UAudioSettingsWidget::PopulateOutputDevices()
+void UHorrorAudioSettingsWidget::PopulateOutputDevices()
 {
 	if (!OutputDeviceComboBox || !AudioSettings)
 	{

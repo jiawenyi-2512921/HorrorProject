@@ -117,7 +117,7 @@ void APickupInteractable::DestroyPickup()
 		GetWorld()->GetTimerManager().SetTimer(
 			DestroyTimer,
 			this,
-			&APickupInteractable::Destroy,
+			&APickupInteractable::DestroyPickupActor,
 			DestroyDelay,
 			false
 		);
@@ -126,4 +126,9 @@ void APickupInteractable::DestroyPickup()
 	{
 		Destroy();
 	}
+}
+
+void APickupInteractable::DestroyPickupActor()
+{
+	Destroy();
 }

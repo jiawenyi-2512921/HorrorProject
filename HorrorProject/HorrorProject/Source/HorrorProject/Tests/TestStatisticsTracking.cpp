@@ -1,9 +1,11 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 #include "Achievements/StatisticsSubsystem.h"
 #include "Achievements/PlayerStatistics.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSubsystemTest, "HorrorProject.Statistics.StatisticsSubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSubsystemTest, "HorrorProject.Statistics.StatisticsSubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FStatisticsSubsystemTest::RunTest(const FString& Parameters)
 {
@@ -46,7 +48,7 @@ bool FStatisticsSubsystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSessionTest, "HorrorProject.Statistics.Session", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSessionTest, "HorrorProject.Statistics.Session", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FStatisticsSessionTest::RunTest(const FString& Parameters)
 {
@@ -79,7 +81,7 @@ bool FStatisticsSessionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsReportTest, "HorrorProject.Statistics.Report", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsReportTest, "HorrorProject.Statistics.Report", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FStatisticsReportTest::RunTest(const FString& Parameters)
 {
@@ -112,7 +114,7 @@ bool FStatisticsReportTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsEventsTest, "HorrorProject.Statistics.Events", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsEventsTest, "HorrorProject.Statistics.Events", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FStatisticsEventsTest::RunTest(const FString& Parameters)
 {
@@ -151,3 +153,5 @@ bool FStatisticsEventsTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

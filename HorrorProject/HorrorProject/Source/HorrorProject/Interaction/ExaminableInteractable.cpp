@@ -105,7 +105,7 @@ void AExaminableInteractable::StartExamining(APlayerController* PlayerController
 		{
 			if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 			{
-				bWasPlayerMovementEnabled = Movement->IsMovementMode(MOVE_Walking);
+				bWasPlayerMovementEnabled = Movement->MovementMode == MOVE_Walking;
 				Movement->DisableMovement();
 			}
 		}

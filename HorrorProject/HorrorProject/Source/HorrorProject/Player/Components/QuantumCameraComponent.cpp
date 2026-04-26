@@ -4,7 +4,6 @@
 #include "Player/Components/CameraBatteryComponent.h"
 #include "GameFramework/Actor.h"
 
-#if WITH_DEV_AUTOMATION_TESTS
 void UQuantumCameraRuntimeDelegateProbe::HandleCameraAcquiredChanged(bool bNewAcquired)
 {
 	++AcquiredBroadcastCount;
@@ -23,12 +22,14 @@ void UQuantumCameraRuntimeDelegateProbe::HandleCameraModeChanged(EQuantumCameraM
 	ModeValues.Add(NewMode);
 }
 
+#if WITH_DEV_AUTOMATION_TESTS
+
 #include "Misc/AutomationTest.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FQuantumCameraComponentTracksRuntimeModesTest,
 	"HorrorProject.Player.QuantumCamera.TracksRuntimeModes",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FQuantumCameraComponentTracksRuntimeModesTest::RunTest(const FString& Parameters)
 {
@@ -80,7 +81,7 @@ bool FQuantumCameraComponentTracksRuntimeModesTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FQuantumCameraComponentBroadcastsRuntimeDelegatesTest,
 	"HorrorProject.Player.QuantumCamera.BroadcastsRuntimeDelegates",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FQuantumCameraComponentBroadcastsRuntimeDelegatesTest::RunTest(const FString& Parameters)
 {

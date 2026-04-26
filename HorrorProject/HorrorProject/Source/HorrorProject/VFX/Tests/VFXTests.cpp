@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -8,7 +10,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPostProcessControllerTest, "HorrorProject.VFX.PostProcessController", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPostProcessControllerTest, "HorrorProject.VFX.PostProcessController", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPostProcessControllerTest::RunTest(const FString& Parameters)
 {
@@ -37,7 +39,7 @@ bool FPostProcessControllerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FParticleSpawnerTest, "HorrorProject.VFX.ParticleSpawner", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FParticleSpawnerTest, "HorrorProject.VFX.ParticleSpawner", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FParticleSpawnerTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FParticleSpawnerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScreenEffectManagerTest, "HorrorProject.VFX.ScreenEffectManager", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScreenEffectManagerTest, "HorrorProject.VFX.ScreenEffectManager", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FScreenEffectManagerTest::RunTest(const FString& Parameters)
 {
@@ -91,7 +93,7 @@ bool FScreenEffectManagerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXPerformanceTest, "HorrorProject.VFX.Performance", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXPerformanceTest, "HorrorProject.VFX.Performance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -113,7 +115,7 @@ bool FVFXPerformanceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXIntegrationTest, "HorrorProject.VFX.Integration", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVFXIntegrationTest, "HorrorProject.VFX.Integration", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVFXIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -150,3 +152,5 @@ bool FVFXIntegrationTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

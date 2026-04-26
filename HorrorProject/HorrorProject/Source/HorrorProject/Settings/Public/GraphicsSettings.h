@@ -18,7 +18,7 @@ enum class EQualityPreset : uint8
 };
 
 UENUM(BlueprintType)
-enum class EAntiAliasingMethod : uint8
+enum class EHorrorAntiAliasingMethod : uint8
 {
 	None,
 	FXAA,
@@ -96,7 +96,7 @@ public:
 
 	// Anti-Aliasing
 	UPROPERTY(Config, BlueprintReadWrite, Category = "Anti-Aliasing")
-	EAntiAliasingMethod AntiAliasingMethod;
+	EHorrorAntiAliasingMethod AntiAliasingMethod;
 
 	UPROPERTY(Config, BlueprintReadWrite, Category = "Anti-Aliasing")
 	int32 AntiAliasingQuality;

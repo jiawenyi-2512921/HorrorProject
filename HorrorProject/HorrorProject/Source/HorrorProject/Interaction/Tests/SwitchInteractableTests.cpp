@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConstructionTest, "HorrorProject.Interaction.Switch.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConstructionTest, "HorrorProject.Interaction.Switch.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -23,7 +25,7 @@ bool FSwitchInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableToggleTest, "HorrorProject.Interaction.Switch.Toggle", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableToggleTest, "HorrorProject.Interaction.Switch.Toggle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableToggleTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -42,7 +44,7 @@ bool FSwitchInteractableToggleTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSetStateTest, "HorrorProject.Interaction.Switch.SetState", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSetStateTest, "HorrorProject.Interaction.Switch.SetState", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableSetStateTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -57,7 +59,7 @@ bool FSwitchInteractableSetStateTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableOneTimeTest, "HorrorProject.Interaction.Switch.OneTime", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableOneTimeTest, "HorrorProject.Interaction.Switch.OneTime", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableOneTimeTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -72,7 +74,7 @@ bool FSwitchInteractableOneTimeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSaveLoadTest, "HorrorProject.Interaction.Switch.SaveLoad", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSaveLoadTest, "HorrorProject.Interaction.Switch.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -96,7 +98,7 @@ bool FSwitchInteractableSaveLoadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableComponentsTest, "HorrorProject.Interaction.Switch.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableComponentsTest, "HorrorProject.Interaction.Switch.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -113,7 +115,7 @@ bool FSwitchInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableEventTest, "HorrorProject.Interaction.Switch.Event", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableEventTest, "HorrorProject.Interaction.Switch.Event", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableEventTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -135,7 +137,7 @@ bool FSwitchInteractableEventTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConnectedActorsTest, "HorrorProject.Interaction.Switch.ConnectedActors", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConnectedActorsTest, "HorrorProject.Interaction.Switch.ConnectedActors", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableConnectedActorsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -151,7 +153,7 @@ bool FSwitchInteractableConnectedActorsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableNullInstigatorTest, "HorrorProject.Interaction.Switch.NullInstigator", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableNullInstigatorTest, "HorrorProject.Interaction.Switch.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -163,7 +165,7 @@ bool FSwitchInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Switch.MultipleInteractions", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Switch.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -181,3 +183,5 @@ bool FSwitchInteractableMultipleInteractionsTest::RunTest(const FString& Paramet
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

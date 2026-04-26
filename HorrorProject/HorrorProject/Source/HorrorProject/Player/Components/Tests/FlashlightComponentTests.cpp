@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/FlashlightComponent.h"
@@ -11,7 +13,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentInitializationTest,
 	"HorrorProject.Player.Flashlight.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentInitializationTest::RunTest(const FString& Parameters)
 {
@@ -27,7 +29,7 @@ bool FFlashlightComponentInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentToggleTest,
 	"HorrorProject.Player.Flashlight.Toggle",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentToggleTest::RunTest(const FString& Parameters)
 {
@@ -47,7 +49,7 @@ bool FFlashlightComponentToggleTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentBatteryDrainTest,
 	"HorrorProject.Player.Flashlight.BatteryDrain",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentBatteryDrainTest::RunTest(const FString& Parameters)
 {
@@ -72,7 +74,7 @@ bool FFlashlightComponentBatteryDrainTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentBatteryDepletionTest,
 	"HorrorProject.Player.Flashlight.BatteryDepletion",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentBatteryDepletionTest::RunTest(const FString& Parameters)
 {
@@ -97,7 +99,7 @@ bool FFlashlightComponentBatteryDepletionTest::RunTest(const FString& Parameters
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentBatteryRechargeTest,
 	"HorrorProject.Player.Flashlight.BatteryRecharge",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentBatteryRechargeTest::RunTest(const FString& Parameters)
 {
@@ -122,7 +124,7 @@ bool FFlashlightComponentBatteryRechargeTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentSpotLightBindingTest,
 	"HorrorProject.Player.Flashlight.SpotLightBinding",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentSpotLightBindingTest::RunTest(const FString& Parameters)
 {
@@ -148,7 +150,7 @@ bool FFlashlightComponentSpotLightBindingTest::RunTest(const FString& Parameters
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFlashlightComponentBatteryPercentTest,
 	"HorrorProject.Player.Flashlight.BatteryPercent",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFlashlightComponentBatteryPercentTest::RunTest(const FString& Parameters)
 {
@@ -169,3 +171,5 @@ bool FFlashlightComponentBatteryPercentTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

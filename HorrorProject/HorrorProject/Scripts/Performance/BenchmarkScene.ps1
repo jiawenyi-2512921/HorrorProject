@@ -3,11 +3,16 @@
 
 param(
     [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$UEPath = "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe",
+    [string]$UEPath = "",
     [string]$MapName = "/Game/Maps/DeepWaterStation_Main",
     [int]$DurationSeconds = 300,
     [string]$OutputDir = "Saved\Profiling"
 )
+
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+if (-not $UEPath) {
+    $UEPath = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor.exe"
+}
 
 Write-Host "=== HorrorProject Performance Benchmark ===" -ForegroundColor Cyan
 Write-Host ""

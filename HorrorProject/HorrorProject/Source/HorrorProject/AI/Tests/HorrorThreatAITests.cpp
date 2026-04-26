@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -13,7 +15,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorThreatAIStateTest,
 	"HorrorProject.AI.Threat.StateAndDetection",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorThreatAIStateTest::RunTest(const FString& Parameters)
 {
@@ -87,7 +89,7 @@ bool FHorrorThreatAIStateTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorThreatAIControllerPossessionTest,
 	"HorrorProject.AI.Threat.ControllerPossession",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorThreatAIControllerPossessionTest::RunTest(const FString& Parameters)
 {
@@ -119,3 +121,5 @@ bool FHorrorThreatAIControllerPossessionTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

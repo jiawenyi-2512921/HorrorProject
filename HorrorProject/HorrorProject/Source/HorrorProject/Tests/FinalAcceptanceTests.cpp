@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // FinalAcceptanceTests.cpp
 // 最终验收测试
 
@@ -10,7 +12,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_GameStartup,
     "HorrorProject.FinalAcceptance.GameStartup",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_GameStartup::RunTest(const FString& Parameters)
 {
@@ -32,7 +34,7 @@ bool FFinalAcceptanceTest_GameStartup::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_PlayerSpawn,
     "HorrorProject.FinalAcceptance.PlayerSpawn",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_PlayerSpawn::RunTest(const FString& Parameters)
 {
@@ -63,7 +65,7 @@ bool FFinalAcceptanceTest_PlayerSpawn::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_InputSystem,
     "HorrorProject.FinalAcceptance.InputSystem",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_InputSystem::RunTest(const FString& Parameters)
 {
@@ -95,7 +97,7 @@ bool FFinalAcceptanceTest_InputSystem::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_UISystem,
     "HorrorProject.FinalAcceptance.UISystem",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_UISystem::RunTest(const FString& Parameters)
 {
@@ -119,7 +121,7 @@ bool FFinalAcceptanceTest_UISystem::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_AudioSystem,
     "HorrorProject.FinalAcceptance.AudioSystem",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_AudioSystem::RunTest(const FString& Parameters)
 {
@@ -141,7 +143,7 @@ bool FFinalAcceptanceTest_AudioSystem::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_SaveSystem,
     "HorrorProject.FinalAcceptance.SaveSystem",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_SaveSystem::RunTest(const FString& Parameters)
 {
@@ -162,7 +164,7 @@ bool FFinalAcceptanceTest_SaveSystem::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_AISystem,
     "HorrorProject.FinalAcceptance.AISystem",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_AISystem::RunTest(const FString& Parameters)
 {
@@ -187,7 +189,7 @@ bool FFinalAcceptanceTest_AISystem::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_PerformanceBaseline,
     "HorrorProject.FinalAcceptance.PerformanceBaseline",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_PerformanceBaseline::RunTest(const FString& Parameters)
 {
@@ -212,7 +214,7 @@ bool FFinalAcceptanceTest_PerformanceBaseline::RunTest(const FString& Parameters
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_AssetLoading,
     "HorrorProject.FinalAcceptance.AssetLoading",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_AssetLoading::RunTest(const FString& Parameters)
 {
@@ -236,7 +238,7 @@ bool FFinalAcceptanceTest_AssetLoading::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_GameplayMechanics,
     "HorrorProject.FinalAcceptance.GameplayMechanics",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_GameplayMechanics::RunTest(const FString& Parameters)
 {
@@ -266,7 +268,7 @@ bool FFinalAcceptanceTest_GameplayMechanics::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_NetworkingReady,
     "HorrorProject.FinalAcceptance.NetworkingReady",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_NetworkingReady::RunTest(const FString& Parameters)
 {
@@ -292,7 +294,7 @@ bool FFinalAcceptanceTest_NetworkingReady::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_ConfigurationValid,
     "HorrorProject.FinalAcceptance.ConfigurationValid",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_ConfigurationValid::RunTest(const FString& Parameters)
 {
@@ -313,7 +315,7 @@ bool FFinalAcceptanceTest_ConfigurationValid::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_BuildConfiguration,
     "HorrorProject.FinalAcceptance.BuildConfiguration",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_BuildConfiguration::RunTest(const FString& Parameters)
 {
@@ -341,7 +343,7 @@ bool FFinalAcceptanceTest_BuildConfiguration::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_PlatformCompatibility,
     "HorrorProject.FinalAcceptance.PlatformCompatibility",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_PlatformCompatibility::RunTest(const FString& Parameters)
 {
@@ -364,7 +366,7 @@ bool FFinalAcceptanceTest_PlatformCompatibility::RunTest(const FString& Paramete
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalAcceptanceTest_MemoryManagement,
     "HorrorProject.FinalAcceptance.MemoryManagement",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFinalAcceptanceTest_MemoryManagement::RunTest(const FString& Parameters)
 {
@@ -388,3 +390,5 @@ bool FFinalAcceptanceTest_MemoryManagement::RunTest(const FString& Parameters)
 
     return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -67,8 +67,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Multiplayer")
 	bool bGameInProgress;
 
-	virtual void HandleMatchHasStarted() override;
-	virtual void HandleMatchHasEnded() override;
+	void HandleMatchHasStarted();
+	void HandleMatchHasEnded();
 
 	void UpdateLobby(float DeltaTime);
 	void UpdateGameTimer(float DeltaTime);

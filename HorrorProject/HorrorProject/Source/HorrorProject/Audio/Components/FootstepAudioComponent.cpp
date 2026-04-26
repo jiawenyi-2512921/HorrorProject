@@ -39,7 +39,7 @@ void UFootstepAudioComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	}
 }
 
-void UFootstepAudioComponent::PlayFootstep(bool bIsLeftFoot)
+void UFootstepAudioComponent::PlayFootstep(bool bInIsLeftFoot)
 {
 	const FFootstepSoundSet* SoundSet = SurfaceSounds.Find(CurrentSurface);
 	if (!SoundSet)

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableConstructionTest, "HorrorProject.Interaction.Recorder.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableConstructionTest, "HorrorProject.Interaction.Recorder.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -24,7 +26,7 @@ bool FRecorderInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePlayTest, "HorrorProject.Interaction.Recorder.Play", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePlayTest, "HorrorProject.Interaction.Recorder.Play", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractablePlayTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -36,7 +38,7 @@ bool FRecorderInteractablePlayTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableStopTest, "HorrorProject.Interaction.Recorder.Stop", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableStopTest, "HorrorProject.Interaction.Recorder.Stop", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableStopTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -49,7 +51,7 @@ bool FRecorderInteractableStopTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePauseTest, "HorrorProject.Interaction.Recorder.Pause", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePauseTest, "HorrorProject.Interaction.Recorder.Pause", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractablePauseTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -62,7 +64,7 @@ bool FRecorderInteractablePauseTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableInteractTest, "HorrorProject.Interaction.Recorder.Interact", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableInteractTest, "HorrorProject.Interaction.Recorder.Interact", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableInteractTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -78,7 +80,7 @@ bool FRecorderInteractableInteractTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableEvidenceTest, "HorrorProject.Interaction.Recorder.Evidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableEvidenceTest, "HorrorProject.Interaction.Recorder.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -98,7 +100,7 @@ bool FRecorderInteractableEvidenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableSaveLoadTest, "HorrorProject.Interaction.Recorder.SaveLoad", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableSaveLoadTest, "HorrorProject.Interaction.Recorder.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -126,7 +128,7 @@ bool FRecorderInteractableSaveLoadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableComponentsTest, "HorrorProject.Interaction.Recorder.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableComponentsTest, "HorrorProject.Interaction.Recorder.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -147,7 +149,7 @@ bool FRecorderInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableProgressTest, "HorrorProject.Interaction.Recorder.Progress", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableProgressTest, "HorrorProject.Interaction.Recorder.Progress", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableProgressTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -159,7 +161,7 @@ bool FRecorderInteractableProgressTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableNullInstigatorTest, "HorrorProject.Interaction.Recorder.NullInstigator", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableNullInstigatorTest, "HorrorProject.Interaction.Recorder.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -172,3 +174,5 @@ bool FRecorderInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

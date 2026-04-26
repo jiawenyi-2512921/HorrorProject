@@ -6,6 +6,8 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "TimerManager.h"
+#include "EngineUtils.h"
+#include "DynamicRHI.h"
 
 void UDiagnosticSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -67,7 +69,7 @@ void UDiagnosticSubsystem::RunPerformanceDiagnostics()
 	}
 
 	// Check GPU time
-	float GPUTime = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+	float GPUTime = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 	if (GPUTime > 33.0f)
 	{
 		AddDiagnosticReport(TEXT("Performance"),

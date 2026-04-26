@@ -1,10 +1,6 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/NoteRecorderComponent.h"
-
-#if WITH_DEV_AUTOMATION_TESTS
-
-#include "Misc/AutomationTest.h"
 
 void UNoteRecorderDelegateProbe::HandleNoteRecorded(FName NoteId, int32 TotalRecordedNotes)
 {
@@ -15,10 +11,14 @@ void UNoteRecorderDelegateProbe::HandleNoteRecorded(FName NoteId, int32 TotalRec
 	TotalRecordedNoteCounts.Add(TotalRecordedNotes);
 }
 
+#if WITH_DEV_AUTOMATION_TESTS
+
+#include "Misc/AutomationTest.h"
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoteRecorderComponentStoresUniqueNoteIdsTest,
 	"HorrorProject.Player.NoteRecorder.StoresUniqueNoteIds",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Parameters)
 {
@@ -90,7 +90,7 @@ bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoteRecorderComponentImportDoesNotBroadcastTest,
 	"HorrorProject.Player.NoteRecorder.ImportDoesNotBroadcast",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoteRecorderComponentImportDoesNotBroadcastTest::RunTest(const FString& Parameters)
 {

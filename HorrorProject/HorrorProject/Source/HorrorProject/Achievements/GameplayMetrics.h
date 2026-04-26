@@ -4,7 +4,7 @@
 #include "GameplayMetrics.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGameplayMetrics
+struct FHorrorGameplayMetrics
 {
 	GENERATED_BODY()
 
@@ -54,7 +54,7 @@ struct FGameplayMetrics
 	UPROPERTY(BlueprintReadOnly, Category = "Metrics")
 	int32 LoadCount = 0;
 
-	FGameplayMetrics()
+	FHorrorGameplayMetrics()
 		: AverageFPS(0.0f)
 		, MinFPS(0.0f)
 		, MaxFPS(0.0f)
@@ -72,26 +72,26 @@ struct FGameplayMetrics
 };
 
 UCLASS()
-class HORRORPROJECT_API UGameplayMetrics : public UObject
+class HORRORPROJECT_API UHorrorGameplayMetricsLibrary : public UObject
 {
 	GENERATED_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static FGameplayMetrics CreateMetrics();
+	static FHorrorGameplayMetrics CreateMetrics();
 
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static void UpdateFPSMetrics(UPARAM(ref) FGameplayMetrics& Metrics, float CurrentFPS);
+	static void UpdateFPSMetrics(UPARAM(ref) FHorrorGameplayMetrics& Metrics, float CurrentFPS);
 
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static void UpdateSanityMetrics(UPARAM(ref) FGameplayMetrics& Metrics, float CurrentSanity);
+	static void UpdateSanityMetrics(UPARAM(ref) FHorrorGameplayMetrics& Metrics, float CurrentSanity);
 
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static void RecordJumpScare(UPARAM(ref) FGameplayMetrics& Metrics, float Intensity);
+	static void RecordJumpScare(UPARAM(ref) FHorrorGameplayMetrics& Metrics, float Intensity);
 
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static void RecordInteraction(UPARAM(ref) FGameplayMetrics& Metrics, bool bSuccess);
+	static void RecordInteraction(UPARAM(ref) FHorrorGameplayMetrics& Metrics, bool bSuccess);
 
 	UFUNCTION(BlueprintCallable, Category = "Metrics")
-	static FString GenerateMetricsReport(const FGameplayMetrics& Metrics);
+	static FString GenerateMetricsReport(const FHorrorGameplayMetrics& Metrics);
 };

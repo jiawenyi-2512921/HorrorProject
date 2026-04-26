@@ -19,9 +19,11 @@ public:
 	virtual void BeginPlay() override;
 
 	// IInteractableInterface
-	virtual void Interact_Implementation(AActor* Interactor) override;
-	virtual FText GetInteractionPrompt_Implementation() const override;
-	virtual bool CanInteract_Implementation(AActor* Interactor) const override;
+	virtual bool Interact_Implementation(AActor* InstigatorActor, const FHitResult& Hit) override;
+	virtual bool CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const override;
+
+	UFUNCTION(BlueprintPure, Category="Evidence")
+	FText GetInteractionPrompt() const;
 
 	UFUNCTION(BlueprintCallable, Category="Evidence")
 	void SetEvidenceMetadata(const FExtendedEvidenceMetadata& Metadata);

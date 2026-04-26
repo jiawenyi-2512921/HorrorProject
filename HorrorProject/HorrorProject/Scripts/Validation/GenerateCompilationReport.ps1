@@ -1,248 +1,185 @@
-# Generate comprehensive compilation report
-# Analyzes project structure and generates detailed report
+# Generates a current compilation and engineering-health report.
+
+param(
+    [string]$OutputDir = ""
+)
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$ReportDir = Join-Path $ProjectRoot "Docs\Compilation"
 
-Write-Host "=== Generating Compilation Report ===" -ForegroundColor Cyan
+. (Join-Path $PSScriptRoot "Common.ps1")
 
-# Create report directory
-if (-not (Test-Path $ReportDir)) {
-    New-Item -ItemType Directory -Path $ReportDir -Force | Out-Null
+$ProjectRoot = Get-HorrorProjectRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$ReportDir = if ([string]::IsNullOrWhiteSpace($OutputDir)) {
+    Join-Path $ProjectRoot "Docs\Compilation"
+} else {
+    $OutputDir
 }
 
-# Count files by system
-$VFXFiles = @(Get-ChildItem -Path "$ProjectRoot\Source\HorrorProject\VFX" -Filter "*.cpp" -Recurse)
-$AudioFiles = @(Get-ChildItem -Path "$ProjectRoot\Source\HorrorProject\Audio" -Filter "*.cpp" -Recurse)
-$UIFiles = @(Get-ChildItem -Path "$ProjectRoot\Source\HorrorProject\UI" -Filter "*.cpp" -Recurse)
-$TestFiles = @(Get-ChildItem -Path "$ProjectRoot\Source\HorrorProject" -Filter "*Tests.cpp" -Recurse)
-$EditorFiles = @(Get-ChildItem -Path "$ProjectRoot\Source\HorrorProjectEditor\Tools" -Filter "*.cpp" -Recurse)
+Write-Host "=== Generating Compilation Report ===" -ForegroundColor Cyan
+Write-Host "Project: $ProjectFile" -ForegroundColor Yellow
 
-# Generate main report
+New-Item -ItemType Directory -Path $ReportDir -Force | Out-Null
+
+function Get-FileCount {
+    param(
+        [string]$RelativePath,
+        [string]$Filter = "*.cpp"
+    )
+
+    $Path = Join-Path $ProjectRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return 0
+    }
+
+    return @(Get-ChildItem -LiteralPath $Path -Filter $Filter -File -Recurse).Count
+}
+
+function Get-BuildModules {
+    param(
+        [string]$BuildFile
+    )
+
+    if (-not (Test-Path -LiteralPath $BuildFile)) {
+        return @()
+    }
+
+    $Content = Get-Content -LiteralPath $BuildFile -Raw
+    return @([regex]::Matches($Content, '"([^"]+)"') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+}
+
+function Get-PowerShellSyntaxSummary {
+    $ScanRoots = @("Scripts", "Source", "Docs")
+    $ExcludedRoots = @("Binaries", "DerivedDataCache", "Intermediate", "Saved", ".git", "Docs\Production")
+    $Files = foreach ($ScanRoot in $ScanRoots) {
+        $AbsolutePath = Join-Path $ProjectRoot $ScanRoot
+        if (Test-Path -LiteralPath $AbsolutePath) {
+            Get-ChildItem -LiteralPath $AbsolutePath -Filter "*.ps1" -File -Recurse
+        }
+    }
+
+    $Files = @($Files | Where-Object {
+        $RelativePath = $_.FullName.Substring($ProjectRoot.Length + 1)
+        $IsExcluded = $false
+        foreach ($ExcludedRoot in $ExcludedRoots) {
+            $NormalizedExcluded = $ExcludedRoot.TrimEnd("\", "/")
+            if ($RelativePath -eq $NormalizedExcluded -or $RelativePath.StartsWith("$NormalizedExcluded\")) {
+                $IsExcluded = $true
+                break
+            }
+        }
+        -not $IsExcluded
+    })
+
+    $ErrorCount = 0
+    $FilesWithErrors = 0
+    foreach ($File in $Files) {
+        $Tokens = $null
+        $Errors = $null
+        [System.Management.Automation.Language.Parser]::ParseFile($File.FullName, [ref]$Tokens, [ref]$Errors) | Out-Null
+        if ($Errors.Count -gt 0) {
+            $FilesWithErrors++
+            $ErrorCount += $Errors.Count
+        }
+    }
+
+    return [PSCustomObject]@{
+        Files = $Files.Count
+        FilesWithErrors = $FilesWithErrors
+        Errors = $ErrorCount
+    }
+}
+
+$RuntimeBuildFile = Join-Path $ProjectRoot "Source\HorrorProject\HorrorProject.Build.cs"
+$EditorBuildFile = Join-Path $ProjectRoot "Source\HorrorProjectEditor\HorrorProjectEditor.Build.cs"
+$RuntimeModules = Get-BuildModules -BuildFile $RuntimeBuildFile
+$EditorModules = Get-BuildModules -BuildFile $EditorBuildFile
+$PowerShellSummary = Get-PowerShellSyntaxSummary
+
+$RuntimeModuleText = ($RuntimeModules | ForEach-Object { "- $_" }) -join "`n"
+$EditorModuleText = ($EditorModules | ForEach-Object { "- $_" }) -join "`n"
+
 $ReportFile = Join-Path $ReportDir "CompilationReport.md"
 $Report = @"
 # Compilation Report
+
 Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 
-## Project Overview
-- **Project**: HorrorProject
-- **Engine**: Unreal Engine 5.6
-- **Platform**: Win64
+## Project
 
-## File Statistics
+- Project file: $ProjectFile
+- Engine association: 5.6
+- Platform target: Win64
+- Runtime target: HorrorProject
+- Editor target: HorrorProjectEditor
 
-### VFX System
-- Implementation Files: $($VFXFiles.Count)
-- Components:
-  - ParticleSpawner (Niagara-based)
-  - PostProcessController
-  - ScreenEffectManager
+## Source Inventory
 
-### Audio System
-- Implementation Files: $($AudioFiles.Count)
-- Components:
-  - AmbientAudioComponent
-  - BreathingAudioComponent
-  - FootstepAudioComponent
-  - UnderwaterAudioComponent
-- Subsystem: HorrorAudioSubsystem
-- Tools: AudioAssetAuditor, AudioAttenuationPresets
+- VFX cpp files: $(Get-FileCount -RelativePath "Source\HorrorProject\VFX")
+- Audio cpp files: $(Get-FileCount -RelativePath "Source\HorrorProject\Audio")
+- UI cpp files: $(Get-FileCount -RelativePath "Source\HorrorProject\UI")
+- Runtime test cpp files: $(Get-FileCount -RelativePath "Source\HorrorProject" -Filter "*Tests.cpp")
+- Editor tool cpp files: $(Get-FileCount -RelativePath "Source\HorrorProjectEditor\Tools")
 
-### UI System
-- Implementation Files: $($UIFiles.Count)
-- Widgets:
-  - ArchiveMenuWidget
-  - BodycamOverlayWidget
-  - EvidenceToastWidget
-  - ObjectiveToastWidget
-  - PauseMenuWidget
-  - SettingsMenuWidget
-- Components:
-  - NoiseOverlayComponent
-  - ScanlineComponent
-  - VHSEffectComponent
-- Subsystem: UIManagerSubsystem
+## Runtime Module Dependencies
 
-### Testing System
-- Test Files: $($TestFiles.Count)
-- Coverage: AI, Audio, Evidence, Game, Interaction, Player, Save, UI, VFX
+$RuntimeModuleText
 
-### Editor Tools
-- Tool Files: $($EditorFiles.Count)
-- Tools:
-  - AssetValidator
-  - AudioBatchProcessor
-  - LODGenerator
-  - MaterialOptimizer
+## Editor Module Dependencies
 
-## Module Dependencies
+$EditorModuleText
 
-### HorrorProject Module
-Required modules:
-- Core, CoreUObject, Engine
-- InputCore, EnhancedInput
-- GameplayTags
-- AIModule, StateTreeModule, GameplayStateTreeModule
-- UMG, SlateCore
-- **Niagara** (for VFX system)
+## Validation Entry Points
 
-### HorrorProjectEditor Module
-Required modules:
-- Core, CoreUObject, Engine
-- UnrealEd, EditorSubsystem
-- AssetTools, ContentBrowser
-- Slate, SlateCore, EditorStyle
-- ToolMenus, PropertyEditor
-- AudioEditor, MaterialEditor
+- Game build: `Scripts\Validation\ValidateCompilation.ps1`
+- Editor build: `Scripts\Validation\ValidateCompilation.ps1 -EditorOnly`
+- Dependency scan: `Scripts\Validation\CheckDependencies.ps1`
+- Include scan: `Scripts\Validation\CheckIncludes.ps1`
+- PowerShell syntax scan: `Scripts\Validation\ValidatePowerShellSyntax.ps1`
 
-## Known Issues
+## Current Engineering Notes
 
-### Missing Module Dependencies
-1. **Niagara module** not in HorrorProject.Build.cs
-   - Required by: VFX/ParticleSpawner.cpp
-   - Fix: Add "Niagara" to PublicDependencyModuleNames
+- Niagara, UMG, networking, rendering, navigation, JSON, and editor dependencies are declared in Build.cs.
+- Legacy automation tests are intentionally quarantined by `HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0` until they are migrated to current APIs.
+- PowerShell syntax scan currently covers $($PowerShellSummary.Files) scripts.
+- PowerShell files with syntax errors: $($PowerShellSummary.FilesWithErrors)
+- PowerShell syntax error count: $($PowerShellSummary.Errors)
 
-### Potential Issues
-- Audio system may benefit from AudioMixer module for advanced features
-- Test files may need additional test framework modules
+## Recommended Next Work
 
-## Compilation Status
-Status will be updated after running ValidateCompilation.ps1
-
-## Next Steps
-1. Add missing Niagara module to Build.cs
-2. Run full compilation test
-3. Verify all tests compile
-4. Check for warnings
+1. Keep Game and Editor builds at zero warnings.
+2. Migrate legacy automation tests module by module before re-enabling them.
+3. Repair or retire corrupted PowerShell tools, starting with validation, build, package, and final-integration scripts.
+4. Add Cook, Package, and Editor smoke tests after script syntax debt is reduced.
 "@
 
 Set-Content -Path $ReportFile -Value $Report -Encoding UTF8
 Write-Host "[OK] Generated: $ReportFile" -ForegroundColor Green
 
-# Generate dependency graph
-$DependencyFile = Join-Path $ReportDir "DependencyGraph.md"
-$DependencyGraph = @"
-# Module Dependency Graph
-
-## HorrorProject Module Dependencies
-
-\`\`\`
-HorrorProject
-├── Core (Engine)
-├── CoreUObject (Engine)
-├── Engine (Engine)
-├── InputCore (Engine)
-├── EnhancedInput (Engine)
-├── GameplayTags (Engine)
-├── AIModule (Engine)
-├── StateTreeModule (Engine)
-├── GameplayStateTreeModule (Engine)
-├── UMG (Engine)
-├── SlateCore (Engine)
-└── Niagara (Engine) [MISSING]
-\`\`\`
-
-## HorrorProjectEditor Module Dependencies
-
-\`\`\`
-HorrorProjectEditor
-├── Core (Engine)
-├── CoreUObject (Engine)
-├── Engine (Engine)
-├── UnrealEd (Editor)
-├── EditorSubsystem (Editor)
-├── AssetTools (Editor)
-├── ContentBrowser (Editor)
-├── Slate (Engine)
-├── SlateCore (Engine)
-├── EditorStyle (Editor)
-├── ToolMenus (Editor)
-├── PropertyEditor (Editor)
-├── AudioEditor (Editor)
-├── MaterialEditor (Editor)
-├── InputCore (Engine)
-├── LevelEditor (Editor)
-├── Projects (Engine)
-├── RenderCore (Engine)
-├── RHI (Engine)
-└── HorrorProject (Game)
-\`\`\`
-
-## System Dependencies
-
-### VFX System
-- Niagara (for particle effects)
-- Engine (for post-process volumes)
-- Camera (for camera shakes)
-
-### Audio System
-- Engine (for audio components)
-- GameplayTags (for event system)
-- Sound (for sound assets)
-
-### UI System
-- UMG (for widgets)
-- SlateCore (for UI framework)
-- Engine (for player controller)
-
-### Editor Tools
-- AssetTools (for asset operations)
-- ContentBrowser (for asset browsing)
-- EditorSubsystem (for editor integration)
-"@
-
-Set-Content -Path $DependencyFile -Value $DependencyGraph -Encoding UTF8
-Write-Host "[OK] Generated: $DependencyFile" -ForegroundColor Green
-
-# Generate issues file
 $IssuesFile = Join-Path $ReportDir "CompilationIssues.md"
 $Issues = @"
 # Compilation Issues
 
-## Critical Issues
+Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 
-### 1. Missing Niagara Module
-**Severity**: Critical
-**File**: Source/HorrorProject/HorrorProject.Build.cs
-**Description**: ParticleSpawner.cpp uses Niagara types but module not declared
-**Fix**:
-\`\`\`csharp
-PublicDependencyModuleNames.AddRange(new string[] {
-    "Core",
-    "CoreUObject",
-    "Engine",
-    "InputCore",
-    "EnhancedInput",
-    "GameplayTags",
-    "AIModule",
-    "StateTreeModule",
-    "GameplayStateTreeModule",
-    "UMG",
-    "SlateCore",
-    "Niagara"  // ADD THIS LINE
-});
-\`\`\`
+## Blocking Build Issues
 
-## Warnings
+- None reported by this static report generator. Run `Scripts\Validation\ValidateCompilation.ps1` and `Scripts\Validation\ValidateCompilation.ps1 -EditorOnly` for fresh build proof.
 
-### 1. Optional Audio Modules
-**Severity**: Low
-**Description**: AudioMixer and AudioExtensions modules could enhance audio system
-**Recommendation**: Consider adding for advanced audio features
+## Known Engineering Debt
 
-## Resolved Issues
-None yet - first validation run
+- Legacy automation tests are disabled behind `HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0`.
+- PowerShell syntax scan reports $($PowerShellSummary.Errors) syntax errors across $($PowerShellSummary.FilesWithErrors) files.
+- Several older utility scripts still contain machine-specific paths and should be normalized to shared validation helpers or project-root-relative defaults.
 
-## Testing Issues
-All test files need to be verified for compilation
+## Quality Gate Direction
+
+- Compilation must remain zero-warning for Game and Editor targets.
+- Script syntax issues should trend to zero before these tools are used as release gates.
+- Re-enable automation tests only after each suite is migrated and verified.
 "@
 
 Set-Content -Path $IssuesFile -Value $Issues -Encoding UTF8
 Write-Host "[OK] Generated: $IssuesFile" -ForegroundColor Green
 
-Write-Host "`n=== Report Generation Complete ===" -ForegroundColor Cyan
 Write-Host "Reports saved to: $ReportDir" -ForegroundColor Green
-Write-Host "  - CompilationReport.md" -ForegroundColor Gray
-Write-Host "  - DependencyGraph.md" -ForegroundColor Gray
-Write-Host "  - CompilationIssues.md" -ForegroundColor Gray

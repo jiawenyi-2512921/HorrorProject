@@ -23,8 +23,8 @@ $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $reportFile = Join-Path $OutputDir "gameplay_profile_$timestamp.json"
 
 # UE5 Editor path
-$UE5Editor = "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+$UE5Editor = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 if (-not (Test-Path $UE5Editor)) {
     Write-Error "UE5 Editor not found at: $UE5Editor"
     exit 1

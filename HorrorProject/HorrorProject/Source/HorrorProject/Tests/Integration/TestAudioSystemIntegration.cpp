@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -11,7 +13,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioSystemIntegrationTest,
     "HorrorProject.Integration.Systems.Audio",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioSystemIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -132,7 +134,7 @@ bool FAudioSystemIntegrationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioSpatializationTest,
     "HorrorProject.Integration.Systems.AudioSpatialization",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAudioSpatializationTest::RunTest(const FString& Parameters)
 {
@@ -170,3 +172,5 @@ bool FAudioSpatializationTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

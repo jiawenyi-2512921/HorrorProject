@@ -69,7 +69,7 @@ public:
 	void SetTimeOfDayIntensity(float Intensity);
 
 	UFUNCTION(BlueprintPure, Category="Ambient Audio")
-	bool IsPlaying() const { return bIsPlaying; }
+	bool IsAmbientPlaying() const { return bIsAmbientPlaying; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ambient Audio")
@@ -97,7 +97,7 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UAudioComponent>> LayerComponents;
 
-	bool bIsPlaying = false;
+	bool bIsAmbientPlaying = false;
 	float TimeSinceLastRandomization = 0.0f;
 	float CurrentTimeOfDayIntensity = 1.0f;
 

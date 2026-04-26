@@ -7,6 +7,14 @@
 #include "Evidence/EvidenceTypes.h"
 #include "ArchiveMenuWidget.generated.h"
 
+UENUM(BlueprintType)
+enum class EArchiveEntryType : uint8
+{
+	All UMETA(DisplayName="All"),
+	Evidence UMETA(DisplayName="Evidence"),
+	Notes UMETA(DisplayName="Notes")
+};
+
 /**
  * Archive menu for viewing collected evidence and notes
  */

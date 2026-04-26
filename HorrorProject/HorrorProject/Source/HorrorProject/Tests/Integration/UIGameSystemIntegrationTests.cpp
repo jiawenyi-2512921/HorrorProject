@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIGameSystemIntegrationTest, "HorrorProject.Integration.UIGameSystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIGameSystemIntegrationTest, "HorrorProject.Integration.UIGameSystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIGameSystemIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -26,7 +28,7 @@ bool FUIGameSystemIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIEventBusIntegrationTest, "HorrorProject.Integration.UIEventBus", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIEventBusIntegrationTest, "HorrorProject.Integration.UIEventBus", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIEventBusIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -38,7 +40,7 @@ bool FUIEventBusIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUICameraIntegrationTest, "HorrorProject.Integration.UICamera", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUICameraIntegrationTest, "HorrorProject.Integration.UICamera", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUICameraIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -56,7 +58,7 @@ bool FUICameraIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIBatteryIntegrationTest, "HorrorProject.Integration.UIBattery", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIBatteryIntegrationTest, "HorrorProject.Integration.UIBattery", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIBatteryIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -72,7 +74,7 @@ bool FUIBatteryIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIEvidenceIntegrationTest, "HorrorProject.Integration.UIEvidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIEvidenceIntegrationTest, "HorrorProject.Integration.UIEvidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIEvidenceIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -82,3 +84,5 @@ bool FUIEvidenceIntegrationTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

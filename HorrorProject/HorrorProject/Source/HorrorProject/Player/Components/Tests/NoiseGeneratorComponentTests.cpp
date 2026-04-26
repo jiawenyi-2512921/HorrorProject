@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/NoiseGeneratorComponent.h"
@@ -8,7 +10,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentInitializationTest,
 	"HorrorProject.Player.Noise.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentInitializationTest::RunTest(const FString& Parameters)
 {
@@ -23,7 +25,7 @@ bool FNoiseGeneratorComponentInitializationTest::RunTest(const FString& Paramete
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentGenerateNoiseTest,
 	"HorrorProject.Player.Noise.GenerateNoise",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentGenerateNoiseTest::RunTest(const FString& Parameters)
 {
@@ -42,7 +44,7 @@ bool FNoiseGeneratorComponentGenerateNoiseTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentSprintTest,
 	"HorrorProject.Player.Noise.Sprint",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentSprintTest::RunTest(const FString& Parameters)
 {
@@ -65,7 +67,7 @@ bool FNoiseGeneratorComponentSprintTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentNoiseTypesTest,
 	"HorrorProject.Player.Noise.NoiseTypes",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentNoiseTypesTest::RunTest(const FString& Parameters)
 {
@@ -91,7 +93,7 @@ bool FNoiseGeneratorComponentNoiseTypesTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentNoiseDecayTest,
 	"HorrorProject.Player.Noise.Decay",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentNoiseDecayTest::RunTest(const FString& Parameters)
 {
@@ -110,7 +112,7 @@ bool FNoiseGeneratorComponentNoiseDecayTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentLocationNoiseTest,
 	"HorrorProject.Player.Noise.LocationNoise",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentLocationNoiseTest::RunTest(const FString& Parameters)
 {
@@ -126,7 +128,7 @@ bool FNoiseGeneratorComponentLocationNoiseTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoiseGeneratorComponentLoudnessMultiplierTest,
 	"HorrorProject.Player.Noise.LoudnessMultiplier",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseGeneratorComponentLoudnessMultiplierTest::RunTest(const FString& Parameters)
 {
@@ -144,3 +146,5 @@ bool FNoiseGeneratorComponentLoudnessMultiplierTest::RunTest(const FString& Para
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

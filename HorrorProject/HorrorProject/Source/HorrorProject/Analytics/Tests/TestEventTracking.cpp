@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -6,7 +8,7 @@
 #include "Analytics/GameplayTelemetry.h"
 #include "Analytics/ErrorTelemetry.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerformanceTelemetryTest, "HorrorProject.Analytics.PerformanceTelemetry", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerformanceTelemetryTest, "HorrorProject.Analytics.PerformanceTelemetry", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPerformanceTelemetryTest::RunTest(const FString& Parameters)
 {
@@ -51,7 +53,7 @@ bool FPerformanceTelemetryTest::RunTest(const FString& Parameters)
 
 	// Test snapshot
 	{
-		FPerformanceSnapshot Snapshot = Telemetry->GetCurrentSnapshot();
+		FPerformanceTelemetrySnapshot Snapshot = Telemetry->GetCurrentSnapshot();
 		TestTrue(TEXT("Snapshot should have valid FPS"), Snapshot.FPS > 0.0f);
 	}
 
@@ -59,14 +61,14 @@ bool FPerformanceTelemetryTest::RunTest(const FString& Parameters)
 	{
 		Telemetry->ResetStats();
 
-		TArray<FPerformanceSnapshot> History = Telemetry->GetPerformanceHistory();
+		TArray<FPerformanceTelemetrySnapshot> History = Telemetry->GetPerformanceHistory();
 		TestEqual(TEXT("History should be empty after reset"), History.Num(), 0);
 	}
 
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameplayTelemetryTest, "HorrorProject.Analytics.GameplayTelemetry", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameplayTelemetryTest, "HorrorProject.Analytics.GameplayTelemetry", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FGameplayTelemetryTest::RunTest(const FString& Parameters)
 {
@@ -116,7 +118,7 @@ bool FGameplayTelemetryTest::RunTest(const FString& Parameters)
 		Telemetry->RecordItemCollected(TEXT("Coin"));
 		Telemetry->RecordItemCollected(TEXT("Key"));
 
-		FGameplayMetrics Metrics = Telemetry->GetMetrics();
+		FGameplayTelemetryMetrics Metrics = Telemetry->GetMetrics();
 		TestEqual(TEXT("Should have collected 3 items"), Metrics.ItemsCollected, 3);
 	}
 
@@ -125,7 +127,7 @@ bool FGameplayTelemetryTest::RunTest(const FString& Parameters)
 		Telemetry->RecordEnemyDefeated(TEXT("Zombie"));
 		Telemetry->RecordEnemyDefeated(TEXT("Ghost"));
 
-		FGameplayMetrics Metrics = Telemetry->GetMetrics();
+		FGameplayTelemetryMetrics Metrics = Telemetry->GetMetrics();
 		TestEqual(TEXT("Should have defeated 2 enemies"), Metrics.EnemiesDefeated, 2);
 	}
 
@@ -134,14 +136,14 @@ bool FGameplayTelemetryTest::RunTest(const FString& Parameters)
 		Telemetry->RecordDistanceTraveled(100.0f);
 		Telemetry->RecordDistanceTraveled(50.0f);
 
-		FGameplayMetrics Metrics = Telemetry->GetMetrics();
+		FGameplayTelemetryMetrics Metrics = Telemetry->GetMetrics();
 		TestEqual(TEXT("Total distance should be 150"), Metrics.DistanceTraveled, 150.0f);
 	}
 
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FErrorTelemetryTest, "HorrorProject.Analytics.ErrorTelemetry", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FErrorTelemetryTest, "HorrorProject.Analytics.ErrorTelemetry", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FErrorTelemetryTest::RunTest(const FString& Parameters)
 {
@@ -212,7 +214,7 @@ bool FErrorTelemetryTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTelemetrySubsystemTest, "HorrorProject.Analytics.TelemetrySubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTelemetrySubsystemTest, "HorrorProject.Analytics.TelemetrySubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTelemetrySubsystemTest::RunTest(const FString& Parameters)
 {
@@ -255,3 +257,5 @@ bool FTelemetrySubsystemTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

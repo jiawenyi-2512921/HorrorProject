@@ -1,4 +1,8 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
+
+#include "Tests/UIWidgetTests.h"
 
 #include "Misc/AutomationTest.h"
 #include "UI/Widgets/BodycamOverlayWidget.h"
@@ -7,7 +11,7 @@
 #include "UI/Widgets/SettingsMenuWidget.h"
 #include "UI/Widgets/EvidenceToastWidget.h"
 #include "UI/Widgets/ObjectiveToastWidget.h"
-#include "UI/Components/VHSEffectComponent.h"
+#include "UI/Components/VHSVisualEffectComponent.h"
 #include "UI/Components/NoiseOverlayComponent.h"
 #include "UI/Components/ScanlineComponent.h"
 #include "UI/UIManagerSubsystem.h"
@@ -15,7 +19,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBodycamOverlayWidgetTest, "HorrorProject.UI.BodycamOverlayWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBodycamOverlayWidgetTest, "HorrorProject.UI.BodycamOverlayWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FBodycamOverlayWidgetTest::RunTest(const FString& Parameters)
 {
@@ -41,7 +45,7 @@ bool FBodycamOverlayWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBodycamBatteryLevelsTest, "HorrorProject.UI.BodycamBatteryLevels", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBodycamBatteryLevelsTest, "HorrorProject.UI.BodycamBatteryLevels", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FBodycamBatteryLevelsTest::RunTest(const FString& Parameters)
 {
@@ -62,7 +66,7 @@ bool FBodycamBatteryLevelsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveMenuWidgetTest, "HorrorProject.UI.ArchiveMenuWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArchiveMenuWidgetTest, "HorrorProject.UI.ArchiveMenuWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FArchiveMenuWidgetTest::RunTest(const FString& Parameters)
 {
@@ -74,7 +78,7 @@ bool FArchiveMenuWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPauseMenuWidgetTest, "HorrorProject.UI.PauseMenuWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPauseMenuWidgetTest, "HorrorProject.UI.PauseMenuWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FPauseMenuWidgetTest::RunTest(const FString& Parameters)
 {
@@ -86,7 +90,7 @@ bool FPauseMenuWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsMenuWidgetTest, "HorrorProject.UI.SettingsMenuWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsMenuWidgetTest, "HorrorProject.UI.SettingsMenuWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSettingsMenuWidgetTest::RunTest(const FString& Parameters)
 {
@@ -98,7 +102,7 @@ bool FSettingsMenuWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceToastWidgetTest, "HorrorProject.UI.EvidenceToastWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceToastWidgetTest, "HorrorProject.UI.EvidenceToastWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceToastWidgetTest::RunTest(const FString& Parameters)
 {
@@ -110,7 +114,7 @@ bool FEvidenceToastWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FObjectiveToastWidgetTest, "HorrorProject.UI.ObjectiveToastWidget", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FObjectiveToastWidgetTest, "HorrorProject.UI.ObjectiveToastWidget", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FObjectiveToastWidgetTest::RunTest(const FString& Parameters)
 {
@@ -122,11 +126,11 @@ bool FObjectiveToastWidgetTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVHSEffectComponentTest, "HorrorProject.UI.VHSEffectComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVHSEffectComponentTest, "HorrorProject.UI.VHSEffectComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FVHSEffectComponentTest::RunTest(const FString& Parameters)
 {
-	UVHSEffectComponent* Component = NewObject<UVHSEffectComponent>();
+	UVHSVisualEffectComponent* Component = NewObject<UVHSVisualEffectComponent>();
 	TestNotNull(TEXT("VHSEffectComponent created"), Component);
 
 	TestTrue(TEXT("VHS effect component initialized"), true);
@@ -134,7 +138,7 @@ bool FVHSEffectComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNoiseOverlayComponentTest, "HorrorProject.UI.NoiseOverlayComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNoiseOverlayComponentTest, "HorrorProject.UI.NoiseOverlayComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FNoiseOverlayComponentTest::RunTest(const FString& Parameters)
 {
@@ -146,7 +150,7 @@ bool FNoiseOverlayComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScanlineComponentTest, "HorrorProject.UI.ScanlineComponent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScanlineComponentTest, "HorrorProject.UI.ScanlineComponent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FScanlineComponentTest::RunTest(const FString& Parameters)
 {
@@ -158,7 +162,7 @@ bool FScanlineComponentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIManagerSubsystemTest, "HorrorProject.UI.UIManagerSubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIManagerSubsystemTest, "HorrorProject.UI.UIManagerSubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIManagerSubsystemTest::RunTest(const FString& Parameters)
 {
@@ -170,7 +174,7 @@ bool FUIManagerSubsystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIWidgetEdgeCasesTest, "HorrorProject.UI.EdgeCases", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUIWidgetEdgeCasesTest, "HorrorProject.UI.EdgeCases", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FUIWidgetEdgeCasesTest::RunTest(const FString& Parameters)
 {
@@ -188,3 +192,5 @@ bool FUIWidgetEdgeCasesTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

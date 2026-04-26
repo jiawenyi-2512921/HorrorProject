@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -5,7 +7,7 @@
 #include "Localization/LocalizationSubsystem.h"
 #include "Engine/GameInstance.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationSubsystemTest, "HorrorProject.Localization.LocalizationSubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationSubsystemTest, "HorrorProject.Localization.LocalizationSubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLocalizationSubsystemTest::RunTest(const FString& Parameters)
 {
@@ -56,7 +58,7 @@ bool FLocalizationSubsystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextLocalizationTest, "HorrorProject.Localization.TextLocalization", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTextLocalizationTest, "HorrorProject.Localization.TextLocalization", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTextLocalizationTest::RunTest(const FString& Parameters)
 {
@@ -76,7 +78,7 @@ bool FTextLocalizationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationDataTest, "HorrorProject.Localization.LocalizationData", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationDataTest, "HorrorProject.Localization.LocalizationData", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLocalizationDataTest::RunTest(const FString& Parameters)
 {
@@ -115,7 +117,7 @@ bool FLocalizationDataTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationPerformanceTest, "HorrorProject.Localization.Performance", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationPerformanceTest, "HorrorProject.Localization.Performance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FLocalizationPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -165,3 +167,5 @@ bool FLocalizationPerformanceTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

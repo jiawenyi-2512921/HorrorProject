@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -5,7 +7,7 @@
 #include "Save/HorrorSaveGame.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerBasicTest, "HorrorProject.SaveGame.SaveSlotManager.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerBasicTest, "HorrorProject.SaveGame.SaveSlotManager.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveSlotManagerBasicTest::RunTest(const FString& Parameters)
 {
@@ -21,7 +23,7 @@ bool FSaveSlotManagerBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerSaveLoadTest, "HorrorProject.SaveGame.SaveSlotManager.SaveLoad", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerSaveLoadTest, "HorrorProject.SaveGame.SaveSlotManager.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveSlotManagerSaveLoadTest::RunTest(const FString& Parameters)
 {
@@ -56,7 +58,7 @@ bool FSaveSlotManagerSaveLoadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerMultipleSlotTest, "HorrorProject.SaveGame.SaveSlotManager.MultipleSlots", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerMultipleSlotTest, "HorrorProject.SaveGame.SaveSlotManager.MultipleSlots", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveSlotManagerMultipleSlotTest::RunTest(const FString& Parameters)
 {
@@ -102,7 +104,7 @@ bool FSaveSlotManagerMultipleSlotTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerDeleteTest, "HorrorProject.SaveGame.SaveSlotManager.Delete", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerDeleteTest, "HorrorProject.SaveGame.SaveSlotManager.Delete", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveSlotManagerDeleteTest::RunTest(const FString& Parameters)
 {
@@ -127,7 +129,7 @@ bool FSaveSlotManagerDeleteTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerMetadataTest, "HorrorProject.SaveGame.SaveSlotManager.Metadata", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveSlotManagerMetadataTest, "HorrorProject.SaveGame.SaveSlotManager.Metadata", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveSlotManagerMetadataTest::RunTest(const FString& Parameters)
 {
@@ -151,3 +153,5 @@ bool FSaveSlotManagerMetadataTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

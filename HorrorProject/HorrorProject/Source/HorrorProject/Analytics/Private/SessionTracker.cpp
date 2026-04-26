@@ -6,6 +6,7 @@
 #include "Misc/Paths.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "GeneralProjectSettings.h"
 
 void USessionTracker::StartSession()
 {
@@ -13,7 +14,7 @@ void USessionTracker::StartSession()
 	CurrentSession.SessionId = GenerateSessionId();
 	CurrentSession.StartTime = FDateTime::UtcNow();
 	CurrentSession.Platform = UGameplayStatics::GetPlatformName();
-	CurrentSession.AppVersion = FApp::GetProjectVersion();
+	CurrentSession.AppVersion = GetDefault<UGeneralProjectSettings>()->ProjectVersion;
 
 	LoadSessionHistory();
 

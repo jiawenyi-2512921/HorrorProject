@@ -7,7 +7,7 @@
 #include "DefaultConfigs.generated.h"
 
 class UGraphicsSettings;
-class UAudioSettings;
+class UHorrorAudioSettings;
 class UControlSettings;
 class UGameplaySettings;
 
@@ -26,7 +26,7 @@ public:
 	static void ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Defaults")
-	static void ApplyDefaultAudioSettings(UAudioSettings* Settings);
+	static void ApplyDefaultAudioSettings(UHorrorAudioSettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Defaults")
 	static void ApplyDefaultControlSettings(UControlSettings* Settings);
@@ -39,7 +39,7 @@ public:
 	static void ApplyRecommendedGraphicsSettings(UGraphicsSettings* Settings);
 
 	UFUNCTION(BlueprintCallable, Category = "Defaults")
-	static void ApplyRecommendedAudioSettings(UAudioSettings* Settings);
+	static void ApplyRecommendedAudioSettings(UHorrorAudioSettings* Settings);
 
 private:
 	static int32 DetectRecommendedQualityLevel();

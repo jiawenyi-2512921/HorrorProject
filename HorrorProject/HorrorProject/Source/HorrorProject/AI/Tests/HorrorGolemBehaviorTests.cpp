@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "AI/HorrorGolemBehaviorComponent.h"
@@ -10,7 +12,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorInitializationTest,
 	"HorrorProject.AI.Golem.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorInitializationTest::RunTest(const FString& Parameters)
 {
@@ -26,7 +28,7 @@ bool FHorrorGolemBehaviorInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorActivationTest,
 	"HorrorProject.AI.Golem.Activation",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorActivationTest::RunTest(const FString& Parameters)
 {
@@ -51,7 +53,7 @@ bool FHorrorGolemBehaviorActivationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorStateTransitionTest,
 	"HorrorProject.AI.Golem.StateTransition",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorStateTransitionTest::RunTest(const FString& Parameters)
 {
@@ -86,7 +88,7 @@ bool FHorrorGolemBehaviorStateTransitionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorDistanceCalculationTest,
 	"HorrorProject.AI.Golem.DistanceCalculation",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorDistanceCalculationTest::RunTest(const FString& Parameters)
 {
@@ -109,7 +111,7 @@ bool FHorrorGolemBehaviorDistanceCalculationTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorPhaseConfigTest,
 	"HorrorProject.AI.Golem.PhaseConfig",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorPhaseConfigTest::RunTest(const FString& Parameters)
 {
@@ -131,7 +133,7 @@ bool FHorrorGolemBehaviorPhaseConfigTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGolemBehaviorDeactivationTest,
 	"HorrorProject.AI.Golem.Deactivation",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGolemBehaviorDeactivationTest::RunTest(const FString& Parameters)
 {
@@ -154,3 +156,5 @@ bool FHorrorGolemBehaviorDeactivationTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

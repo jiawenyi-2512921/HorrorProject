@@ -7,7 +7,7 @@
 #include "ConfigManager.generated.h"
 
 class UGraphicsSettings;
-class UAudioSettings;
+class UHorrorAudioSettings;
 class UControlSettings;
 class UGameplaySettings;
 
@@ -39,11 +39,11 @@ public:
 	// Import/Export
 	UFUNCTION(BlueprintCallable, Category = "Config")
 	bool ExportSettings(const FString& FilePath, UGraphicsSettings* Graphics,
-		UAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay);
+		UHorrorAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay);
 
 	UFUNCTION(BlueprintCallable, Category = "Config")
 	bool ImportSettings(const FString& FilePath, UGraphicsSettings* Graphics,
-		UAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay);
+		UHorrorAudioSettings* Audio, UControlSettings* Controls, UGameplaySettings* Gameplay);
 
 	// Backup/Restore
 	UFUNCTION(BlueprintCallable, Category = "Config")

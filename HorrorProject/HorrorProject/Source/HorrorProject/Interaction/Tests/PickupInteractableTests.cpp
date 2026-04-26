@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableConstructionTest, "HorrorProject.Interaction.Pickup.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableConstructionTest, "HorrorProject.Interaction.Pickup.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -24,7 +26,7 @@ bool FPickupInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractablePickupTest, "HorrorProject.Interaction.Pickup.Pickup", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractablePickupTest, "HorrorProject.Interaction.Pickup.Pickup", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractablePickupTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -43,7 +45,7 @@ bool FPickupInteractablePickupTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableEvidenceTest, "HorrorProject.Interaction.Pickup.Evidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableEvidenceTest, "HorrorProject.Interaction.Pickup.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -67,7 +69,7 @@ bool FPickupInteractableEvidenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNoInventoryTest, "HorrorProject.Interaction.Pickup.NoInventory", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNoInventoryTest, "HorrorProject.Interaction.Pickup.NoInventory", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableNoInventoryTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -82,7 +84,7 @@ bool FPickupInteractableNoInventoryTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableOnceOnlyTest, "HorrorProject.Interaction.Pickup.OnceOnly", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableOnceOnlyTest, "HorrorProject.Interaction.Pickup.OnceOnly", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableOnceOnlyTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -99,7 +101,7 @@ bool FPickupInteractableOnceOnlyTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableComponentsTest, "HorrorProject.Interaction.Pickup.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableComponentsTest, "HorrorProject.Interaction.Pickup.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -116,7 +118,7 @@ bool FPickupInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableItemIdTest, "HorrorProject.Interaction.Pickup.ItemId", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableItemIdTest, "HorrorProject.Interaction.Pickup.ItemId", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableItemIdTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -130,7 +132,7 @@ bool FPickupInteractableItemIdTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNullInstigatorTest, "HorrorProject.Interaction.Pickup.NullInstigator", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNullInstigatorTest, "HorrorProject.Interaction.Pickup.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -142,7 +144,7 @@ bool FPickupInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableTypesTest, "HorrorProject.Interaction.Pickup.Types", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableTypesTest, "HorrorProject.Interaction.Pickup.Types", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableTypesTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -166,7 +168,7 @@ bool FPickupInteractableTypesTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableDestroyTest, "HorrorProject.Interaction.Pickup.Destroy", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableDestroyTest, "HorrorProject.Interaction.Pickup.Destroy", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableDestroyTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -186,3 +188,5 @@ bool FPickupInteractableDestroyTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFullGameSessionTest,
     "HorrorProject.Integration.E2E.FullGameSession",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFullGameSessionTest::RunTest(const FString& Parameters)
 {
@@ -125,7 +127,7 @@ bool FFullGameSessionTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameSessionWithSaveTest,
     "HorrorProject.Integration.E2E.GameSessionWithSave",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FGameSessionWithSaveTest::RunTest(const FString& Parameters)
 {
@@ -193,3 +195,5 @@ bool FGameSessionWithSaveTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
+#include "EngineUtils.h"
 
 UDebugVisualization::UDebugVisualization()
 {

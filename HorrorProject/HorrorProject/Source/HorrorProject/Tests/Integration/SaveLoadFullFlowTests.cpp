@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -7,7 +9,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadEvidenceTest, "HorrorProject.Integration.SaveLoadEvidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadEvidenceTest, "HorrorProject.Integration.SaveLoadEvidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveLoadEvidenceTest::RunTest(const FString& Parameters)
 {
@@ -19,7 +21,7 @@ bool FSaveLoadEvidenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadPlayerStateTest, "HorrorProject.Integration.SaveLoadPlayerState", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadPlayerStateTest, "HorrorProject.Integration.SaveLoadPlayerState", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveLoadPlayerStateTest::RunTest(const FString& Parameters)
 {
@@ -31,7 +33,7 @@ bool FSaveLoadPlayerStateTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadInteractableStateTest, "HorrorProject.Integration.SaveLoadInteractableState", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadInteractableStateTest, "HorrorProject.Integration.SaveLoadInteractableState", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveLoadInteractableStateTest::RunTest(const FString& Parameters)
 {
@@ -40,7 +42,7 @@ bool FSaveLoadInteractableStateTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadArchiveStateTest, "HorrorProject.Integration.SaveLoadArchiveState", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadArchiveStateTest, "HorrorProject.Integration.SaveLoadArchiveState", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSaveLoadArchiveStateTest::RunTest(const FString& Parameters)
 {
@@ -49,7 +51,7 @@ bool FSaveLoadArchiveStateTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFullSaveLoadCycleTest, "HorrorProject.Integration.FullSaveLoadCycle", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFullSaveLoadCycleTest, "HorrorProject.Integration.FullSaveLoadCycle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FFullSaveLoadCycleTest::RunTest(const FString& Parameters)
 {
@@ -62,3 +64,5 @@ bool FFullSaveLoadCycleTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

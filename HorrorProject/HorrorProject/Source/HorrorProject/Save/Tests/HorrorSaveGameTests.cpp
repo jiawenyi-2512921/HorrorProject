@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Save/HorrorSaveGame.h"
@@ -9,7 +11,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameInitializationTest,
 	"HorrorProject.Save.SaveGame.Initialization",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameInitializationTest::RunTest(const FString& Parameters)
 {
@@ -29,7 +31,7 @@ bool FHorrorSaveGameInitializationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameCheckpointTest,
 	"HorrorProject.Save.SaveGame.Checkpoint",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameCheckpointTest::RunTest(const FString& Parameters)
 {
@@ -44,7 +46,7 @@ bool FHorrorSaveGameCheckpointTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameObjectiveEventsTest,
 	"HorrorProject.Save.SaveGame.ObjectiveEvents",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameObjectiveEventsTest::RunTest(const FString& Parameters)
 {
@@ -66,7 +68,7 @@ bool FHorrorSaveGameObjectiveEventsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameCompletedObjectivesTest,
 	"HorrorProject.Save.SaveGame.CompletedObjectives",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameCompletedObjectivesTest::RunTest(const FString& Parameters)
 {
@@ -88,7 +90,7 @@ bool FHorrorSaveGameCompletedObjectivesTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameEvidenceCollectionTest,
 	"HorrorProject.Save.SaveGame.EvidenceCollection",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameEvidenceCollectionTest::RunTest(const FString& Parameters)
 {
@@ -109,7 +111,7 @@ bool FHorrorSaveGameEvidenceCollectionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameNoteRecordingTest,
 	"HorrorProject.Save.SaveGame.NoteRecording",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameNoteRecordingTest::RunTest(const FString& Parameters)
 {
@@ -128,7 +130,7 @@ bool FHorrorSaveGameNoteRecordingTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGamePlayerTransformTest,
 	"HorrorProject.Save.SaveGame.PlayerTransform",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGamePlayerTransformTest::RunTest(const FString& Parameters)
 {
@@ -151,7 +153,7 @@ bool FHorrorSaveGamePlayerTransformTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameAnomalySourceTest,
 	"HorrorProject.Save.SaveGame.AnomalySource",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameAnomalySourceTest::RunTest(const FString& Parameters)
 {
@@ -164,3 +166,5 @@ bool FHorrorSaveGameAnomalySourceTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

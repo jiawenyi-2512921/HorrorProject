@@ -132,8 +132,8 @@ void UUnderwaterAudioComponent::UpdateUnderwaterEffects()
 
 	AmbientComponent->SetVolumeMultiplier(TargetVolume);
 
-	float PitchMultiplier = 1.0f - (DepthMultiplier * DepthPressureMultiplier * 0.2f);
-	AmbientComponent->SetPitchMultiplier(FMath::Clamp(PitchMultiplier, 0.8f, 1.0f));
+	float TargetPitchMultiplier = 1.0f - (DepthMultiplier * DepthPressureMultiplier * 0.2f);
+	AmbientComponent->SetPitchMultiplier(FMath::Clamp(TargetPitchMultiplier, 0.8f, 1.0f));
 }
 
 void UUnderwaterAudioComponent::UpdateBubbles(float DeltaTime)

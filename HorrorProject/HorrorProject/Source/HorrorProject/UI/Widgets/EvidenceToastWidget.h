@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Evidence/EvidenceTypes.h"
+#include "Player/Components/InventoryComponent.h"
 #include "EvidenceToastWidget.generated.h"
 
 /**
@@ -26,7 +26,7 @@ public:
 	void DismissToast();
 
 	UFUNCTION(BlueprintPure, Category="Evidence|UI")
-	bool IsVisible() const { return bIsVisible; }
+	bool IsToastVisible() const { return bToastVisible; }
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="Show Toast"))
@@ -51,7 +51,7 @@ protected:
 	float FadeOutDuration = 0.5f;
 
 	UPROPERTY(BlueprintReadOnly, Category="Evidence|UI")
-	bool bIsVisible = false;
+	bool bToastVisible = false;
 
 private:
 	FTimerHandle DismissTimerHandle;

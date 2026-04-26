@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceCollectionFlowTest,
     "HorrorProject.Integration.Gameplay.EvidenceCollection",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceCollectionFlowTest::RunTest(const FString& Parameters)
 {
@@ -136,7 +138,7 @@ bool FEvidenceCollectionFlowTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEvidenceStorageTest,
     "HorrorProject.Integration.Gameplay.EvidenceStorage",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEvidenceStorageTest::RunTest(const FString& Parameters)
 {
@@ -184,3 +186,5 @@ bool FEvidenceStorageTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

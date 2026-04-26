@@ -61,22 +61,29 @@ public:
 
 	// Logging Functions
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogTrace(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogTrace(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
 
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogDebug(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogDebug(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
 
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogInfo(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogInfo(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
 
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogWarning(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogWarning(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
 
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogError(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogError(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
 
 	UFUNCTION(BlueprintCallable, Category = "Logging")
-	void LogFatal(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata = TMap<FString, FString>());
+	void LogFatal(const FString& Category, const FString& Message, const TMap<FString, FString>& Metadata);
+
+	void LogTrace(const FString& Category, const FString& Message);
+	void LogDebug(const FString& Category, const FString& Message);
+	void LogInfo(const FString& Category, const FString& Message);
+	void LogWarning(const FString& Category, const FString& Message);
+	void LogError(const FString& Category, const FString& Message);
+	void LogFatal(const FString& Category, const FString& Message);
 
 	// Configuration
 	UFUNCTION(BlueprintCallable, Category = "Logging")

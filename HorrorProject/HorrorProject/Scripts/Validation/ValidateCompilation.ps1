@@ -8,39 +8,29 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$ProjectFile = Join-Path $ProjectRoot "HorrorProject.uproject"
-$UE5Path = "C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles"
-$UAT = Join-Path $UE5Path "RunUAT.bat"
-$UBT = Join-Path $UE5Path "Build.bat"
+
+. (Join-Path $PSScriptRoot "Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$UE5Root = Get-HorrorUERoot
+$UE5Path = Join-Path $UE5Root "Engine\Build\BatchFiles"
+$UBT = Get-HorrorBuildScript -UERoot $UE5Root -ScriptName "Build.bat"
 
 Write-Host "=== Compilation Validation ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration" -ForegroundColor Yellow
 Write-Host "Platform: $Platform" -ForegroundColor Yellow
 Write-Host "Project: $ProjectFile" -ForegroundColor Yellow
 
-# Check if UE5 is installed
-if (-not (Test-Path $UBT)) {
-    Write-Host "[ERROR] Unreal Engine 5.6 not found at expected path" -ForegroundColor Red
-    Write-Host "Expected: $UE5Path" -ForegroundColor Yellow
-    exit 1
-}
-
-# Check if project file exists
-if (-not (Test-Path $ProjectFile)) {
-    Write-Host "[ERROR] Project file not found: $ProjectFile" -ForegroundColor Red
-    exit 1
-}
-
 Write-Host "`n=== Running Dependency Check ===" -ForegroundColor Cyan
-& "$ProjectRoot\Scripts\Validation\CheckDependencies.ps1"
+& (Join-Path $PSScriptRoot "CheckDependencies.ps1")
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Dependency check failed" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "`n=== Running Include Check ===" -ForegroundColor Cyan
-& "$ProjectRoot\Scripts\Validation\CheckIncludes.ps1"
+& (Join-Path $PSScriptRoot "CheckIncludes.ps1")
 
 Write-Host "`n=== Building Project ===" -ForegroundColor Cyan
 

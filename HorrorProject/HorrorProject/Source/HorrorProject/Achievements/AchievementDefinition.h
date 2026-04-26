@@ -18,7 +18,7 @@ enum class EAchievementCategory : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FAchievementDefinition
+struct FHorrorAchievementDefinition
 {
 	GENERATED_BODY()
 
@@ -49,7 +49,7 @@ struct FAchievementDefinition
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Points;
 
-	FAchievementDefinition()
+	FHorrorAchievementDefinition()
 		: ID(NAME_None)
 		, Category(EAchievementCategory::Exploration)
 		, bIsHidden(false)
@@ -113,10 +113,10 @@ struct FAchievementData
 };
 
 UCLASS()
-class HORRORPROJECT_API UAchievementDefinition : public UDataAsset
+class HORRORPROJECT_API UAchievementDefinitionCatalog : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	static TArray<FAchievementDefinition> GetAllAchievementDefinitions();
+	static TArray<FHorrorAchievementDefinition> GetAllAchievementDefinitions();
 };

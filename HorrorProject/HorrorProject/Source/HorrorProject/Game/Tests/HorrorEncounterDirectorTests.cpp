@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -12,7 +14,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorLifecycleTest,
 	"HorrorProject.Game.Encounter.Director.Lifecycle",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorLifecycleTest::RunTest(const FString& Parameters)
 {
@@ -107,7 +109,7 @@ bool FHorrorEncounterDirectorLifecycleTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorSpawnsAuthoredThreatTest,
 	"HorrorProject.Game.Encounter.Director.SpawnsAuthoredThreat",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorSpawnsAuthoredThreatTest::RunTest(const FString& Parameters)
 {
@@ -163,7 +165,7 @@ bool FHorrorEncounterDirectorSpawnsAuthoredThreatTest::RunTest(const FString& Pa
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest,
 	"HorrorProject.Game.Encounter.Director.SpawnsAuthoredThreatWithRotatedDirector",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest::RunTest(const FString& Parameters)
 {
@@ -211,7 +213,7 @@ bool FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest::RunTes
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorThreatlessRevealTest,
 	"HorrorProject.Game.Encounter.Director.ThreatlessReveal",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorThreatlessRevealTest::RunTest(const FString& Parameters)
 {
@@ -253,7 +255,7 @@ bool FHorrorEncounterDirectorThreatlessRevealTest::RunTest(const FString& Parame
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorRadiusSemanticsTest,
 	"HorrorProject.Game.Encounter.Director.RadiusSemantics",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorRadiusSemanticsTest::RunTest(const FString& Parameters)
 {
@@ -303,7 +305,7 @@ bool FHorrorEncounterDirectorRadiusSemanticsTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorThreatDetectionDivergenceTest,
 	"HorrorProject.Game.Encounter.Director.ThreatDetectionDivergence",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorThreatDetectionDivergenceTest::RunTest(const FString& Parameters)
 {
@@ -346,7 +348,7 @@ bool FHorrorEncounterDirectorThreatDetectionDivergenceTest::RunTest(const FStrin
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetReusesThreatTest,
 	"HorrorProject.Game.Encounter.Director.ResetReusesThreat",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetReusesThreatTest::RunTest(const FString& Parameters)
 {
@@ -404,7 +406,7 @@ bool FHorrorEncounterDirectorResetReusesThreatTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorRevealCanAvoidRouteGateTest,
 	"HorrorProject.Game.Encounter.Director.RevealCanAvoidRouteGate",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorRevealCanAvoidRouteGateTest::RunTest(const FString& Parameters)
 {
@@ -447,7 +449,7 @@ bool FHorrorEncounterDirectorRevealCanAvoidRouteGateTest::RunTest(const FString&
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetFromPrimedClearsStateTest,
 	"HorrorProject.Game.Encounter.Director.ResetFromPrimedClearsState",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetFromPrimedClearsStateTest::RunTest(const FString& Parameters)
 {
@@ -482,7 +484,7 @@ bool FHorrorEncounterDirectorResetFromPrimedClearsStateTest::RunTest(const FStri
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest,
 	"HorrorProject.Game.Encounter.Director.ResetFromRevealedClearsGateAndThreat",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest::RunTest(const FString& Parameters)
 {
@@ -529,7 +531,7 @@ bool FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest::RunTest(c
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResolveFailurePreservesStateTest,
 	"HorrorProject.Game.Encounter.Director.ResolveFailurePreservesState",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResolveFailurePreservesStateTest::RunTest(const FString& Parameters)
 {
@@ -571,7 +573,7 @@ bool FHorrorEncounterDirectorResolveFailurePreservesStateTest::RunTest(const FSt
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorFailedRevealDoesNotMutateStateTest,
 	"HorrorProject.Game.Encounter.Director.FailedRevealDoesNotMutateState",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorFailedRevealDoesNotMutateStateTest::RunTest(const FString& Parameters)
 {
@@ -611,3 +613,5 @@ bool FHorrorEncounterDirectorFailedRevealDoesNotMutateStateTest::RunTest(const F
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

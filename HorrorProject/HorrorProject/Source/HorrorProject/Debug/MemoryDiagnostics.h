@@ -31,7 +31,7 @@ struct FMemorySnapshot
 };
 
 USTRUCT(BlueprintType)
-struct FMemoryStats
+struct FHorrorMemoryDiagnosticsStats
 {
 	GENERATED_BODY()
 
@@ -69,7 +69,7 @@ public:
 	void StopMonitoring();
 
 	UFUNCTION(BlueprintCallable, Category = "Memory")
-	FMemoryStats GetCurrentStats() const;
+	FHorrorMemoryDiagnosticsStats GetCurrentStats() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Memory")
 	void GenerateMemoryReport(const FString& FilePath = TEXT(""));

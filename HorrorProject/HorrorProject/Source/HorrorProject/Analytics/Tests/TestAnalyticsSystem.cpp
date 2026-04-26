@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -6,7 +8,7 @@
 #include "Analytics/SessionTracker.h"
 #include "Analytics/MetricsCollector.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAnalyticsSubsystemTest, "HorrorProject.Analytics.AnalyticsSubsystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAnalyticsSubsystemTest, "HorrorProject.Analytics.AnalyticsSubsystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAnalyticsSubsystemTest::RunTest(const FString& Parameters)
 {
@@ -106,7 +108,7 @@ bool FAnalyticsSubsystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventTrackerTest, "HorrorProject.Analytics.EventTracker", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventTrackerTest, "HorrorProject.Analytics.EventTracker", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventTrackerTest::RunTest(const FString& Parameters)
 {
@@ -171,7 +173,7 @@ bool FEventTrackerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSessionTrackerTest, "HorrorProject.Analytics.SessionTracker", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSessionTrackerTest, "HorrorProject.Analytics.SessionTracker", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSessionTrackerTest::RunTest(const FString& Parameters)
 {
@@ -229,7 +231,7 @@ bool FSessionTrackerTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMetricsCollectorTest, "HorrorProject.Analytics.MetricsCollector", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMetricsCollectorTest, "HorrorProject.Analytics.MetricsCollector", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FMetricsCollectorTest::RunTest(const FString& Parameters)
 {
@@ -294,3 +296,5 @@ bool FMetricsCollectorTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

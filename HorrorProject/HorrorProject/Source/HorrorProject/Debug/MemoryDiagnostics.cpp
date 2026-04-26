@@ -119,9 +119,9 @@ void UMemoryDiagnostics::AnalyzeMemoryTrend()
 	}
 }
 
-FMemoryStats UMemoryDiagnostics::GetCurrentStats() const
+FHorrorMemoryDiagnosticsStats UMemoryDiagnostics::GetCurrentStats() const
 {
-	FMemoryStats Stats;
+	FHorrorMemoryDiagnosticsStats Stats;
 
 	if (MemoryHistory.Num() == 0)
 	{
@@ -163,7 +163,7 @@ void UMemoryDiagnostics::GenerateMemoryReport(const FString& FilePath)
 	Content += FString::Printf(TEXT("Samples: %d\n"), MemoryHistory.Num());
 	Content += FString::Printf(TEXT("Baseline: %.2f MB\n\n"), BaselineMemoryMB);
 
-	FMemoryStats Stats = GetCurrentStats();
+	FHorrorMemoryDiagnosticsStats Stats = GetCurrentStats();
 
 	Content += TEXT("=== SUMMARY ===\n");
 	Content += FString::Printf(TEXT("Current Usage: %.2f MB (%.1f%%)\n"), Stats.CurrentUsedMB, Stats.UsagePercent);
@@ -218,7 +218,7 @@ void UMemoryDiagnostics::DetectMemoryLeaks()
 	AnalyzeMemoryTrend();
 
 	// Additional leak detection logic
-	FMemoryStats Stats = GetCurrentStats();
+	FHorrorMemoryDiagnosticsStats Stats = GetCurrentStats();
 	float MemoryGrowth = Stats.CurrentUsedMB - BaselineMemoryMB;
 
 	if (MemoryGrowth > MemoryLeakThresholdMB)
@@ -240,14 +240,14 @@ void UMemoryDiagnostics::ForceGarbageCollection()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Forcing garbage collection..."));
 
-	FMemoryStats BeforeStats = GetCurrentStats();
+	FHorrorMemoryDiagnosticsStats BeforeStats = GetCurrentStats();
 
 	GEngine->ForceGarbageCollection(true);
 
 	// Wait a frame for GC to complete
 	FPlatformProcess::Sleep(0.1f);
 
-	FMemoryStats AfterStats = GetCurrentStats();
+	FHorrorMemoryDiagnosticsStats AfterStats = GetCurrentStats();
 	float MemoryFreed = BeforeStats.CurrentUsedMB - AfterStats.CurrentUsedMB;
 
 	UE_LOG(LogTemp, Log, TEXT("Garbage collection complete. Freed: %.2f MB"), MemoryFreed);

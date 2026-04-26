@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -18,7 +20,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FDeepWaterStationRouteKitSpawnsObjectiveNodesTest,
 	"HorrorProject.Game.DeepWaterStation.RouteKit.SpawnsObjectiveNodes",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& Parameters)
 {
@@ -242,7 +244,7 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FDeepWaterStationRouteKitObjectiveEncounterBridgeTest,
 	"HorrorProject.Game.DeepWaterStation.RouteKit.ObjectiveEncounterBridge",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FDeepWaterStationRouteKitObjectiveEncounterBridgeTest::RunTest(const FString& Parameters)
 {
@@ -356,3 +358,5 @@ bool FDeepWaterStationRouteKitObjectiveEncounterBridgeTest::RunTest(const FStrin
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

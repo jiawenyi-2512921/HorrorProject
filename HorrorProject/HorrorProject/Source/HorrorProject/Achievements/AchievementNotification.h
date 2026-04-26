@@ -42,6 +42,12 @@ protected:
 	float FadeOutDuration = 0.5f;
 
 private:
+	UPROPERTY(Transient, meta = (BindWidgetAnimOptional))
+	TObjectPtr<class UWidgetAnimation> FadeInAnimation;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnimOptional))
+	TObjectPtr<class UWidgetAnimation> FadeOutAnimation;
+
 	FTimerHandle DisplayTimerHandle;
 
 	void FadeIn();

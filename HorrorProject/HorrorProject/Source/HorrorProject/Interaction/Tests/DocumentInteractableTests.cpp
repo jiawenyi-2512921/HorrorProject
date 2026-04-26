@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -10,7 +12,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableConstructionTest, "HorrorProject.Interaction.Document.Construction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableConstructionTest, "HorrorProject.Interaction.Document.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableConstructionTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -23,7 +25,7 @@ bool FDocumentInteractableConstructionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableReadTest, "HorrorProject.Interaction.Document.Read", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableReadTest, "HorrorProject.Interaction.Document.Read", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableReadTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -40,7 +42,7 @@ bool FDocumentInteractableReadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableCloseTest, "HorrorProject.Interaction.Document.Close", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableCloseTest, "HorrorProject.Interaction.Document.Close", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableCloseTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -59,7 +61,7 @@ bool FDocumentInteractableCloseTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableEvidenceTest, "HorrorProject.Interaction.Document.Evidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableEvidenceTest, "HorrorProject.Interaction.Document.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -79,7 +81,7 @@ bool FDocumentInteractableEvidenceTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTitleContentTest, "HorrorProject.Interaction.Document.TitleContent", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTitleContentTest, "HorrorProject.Interaction.Document.TitleContent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableTitleContentTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -94,7 +96,7 @@ bool FDocumentInteractableTitleContentTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTypesTest, "HorrorProject.Interaction.Document.Types", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTypesTest, "HorrorProject.Interaction.Document.Types", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableTypesTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -114,7 +116,7 @@ bool FDocumentInteractableTypesTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableComponentsTest, "HorrorProject.Interaction.Document.Components", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableComponentsTest, "HorrorProject.Interaction.Document.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableComponentsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -131,7 +133,7 @@ bool FDocumentInteractableComponentsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableMultipleReadsTest, "HorrorProject.Interaction.Document.MultipleReads", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableMultipleReadsTest, "HorrorProject.Interaction.Document.MultipleReads", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableMultipleReadsTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -151,7 +153,7 @@ bool FDocumentInteractableMultipleReadsTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableNullInstigatorTest, "HorrorProject.Interaction.Document.NullInstigator", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableNullInstigatorTest, "HorrorProject.Interaction.Document.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -163,7 +165,7 @@ bool FDocumentInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableImageTest, "HorrorProject.Interaction.Document.Image", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableImageTest, "HorrorProject.Interaction.Document.Image", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableImageTest::RunTest(const FString& Parameters)
 {
 	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
@@ -177,3 +179,5 @@ bool FDocumentInteractableImageTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

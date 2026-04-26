@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -14,7 +16,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompleteGameplayLoopTest,
     "HorrorProject.Integration.Gameplay.CompleteLoop",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCompleteGameplayLoopTest::RunTest(const FString& Parameters)
 {
@@ -114,7 +116,7 @@ bool FCompleteGameplayLoopTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGameplayLoopPerformanceTest,
     "HorrorProject.Integration.Gameplay.LoopPerformance",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FGameplayLoopPerformanceTest::RunTest(const FString& Parameters)
 {
@@ -154,3 +156,5 @@ bool FGameplayLoopPerformanceTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

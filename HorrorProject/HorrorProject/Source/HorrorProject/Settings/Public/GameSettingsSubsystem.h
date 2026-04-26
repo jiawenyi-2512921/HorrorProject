@@ -7,7 +7,7 @@
 #include "GameSettingsSubsystem.generated.h"
 
 class UGraphicsSettings;
-class UAudioSettings;
+class UHorrorAudioSettings;
 class UControlSettings;
 class UGameplaySettings;
 class UConfigManager;
@@ -33,7 +33,7 @@ public:
 	UGraphicsSettings* GetGraphicsSettings() const { return GraphicsSettings; }
 
 	UFUNCTION(BlueprintPure, Category = "Settings")
-	UAudioSettings* GetAudioSettings() const { return AudioSettings; }
+	UHorrorAudioSettings* GetAudioSettings() const { return AudioSettings; }
 
 	UFUNCTION(BlueprintPure, Category = "Settings")
 	UControlSettings* GetControlSettings() const { return ControlSettings; }
@@ -97,7 +97,7 @@ private:
 	TObjectPtr<UGraphicsSettings> GraphicsSettings;
 
 	UPROPERTY()
-	TObjectPtr<UAudioSettings> AudioSettings;
+	TObjectPtr<UHorrorAudioSettings> AudioSettings;
 
 	UPROPERTY()
 	TObjectPtr<UControlSettings> ControlSettings;

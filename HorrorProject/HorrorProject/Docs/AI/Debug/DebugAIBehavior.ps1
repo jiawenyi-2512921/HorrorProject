@@ -11,7 +11,8 @@ param(
 )
 
 $ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject"
-$UEEditorPath = "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"
+$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+$UEEditorPath = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor.exe"
 $LogPath = "$ProjectPath\Saved\Logs\HorrorProject.log"
 
 Write-Host "=== AI Behavior Debug Tool ===" -ForegroundColor Cyan

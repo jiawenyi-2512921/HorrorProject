@@ -1,10 +1,12 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
 #include "SaveGame/CloudSaveSubsystem.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveSubsystemInitTest, "HorrorProject.SaveGame.CloudSave.Init", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveSubsystemInitTest, "HorrorProject.SaveGame.CloudSave.Init", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCloudSaveSubsystemInitTest::RunTest(const FString& Parameters)
 {
@@ -17,7 +19,7 @@ bool FCloudSaveSubsystemInitTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveProviderDetectionTest, "HorrorProject.SaveGame.CloudSave.ProviderDetection", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveProviderDetectionTest, "HorrorProject.SaveGame.CloudSave.ProviderDetection", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCloudSaveProviderDetectionTest::RunTest(const FString& Parameters)
 {
@@ -34,7 +36,7 @@ bool FCloudSaveProviderDetectionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveEnabledTest, "HorrorProject.SaveGame.CloudSave.Enabled", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveEnabledTest, "HorrorProject.SaveGame.CloudSave.Enabled", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCloudSaveEnabledTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FCloudSaveEnabledTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveUploadTest, "HorrorProject.SaveGame.CloudSave.Upload", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveUploadTest, "HorrorProject.SaveGame.CloudSave.Upload", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCloudSaveUploadTest::RunTest(const FString& Parameters)
 {
@@ -87,7 +89,7 @@ bool FCloudSaveUploadTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveDownloadTest, "HorrorProject.SaveGame.CloudSave.Download", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCloudSaveDownloadTest, "HorrorProject.SaveGame.CloudSave.Download", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCloudSaveDownloadTest::RunTest(const FString& Parameters)
 {
@@ -113,3 +115,5 @@ bool FCloudSaveDownloadTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

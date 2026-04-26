@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "AudioSettingsWidget.generated.h"
 
-class UAudioSettings;
+class UHorrorAudioSettings;
 class USlider;
 class UCheckBox;
 class UComboBoxString;
@@ -16,7 +16,7 @@ class UComboBoxString;
  * UI for audio settings
  */
 UCLASS()
-class HORRORPROJECT_API UAudioSettingsWidget : public UUserWidget
+class HORRORPROJECT_API UHorrorAudioSettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
@@ -93,7 +93,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<UAudioSettings> AudioSettings;
+	TObjectPtr<UHorrorAudioSettings> AudioSettings;
 
 	void PopulateOutputDevices();
 };

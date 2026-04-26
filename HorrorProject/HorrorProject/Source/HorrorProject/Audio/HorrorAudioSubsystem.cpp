@@ -34,16 +34,36 @@ void UHorrorAudioSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+/**
+ * Initializes default volume levels for each audio category
+ * These values are tuned for optimal horror atmosphere balance
+ */
 void UHorrorAudioSubsystem::InitializeDefaultVolumes()
 {
-	CategoryVolumes.Add(EHorrorAudioCategory::Ambient, 0.6f);
-	CategoryVolumes.Add(EHorrorAudioCategory::Anomaly, 0.8f);
-	CategoryVolumes.Add(EHorrorAudioCategory::Site, 0.7f);
-	CategoryVolumes.Add(EHorrorAudioCategory::Interaction, 0.75f);
-	CategoryVolumes.Add(EHorrorAudioCategory::Escape, 0.9f);
-	CategoryVolumes.Add(EHorrorAudioCategory::Music, 0.5f);
+	// Default volume constants for audio categories
+	constexpr float DefaultAmbientVolume = 0.6f;      // Background atmosphere
+	constexpr float DefaultAnomalyVolume = 0.8f;      // Supernatural events (high priority)
+	constexpr float DefaultSiteVolume = 0.7f;         // Environmental sounds
+	constexpr float DefaultInteractionVolume = 0.75f; // Player interaction feedback
+	constexpr float DefaultEscapeVolume = 0.9f;       // Chase/escape sequences (highest priority)
+	constexpr float DefaultMusicVolume = 0.5f;        // Background music (lowest to not mask gameplay)
+
+	CategoryVolumes.Add(EHorrorAudioCategory::Ambient, DefaultAmbientVolume);
+	CategoryVolumes.Add(EHorrorAudioCategory::Anomaly, DefaultAnomalyVolume);
+	CategoryVolumes.Add(EHorrorAudioCategory::Site, DefaultSiteVolume);
+	CategoryVolumes.Add(EHorrorAudioCategory::Interaction, DefaultInteractionVolume);
+	CategoryVolumes.Add(EHorrorAudioCategory::Escape, DefaultEscapeVolume);
+	CategoryVolumes.Add(EHorrorAudioCategory::Music, DefaultMusicVolume);
 }
 
+/**
+ * Plays a sound at a specific world location with optional volume and pitch modulation
+ * @param Sound - The sound asset to play
+ * @param Location - World space position for the sound
+ * @param VolumeMultiplier - Volume scale factor (1.0 = default)
+ * @param PitchMultiplier - Pitch scale factor (1.0 = default)
+ * @return The spawned audio component, or nullptr if failed
+ */
 UAudioComponent* UHorrorAudioSubsystem::PlaySoundAtLocation(USoundBase* Sound, FVector Location, float VolumeMultiplier, float PitchMultiplier)
 {
 	if (!Sound || !GetWorld())
@@ -104,6 +124,13 @@ UAudioComponent* UHorrorAudioSubsystem::PlaySound2D(USoundBase* Sound, float Vol
 		true);
 }
 
+/**
+ * Plays event-mapped audio based on gameplay tags
+ * Automatically handles 2D/3D positioning and attachment based on mapping configuration
+ * @param EventTag - Gameplay tag identifying the audio event
+ * @param SourceObject - Optional source actor/component for spatial audio
+ * @return True if sound was successfully triggered
+ */
 bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* SourceObject)
 {
 	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(EventTag);

@@ -21,6 +21,11 @@ void UMetricsCollector::RecordMetric(const FString& MetricName, float Value, con
 	UpdateStats(MetricName);
 }
 
+void UMetricsCollector::RecordMetric(const FString& MetricName, float Value)
+{
+	RecordMetric(MetricName, Value, TMap<FString, FString>());
+}
+
 void UMetricsCollector::RecordTimingMetric(const FString& MetricName, float DurationMs)
 {
 	TMap<FString, FString> Tags;

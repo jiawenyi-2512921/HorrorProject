@@ -5,6 +5,7 @@
 #include "HAL/PlatformTime.h"
 #include "Stats/Stats.h"
 #include "RenderingThread.h"
+#include "DynamicRHI.h"
 
 UPerformanceDiagnostics::UPerformanceDiagnostics()
 {
@@ -40,13 +41,13 @@ void UPerformanceDiagnostics::StopMonitoring()
 
 void UPerformanceDiagnostics::CollectPerformanceData()
 {
-	FPerformanceSnapshot Snapshot;
+	FHorrorPerformanceDiagnosticsSnapshot Snapshot;
 	Snapshot.Timestamp = FDateTime::Now();
 	Snapshot.DeltaTime = GetWorld()->GetDeltaSeconds();
 	Snapshot.FPS = 1.0f / Snapshot.DeltaTime;
 	Snapshot.GameThreadTime = FPlatformTime::ToMilliseconds(GGameThreadTime);
 	Snapshot.RenderThreadTime = FPlatformTime::ToMilliseconds(GRenderThreadTime);
-	Snapshot.GPUTime = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+	Snapshot.GPUTime = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 	Snapshot.ActorCount = GetWorld()->GetActorCount();
 
 	PerformanceHistory.Add(Snapshot);
@@ -75,7 +76,7 @@ void UPerformanceDiagnostics::CollectPerformanceData()
 	CheckPerformanceThresholds(Snapshot);
 }
 
-void UPerformanceDiagnostics::CheckPerformanceThresholds(const FPerformanceSnapshot& Snapshot)
+void UPerformanceDiagnostics::CheckPerformanceThresholds(const FHorrorPerformanceDiagnosticsSnapshot& Snapshot)
 {
 	// Check FPS
 	if (Snapshot.FPS < 30.0f)
@@ -108,9 +109,9 @@ void UPerformanceDiagnostics::CheckPerformanceThresholds(const FPerformanceSnaps
 	}
 }
 
-FPerformanceStats UPerformanceDiagnostics::GetCurrentStats() const
+FHorrorPerformanceDiagnosticsStats UPerformanceDiagnostics::GetCurrentStats() const
 {
-	FPerformanceStats Stats;
+	FHorrorPerformanceDiagnosticsStats Stats;
 
 	if (PerformanceHistory.Num() == 0)
 	{
@@ -125,7 +126,7 @@ FPerformanceStats UPerformanceDiagnostics::GetCurrentStats() const
 	float MinFPS = FLT_MAX;
 	float MaxFPS = 0.0f;
 
-	for (const FPerformanceSnapshot& Snapshot : PerformanceHistory)
+	for (const FHorrorPerformanceDiagnosticsSnapshot& Snapshot : PerformanceHistory)
 	{
 		TotalFPS += Snapshot.FPS;
 		TotalGameThread += Snapshot.GameThreadTime;
@@ -145,7 +146,7 @@ FPerformanceStats UPerformanceDiagnostics::GetCurrentStats() const
 	Stats.AverageGPUTime = TotalGPU / Count;
 
 	// Get current values
-	const FPerformanceSnapshot& Latest = PerformanceHistory.Last();
+	const FHorrorPerformanceDiagnosticsSnapshot& Latest = PerformanceHistory.Last();
 	Stats.CurrentFPS = Latest.FPS;
 	Stats.CurrentFrameTime = Latest.DeltaTime * 1000.0f;
 
@@ -162,7 +163,7 @@ void UPerformanceDiagnostics::GeneratePerformanceReport(const FString& FilePath)
 	Content += FString::Printf(TEXT("Generated: %s\n"), *FDateTime::Now().ToString());
 	Content += FString::Printf(TEXT("Samples: %d\n\n"), PerformanceHistory.Num());
 
-	FPerformanceStats Stats = GetCurrentStats();
+	FHorrorPerformanceDiagnosticsStats Stats = GetCurrentStats();
 
 	Content += TEXT("=== SUMMARY ===\n");
 	Content += FString::Printf(TEXT("Average FPS: %.2f\n"), Stats.AverageFPS);
@@ -173,7 +174,7 @@ void UPerformanceDiagnostics::GeneratePerformanceReport(const FString& FilePath)
 	Content += FString::Printf(TEXT("Average GPU: %.2f ms\n\n"), Stats.AverageGPUTime);
 
 	Content += TEXT("=== DETAILED HISTORY ===\n");
-	for (const FPerformanceSnapshot& Snapshot : PerformanceHistory)
+	for (const FHorrorPerformanceDiagnosticsSnapshot& Snapshot : PerformanceHistory)
 	{
 		Content += FString::Printf(TEXT("[%s] FPS: %.1f | Frame: %.2f ms | Game: %.2f ms | Render: %.2f ms | GPU: %.2f ms | Actors: %d\n"),
 			*Snapshot.Timestamp.ToString(),

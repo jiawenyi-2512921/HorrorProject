@@ -217,9 +217,12 @@ void UNetworkDiagnostics::DumpNetworkStats()
 	UE_LOG(LogTemp, Warning, TEXT("Dumping network statistics..."));
 
 	UE_LOG(LogTemp, Log, TEXT("=== NETWORK STATISTICS ==="));
-	UE_LOG(LogTemp, Log, TEXT("Net Mode: %d"), (int32)GetWorld()->GetNetMode());
-	UE_LOG(LogTemp, Log, TEXT("Is Server: %s"), GetWorld()->IsServer() ? TEXT("Yes") : TEXT("No"));
-	UE_LOG(LogTemp, Log, TEXT("Is Client: %s"), GetWorld()->IsClient() ? TEXT("Yes") : TEXT("No"));
+	const ENetMode NetMode = GetWorld()->GetNetMode();
+	const bool bIsServer = NetMode == NM_ListenServer || NetMode == NM_DedicatedServer;
+	const bool bIsClient = NetMode == NM_Client;
+	UE_LOG(LogTemp, Log, TEXT("Net Mode: %d"), (int32)NetMode);
+	UE_LOG(LogTemp, Log, TEXT("Is Server: %s"), bIsServer ? TEXT("Yes") : TEXT("No"));
+	UE_LOG(LogTemp, Log, TEXT("Is Client: %s"), bIsClient ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogTemp, Log, TEXT("Player Controllers: %d"), GetWorld()->GetNumPlayerControllers());
 
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);

@@ -47,8 +47,9 @@ void ARecorderInteractable::BeginPlay()
 
 		if (bUse3DAudio)
 		{
-			AudioComponent->AttenuationSettings.AttenuationShape = EAttenuationShape::Sphere;
-			AudioComponent->AttenuationSettings.FalloffDistance = MaxAudibleDistance;
+			AudioComponent->bOverrideAttenuation = true;
+			AudioComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
+			AudioComponent->AttenuationOverrides.FalloffDistance = MaxAudibleDistance;
 		}
 	}
 

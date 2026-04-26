@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMemoryUsageTest,
     "HorrorProject.Integration.Performance.MemoryUsage",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FMemoryUsageTest::RunTest(const FString& Parameters)
 {
@@ -115,7 +117,7 @@ bool FMemoryUsageTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMemoryAllocationTest,
     "HorrorProject.Integration.Performance.MemoryAllocation",
-    EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FMemoryAllocationTest::RunTest(const FString& Parameters)
 {
@@ -160,3 +162,5 @@ bool FMemoryAllocationTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

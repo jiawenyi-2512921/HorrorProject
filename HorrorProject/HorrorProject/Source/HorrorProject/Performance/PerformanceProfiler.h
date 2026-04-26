@@ -50,7 +50,7 @@ struct HORRORPROJECT_API FPerformanceSample
  * Performance statistics for a scope
  */
 USTRUCT(BlueprintType)
-struct HORRORPROJECT_API FPerformanceStats
+struct HORRORPROJECT_API FHorrorPerformanceScopeStats
 {
 	GENERATED_BODY()
 
@@ -100,11 +100,11 @@ public:
 
 	// Get statistics for a scope
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	FPerformanceStats GetStats(FName ScopeName) const;
+	FHorrorPerformanceScopeStats GetStats(FName ScopeName) const;
 
 	// Get all statistics
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	TArray<FPerformanceStats> GetAllStats() const;
+	TArray<FHorrorPerformanceScopeStats> GetAllStats() const;
 
 	// Clear all recorded data
 	UFUNCTION(BlueprintCallable, Category = "Performance")
@@ -122,7 +122,7 @@ private:
 	bool bProfilingEnabled = false;
 
 	// Statistics per scope
-	TMap<FName, FPerformanceStats> ScopeStats;
+	TMap<FName, FHorrorPerformanceScopeStats> ScopeStats;
 
 	// Recent samples for CSV export
 	TArray<FPerformanceSample> RecentSamples;

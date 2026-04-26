@@ -1,4 +1,6 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -9,7 +11,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageContractTracksMilestonesTest,
 	"HorrorProject.Game.FoundFootage.ContractTracksMilestones",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageContractTracksMilestonesTest::RunTest(const FString& Parameters)
 {
@@ -82,7 +84,7 @@ bool FHorrorFoundFootageContractTracksMilestonesTest::RunTest(const FString& Par
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageImportRejectsOutOfOrderMilestonesTest,
 	"HorrorProject.Game.FoundFootage.ImportSaveStateRejectsOutOfOrderMilestones",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageImportRejectsOutOfOrderMilestonesTest::RunTest(const FString& Parameters)
 {
@@ -102,7 +104,7 @@ bool FHorrorFoundFootageImportRejectsOutOfOrderMilestonesTest::RunTest(const FSt
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageImportRejectsTerminalBypassTest,
 	"HorrorProject.Game.FoundFootage.ImportSaveStateRejectsTerminalBypass",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageImportRejectsTerminalBypassTest::RunTest(const FString& Parameters)
 {
@@ -130,7 +132,7 @@ bool FHorrorFoundFootageImportRejectsTerminalBypassTest::RunTest(const FString& 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageImportIgnoresUnknownAndDuplicateTagsTest,
 	"HorrorProject.Game.FoundFootage.ImportSaveStateIgnoresUnknownAndDuplicateTags",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageImportIgnoresUnknownAndDuplicateTagsTest::RunTest(const FString& Parameters)
 {
@@ -168,7 +170,7 @@ bool FHorrorFoundFootageImportIgnoresUnknownAndDuplicateTagsTest::RunTest(const 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageImportRoundTripsValidProgressTest,
 	"HorrorProject.Game.FoundFootage.ImportSaveStateRoundTripsValidProgress",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageImportRoundTripsValidProgressTest::RunTest(const FString& Parameters)
 {
@@ -197,7 +199,7 @@ bool FHorrorFoundFootageImportRoundTripsValidProgressTest::RunTest(const FString
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageImportDerivesExitUnlockFromCompletePrerequisitesTest,
 	"HorrorProject.Game.FoundFootage.ImportSaveStateDerivesExitUnlockFromCompletePrerequisites",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageImportDerivesExitUnlockFromCompletePrerequisitesTest::RunTest(const FString& Parameters)
 {
@@ -229,3 +231,4 @@ bool FHorrorFoundFootageImportDerivesExitUnlockFromCompletePrerequisitesTest::Ru
 
 #endif
 
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

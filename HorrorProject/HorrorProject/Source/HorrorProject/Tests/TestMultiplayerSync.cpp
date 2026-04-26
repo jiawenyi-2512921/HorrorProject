@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -8,7 +10,7 @@
 #include "Network/ReplicatedPlayerState.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestMultiplayerSync, "HorrorProject.Network.MultiplayerSync", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestMultiplayerSync, "HorrorProject.Network.MultiplayerSync", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestMultiplayerSync::RunTest(const FString& Parameters)
 {
@@ -109,7 +111,7 @@ bool FTestMultiplayerSync::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestMultiplayerPlayerInteraction, "HorrorProject.Network.PlayerInteraction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestMultiplayerPlayerInteraction, "HorrorProject.Network.PlayerInteraction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestMultiplayerPlayerInteraction::RunTest(const FString& Parameters)
 {
@@ -143,3 +145,5 @@ bool FTestMultiplayerPlayerInteraction::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -26,7 +26,7 @@ public:
 	void DismissToast();
 
 	UFUNCTION(BlueprintPure, Category="Objective|UI")
-	bool IsVisible() const { return bIsVisible; }
+	bool IsToastVisible() const { return bToastVisible; }
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Show Toast"))
@@ -57,7 +57,7 @@ protected:
 	float SlideOutDuration = 0.3f;
 
 	UPROPERTY(BlueprintReadOnly, Category="Objective|UI")
-	bool bIsVisible = false;
+	bool bToastVisible = false;
 
 	UPROPERTY(BlueprintReadOnly, Category="Objective|UI")
 	FGameplayTag CurrentEventTag;

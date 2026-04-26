@@ -4,6 +4,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Animation/WidgetAnimation.h"
 
 void UAchievementNotification::ShowAchievementNotification(UWorld* World, const FAchievementData& Achievement)
 {
@@ -78,14 +79,34 @@ void UAchievementNotification::NativeConstruct()
 
 void UAchievementNotification::FadeIn()
 {
-	// Play fade in animation
-	PlayAnimationForward(GetAnimationByName(FName("FadeIn")), FadeInDuration);
+	if (FadeInAnimation)
+	{
+		const float AnimationLength = FadeInAnimation->GetEndTime() - FadeInAnimation->GetStartTime();
+		const float PlaybackSpeed = (FadeInDuration > SMALL_NUMBER && AnimationLength > SMALL_NUMBER)
+			? AnimationLength / FadeInDuration
+			: 1.0f;
+		PlayAnimationForward(FadeInAnimation, PlaybackSpeed);
+	}
+	else
+	{
+		SetRenderOpacity(1.0f);
+	}
 }
 
 void UAchievementNotification::FadeOut()
 {
-	// Play fade out animation
-	PlayAnimationReverse(GetAnimationByName(FName("FadeOut")), FadeOutDuration);
+	if (FadeOutAnimation)
+	{
+		const float AnimationLength = FadeOutAnimation->GetEndTime() - FadeOutAnimation->GetStartTime();
+		const float PlaybackSpeed = (FadeOutDuration > SMALL_NUMBER && AnimationLength > SMALL_NUMBER)
+			? AnimationLength / FadeOutDuration
+			: 1.0f;
+		PlayAnimationReverse(FadeOutAnimation, PlaybackSpeed);
+	}
+	else
+	{
+		SetRenderOpacity(0.0f);
+	}
 
 	// Set timer to remove widget
 	GetWorld()->GetTimerManager().SetTimer(

@@ -18,7 +18,7 @@ void UHorrorAudioZoneTrigger::BeginPlay()
 
 	CreateTriggerComponent();
 
-	if (bAutoActivate)
+	if (bAutoActivateTrigger)
 	{
 		ActivateTrigger();
 	}
@@ -71,23 +71,23 @@ void UHorrorAudioZoneTrigger::CreateTriggerComponent()
 
 void UHorrorAudioZoneTrigger::ActivateTrigger()
 {
-	if (bIsActive || !TriggerComponent)
+	if (bTriggerActive || !TriggerComponent)
 	{
 		return;
 	}
 
-	bIsActive = true;
+	bTriggerActive = true;
 	BindTriggerEvents();
 }
 
 void UHorrorAudioZoneTrigger::DeactivateTrigger()
 {
-	if (!bIsActive)
+	if (!bTriggerActive)
 	{
 		return;
 	}
 
-	bIsActive = false;
+	bTriggerActive = false;
 	UnbindTriggerEvents();
 
 	if (UWorld* World = GetWorld())
@@ -126,7 +126,7 @@ void UHorrorAudioZoneTrigger::UnbindTriggerEvents()
 
 void UHorrorAudioZoneTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!bIsActive || !IsPlayerActor(OtherActor))
+	if (!bTriggerActive || !IsPlayerActor(OtherActor))
 	{
 		return;
 	}
@@ -150,7 +150,7 @@ void UHorrorAudioZoneTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* Overlap
 
 void UHorrorAudioZoneTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!bIsActive || !IsPlayerActor(OtherActor))
+	if (!bTriggerActive || !IsPlayerActor(OtherActor))
 	{
 		return;
 	}

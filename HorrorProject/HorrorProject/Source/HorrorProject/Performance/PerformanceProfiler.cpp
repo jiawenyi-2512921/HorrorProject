@@ -32,7 +32,7 @@ FPerformanceScope::~FPerformanceScope()
 
 #endif
 
-void FPerformanceStats::AddSample(double DurationMs)
+void FHorrorPerformanceScopeStats::AddSample(double DurationMs)
 {
 	if (SampleCount == 0)
 	{
@@ -52,7 +52,7 @@ void FPerformanceStats::AddSample(double DurationMs)
 	}
 }
 
-void FPerformanceStats::Reset()
+void FHorrorPerformanceScopeStats::Reset()
 {
 	SampleCount = 0;
 	MinMs = 0.0;
@@ -91,7 +91,7 @@ void UPerformanceProfiler::RecordSample(const FName& ScopeName, double DurationM
 	FScopeLock Lock(&DataMutex);
 
 	// Update statistics
-	FPerformanceStats& Stats = ScopeStats.FindOrAdd(ScopeName);
+	FHorrorPerformanceScopeStats& Stats = ScopeStats.FindOrAdd(ScopeName);
 	Stats.ScopeName = ScopeName;
 	Stats.AddSample(DurationMs);
 
@@ -111,23 +111,23 @@ void UPerformanceProfiler::RecordSample(const FName& ScopeName, double DurationM
 	}
 }
 
-FPerformanceStats UPerformanceProfiler::GetStats(FName ScopeName) const
+FHorrorPerformanceScopeStats UPerformanceProfiler::GetStats(FName ScopeName) const
 {
 	FScopeLock Lock(&const_cast<FCriticalSection&>(DataMutex));
 
-	const FPerformanceStats* Stats = ScopeStats.Find(ScopeName);
-	return Stats ? *Stats : FPerformanceStats();
+	const FHorrorPerformanceScopeStats* Stats = ScopeStats.Find(ScopeName);
+	return Stats ? *Stats : FHorrorPerformanceScopeStats();
 }
 
-TArray<FPerformanceStats> UPerformanceProfiler::GetAllStats() const
+TArray<FHorrorPerformanceScopeStats> UPerformanceProfiler::GetAllStats() const
 {
 	FScopeLock Lock(&const_cast<FCriticalSection&>(DataMutex));
 
-	TArray<FPerformanceStats> AllStats;
+	TArray<FHorrorPerformanceScopeStats> AllStats;
 	ScopeStats.GenerateValueArray(AllStats);
 
 	// Sort by average duration (descending)
-	AllStats.Sort([](const FPerformanceStats& A, const FPerformanceStats& B)
+	AllStats.Sort([](const FHorrorPerformanceScopeStats& A, const FHorrorPerformanceScopeStats& B)
 	{
 		return A.AverageMs > B.AverageMs;
 	});

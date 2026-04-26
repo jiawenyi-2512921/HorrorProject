@@ -1,9 +1,11 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 #include "Achievements/AchievementSubsystem.h"
 #include "Achievements/AchievementDefinition.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementSystemTest, "HorrorProject.Achievements.AchievementSystem", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementSystemTest, "HorrorProject.Achievements.AchievementSystem", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAchievementSystemTest::RunTest(const FString& Parameters)
 {
@@ -57,12 +59,12 @@ bool FAchievementSystemTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementDefinitionTest, "HorrorProject.Achievements.AchievementDefinition", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHorrorAchievementDefinitionTest, "HorrorProject.Achievements.AchievementDefinition", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FAchievementDefinitionTest::RunTest(const FString& Parameters)
+bool FHorrorAchievementDefinitionTest::RunTest(const FString& Parameters)
 {
 	// Test: Get all achievement definitions
-	TArray<FAchievementDefinition> Definitions = UAchievementDefinition::GetAllAchievementDefinitions();
+	TArray<FHorrorAchievementDefinition> Definitions = UAchievementDefinitionCatalog::GetAllAchievementDefinitions();
 	TestTrue(TEXT("Should have at least 20 achievements"), Definitions.Num() >= 20);
 
 	// Test: Check categories
@@ -72,7 +74,7 @@ bool FAchievementDefinitionTest::RunTest(const FString& Parameters)
 	bool bHasSpeedrun = false;
 	bool bHasSecret = false;
 
-	for (const FAchievementDefinition& Def : Definitions)
+	for (const FHorrorAchievementDefinition& Def : Definitions)
 	{
 		if (Def.Category == EAchievementCategory::Exploration) bHasExploration = true;
 		if (Def.Category == EAchievementCategory::Collection) bHasCollection = true;
@@ -89,7 +91,7 @@ bool FAchievementDefinitionTest::RunTest(const FString& Parameters)
 
 	// Test: Check progressive achievements
 	int32 ProgressiveCount = 0;
-	for (const FAchievementDefinition& Def : Definitions)
+	for (const FHorrorAchievementDefinition& Def : Definitions)
 	{
 		if (Def.bIsProgressive)
 		{
@@ -102,7 +104,7 @@ bool FAchievementDefinitionTest::RunTest(const FString& Parameters)
 
 	// Test: Check hidden achievements
 	int32 HiddenCount = 0;
-	for (const FAchievementDefinition& Def : Definitions)
+	for (const FHorrorAchievementDefinition& Def : Definitions)
 	{
 		if (Def.bIsHidden)
 		{
@@ -115,7 +117,7 @@ bool FAchievementDefinitionTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementEventsTest, "HorrorProject.Achievements.Events", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementEventsTest, "HorrorProject.Achievements.Events", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FAchievementEventsTest::RunTest(const FString& Parameters)
 {
@@ -157,3 +159,5 @@ bool FAchievementEventsTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "SettingsMenuWidget.generated.h"
+#include "SettingsPanelWidget.generated.h"
 
 class UGameSettingsSubsystem;
 class UGraphicsSettingsWidget;
-class UAudioSettingsWidget;
+class UHorrorAudioSettingsWidget;
 class UControlsSettingsWidget;
 class UButton;
 class UWidgetSwitcher;
@@ -18,7 +18,7 @@ class UWidgetSwitcher;
  * Main settings menu UI
  */
 UCLASS()
-class HORRORPROJECT_API USettingsMenuWidget : public UUserWidget
+class HORRORPROJECT_API USettingsPanelWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
@@ -59,7 +59,7 @@ protected:
 	TObjectPtr<UGraphicsSettingsWidget> GraphicsWidget;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UAudioSettingsWidget> AudioWidget;
+	TObjectPtr<UHorrorAudioSettingsWidget> AudioWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UControlsSettingsWidget> ControlsWidget;

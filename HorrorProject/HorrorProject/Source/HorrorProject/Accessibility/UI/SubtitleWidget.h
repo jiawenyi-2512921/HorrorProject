@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../AccessibilitySubsystem.h"
 #include "../SubtitleSystem.h"
 #include "SubtitleWidget.generated.h"
 
@@ -49,7 +50,7 @@ protected:
 
 private:
     UFUNCTION()
-    void OnSubtitleDisplayed(const FText& SubtitleText, float Duration);
+    void OnSubtitleDisplayed(const FText& InSubtitleText, float Duration);
 
     UFUNCTION()
     void OnAccessibilitySettingsChanged(const FAccessibilitySettings& NewSettings);

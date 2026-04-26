@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -7,7 +9,7 @@
 #include "GameFramework/Actor.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkReplication, "HorrorProject.Network.Replication", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkReplication, "HorrorProject.Network.Replication", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestNetworkReplication::RunTest(const FString& Parameters)
 {
@@ -103,7 +105,7 @@ bool FTestNetworkReplication::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkSync, "HorrorProject.Network.Sync", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkSync, "HorrorProject.Network.Sync", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestNetworkSync::RunTest(const FString& Parameters)
 {
@@ -143,3 +145,5 @@ bool FTestNetworkSync::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

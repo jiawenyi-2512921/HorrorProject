@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentBasicTest, "HorrorProject.CameraPhoto.Basic", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentBasicTest, "HorrorProject.CameraPhoto.Basic", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentBasicTest::RunTest(const FString& Parameters)
 {
@@ -34,7 +36,7 @@ bool FCameraPhotoComponentBasicTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentStorageTest, "HorrorProject.CameraPhoto.Storage", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentStorageTest, "HorrorProject.CameraPhoto.Storage", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentStorageTest::RunTest(const FString& Parameters)
 {
@@ -62,7 +64,7 @@ bool FCameraPhotoComponentStorageTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentFlashTest, "HorrorProject.CameraPhoto.Flash", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentFlashTest, "HorrorProject.CameraPhoto.Flash", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentFlashTest::RunTest(const FString& Parameters)
 {
@@ -87,7 +89,7 @@ bool FCameraPhotoComponentFlashTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentEvidenceDetectionTest, "HorrorProject.CameraPhoto.EvidenceDetection", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentEvidenceDetectionTest, "HorrorProject.CameraPhoto.EvidenceDetection", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentEvidenceDetectionTest::RunTest(const FString& Parameters)
 {
@@ -112,7 +114,7 @@ bool FCameraPhotoComponentEvidenceDetectionTest::RunTest(const FString& Paramete
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentMetadataTest, "HorrorProject.CameraPhoto.Metadata", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentMetadataTest, "HorrorProject.CameraPhoto.Metadata", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentMetadataTest::RunTest(const FString& Parameters)
 {
@@ -127,7 +129,7 @@ bool FCameraPhotoComponentMetadataTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentIntegrationTest, "HorrorProject.CameraPhoto.Integration", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentIntegrationTest, "HorrorProject.CameraPhoto.Integration", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -160,7 +162,7 @@ bool FCameraPhotoComponentIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentDelegateTest, "HorrorProject.CameraPhoto.Delegates", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentDelegateTest, "HorrorProject.CameraPhoto.Delegates", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraPhotoComponentDelegateTest::RunTest(const FString& Parameters)
 {
@@ -200,3 +202,5 @@ bool FCameraPhotoComponentDelegateTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

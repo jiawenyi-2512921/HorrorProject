@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CameraRecordingComponent.h"
@@ -11,7 +13,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentBasicRecordingTest,
 	"HorrorProject.Player.CameraRecording.BasicRecording",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentBasicRecordingTest::RunTest(const FString& Parameters)
 {
@@ -44,7 +46,7 @@ bool FCameraRecordingComponentBasicRecordingTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentRecordingProgressTest,
 	"HorrorProject.Player.CameraRecording.RecordingProgress",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentRecordingProgressTest::RunTest(const FString& Parameters)
 {
@@ -74,7 +76,7 @@ bool FCameraRecordingComponentRecordingProgressTest::RunTest(const FString& Para
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentMaxDurationTest,
 	"HorrorProject.Player.CameraRecording.MaxDuration",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentMaxDurationTest::RunTest(const FString& Parameters)
 {
@@ -102,7 +104,7 @@ bool FCameraRecordingComponentMaxDurationTest::RunTest(const FString& Parameters
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentRewindTest,
 	"HorrorProject.Player.CameraRecording.Rewind",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentRewindTest::RunTest(const FString& Parameters)
 {
@@ -137,7 +139,7 @@ bool FCameraRecordingComponentRewindTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentClearRecordingTest,
 	"HorrorProject.Player.CameraRecording.ClearRecording",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentClearRecordingTest::RunTest(const FString& Parameters)
 {
@@ -168,7 +170,7 @@ bool FCameraRecordingComponentClearRecordingTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentMetadataTest,
 	"HorrorProject.Player.CameraRecording.Metadata",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentMetadataTest::RunTest(const FString& Parameters)
 {
@@ -198,7 +200,7 @@ bool FCameraRecordingComponentMetadataTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCameraRecordingComponentDelegatesTest,
 	"HorrorProject.Player.CameraRecording.Delegates",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraRecordingComponentDelegatesTest::RunTest(const FString& Parameters)
 {
@@ -241,3 +243,5 @@ bool FCameraRecordingComponentDelegatesTest::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

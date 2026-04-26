@@ -27,6 +27,12 @@ bool UInteractionComponent::TryInteract()
 	return TryInteractWithHit(Hit);
 }
 
+/**
+ * Attempts to interact with a specific hit result
+ * Resolves the appropriate interaction method (interface, legacy function, or door timeline)
+ * @param Hit - The raycast hit result containing the target object
+ * @return True if interaction was successfully invoked
+ */
 bool UInteractionComponent::TryInteractWithHit(const FHitResult& Hit) const
 {
 	AActor* TargetActor = Hit.GetActor();

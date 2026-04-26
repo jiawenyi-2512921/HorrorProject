@@ -1,12 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "AudioSettings.h"
+#include "HorrorAudioSettings.h"
 #include "Sound/SoundClass.h"
 #include "Sound/SoundMix.h"
 #include "AudioDevice.h"
 #include "Engine/Engine.h"
 
-UAudioSettings::UAudioSettings()
+UHorrorAudioSettings::UHorrorAudioSettings()
 {
 	MasterVolume = 1.0f;
 	MusicVolume = 0.8f;
@@ -34,19 +34,19 @@ UAudioSettings::UAudioSettings()
 	bEnableAudioDescription = false;
 }
 
-void UAudioSettings::Apply()
+void UHorrorAudioSettings::Apply()
 {
 	ApplyVolumeSettings();
 	ApplyQualitySettings();
 	ApplySpatialSettings();
 }
 
-void UAudioSettings::AutoDetect()
+void UHorrorAudioSettings::AutoDetect()
 {
 	DetectAudioCapabilities();
 }
 
-void UAudioSettings::SetMasterVolume(float Volume, bool bApplyImmediately)
+void UHorrorAudioSettings::SetMasterVolume(float Volume, bool bApplyImmediately)
 {
 	MasterVolume = FMath::Clamp(Volume, 0.0f, 1.0f);
 
@@ -56,7 +56,7 @@ void UAudioSettings::SetMasterVolume(float Volume, bool bApplyImmediately)
 	}
 }
 
-void UAudioSettings::SetCategoryVolume(FName Category, float Volume, bool bApplyImmediately)
+void UHorrorAudioSettings::SetCategoryVolume(FName Category, float Volume, bool bApplyImmediately)
 {
 	Volume = FMath::Clamp(Volume, 0.0f, 1.0f);
 
@@ -87,54 +87,74 @@ void UAudioSettings::SetCategoryVolume(FName Category, float Volume, bool bApply
 	}
 }
 
-TArray<FString> UAudioSettings::GetAvailableOutputDevices() const
+TArray<FString> UHorrorAudioSettings::GetAvailableOutputDevices() const
 {
 	TArray<FString> Devices;
 	Devices.Add(TEXT("Default"));
 
-	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice())
+	if (GEngine)
 	{
-		// Get available audio devices from the audio device
-		// This is platform-specific implementation
+		FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
+		if (AudioDevice)
+		{
+			AudioDevice->GetAudioDeviceList(Devices);
+			Devices.Insert(TEXT("Default"), 0);
+		}
 	}
 
 	return Devices;
 }
 
-bool UAudioSettings::IsSpatialAudioSupported() const
+bool UHorrorAudioSettings::IsSpatialAudioSupported() const
 {
-	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice())
+	if (GEngine)
 	{
-		return AudioDevice->IsSpatializationPluginEnabled();
+		FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
+		if (AudioDevice)
+		{
+			return AudioDevice->IsSpatializationPluginEnabled();
+		}
 	}
 	return false;
 }
 
-void UAudioSettings::ApplyVolumeSettings()
+void UHorrorAudioSettings::ApplyVolumeSettings()
 {
-	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice())
+	if (GEngine)
 	{
-		AudioDevice->SetTransientMasterVolume(MasterVolume);
+		FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
+		if (AudioDevice)
+		{
+			AudioDevice->SetTransientPrimaryVolume(MasterVolume);
+		}
 	}
 }
 
-void UAudioSettings::ApplyQualitySettings()
+void UHorrorAudioSettings::ApplyQualitySettings()
 {
-	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice())
+	if (GEngine)
 	{
-		AudioDevice->SetMaxChannels(MaxChannels);
+		FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
+		if (AudioDevice)
+		{
+			AudioDevice->SetMaxChannels(MaxChannels);
+		}
 	}
 }
 
-void UAudioSettings::ApplySpatialSettings()
+void UHorrorAudioSettings::ApplySpatialSettings()
 {
-	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDevice())
+	if (GEngine)
 	{
-		AudioDevice->EnableSpatializationPlugin(bEnableSpatialAudio);
+		FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
+		if (AudioDevice)
+		{
+			AudioDevice->SetSpatializationInterfaceEnabled(bEnableSpatialAudio);
+		}
 	}
 }
 
-void UAudioSettings::DetectAudioCapabilities()
+void UHorrorAudioSettings::DetectAudioCapabilities()
 {
 	bEnableSpatialAudio = IsSpatialAudioSupported();
 }

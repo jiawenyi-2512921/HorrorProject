@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationBasicTest,
 	"HorrorProject.Integration.Camera.BasicCameraSystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationBasicTest::RunTest(const FString& Parameters)
 {
@@ -33,7 +35,7 @@ bool FCameraIntegrationBasicTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationBatteryTest,
 	"HorrorProject.Integration.Camera.BatterySystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationBatteryTest::RunTest(const FString& Parameters)
 {
@@ -60,7 +62,7 @@ bool FCameraIntegrationBatteryTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationRecordingTest,
 	"HorrorProject.Integration.Camera.RecordingSystem",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationRecordingTest::RunTest(const FString& Parameters)
 {
@@ -84,7 +86,7 @@ bool FCameraIntegrationRecordingTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationPhotoWithBatteryTest,
 	"HorrorProject.Integration.Camera.PhotoWithBattery",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationPhotoWithBatteryTest::RunTest(const FString& Parameters)
 {
@@ -112,7 +114,7 @@ bool FCameraIntegrationPhotoWithBatteryTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationEventPublishTest,
 	"HorrorProject.Integration.Camera.EventPublish",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationEventPublishTest::RunTest(const FString& Parameters)
 {
@@ -149,7 +151,7 @@ bool FCameraIntegrationEventPublishTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationRecordingWithBatteryTest,
 	"HorrorProject.Integration.Camera.RecordingWithBattery",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationRecordingWithBatteryTest::RunTest(const FString& Parameters)
 {
@@ -177,7 +179,7 @@ bool FCameraIntegrationRecordingWithBatteryTest::RunTest(const FString& Paramete
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationAllComponentsTest,
 	"HorrorProject.Integration.Camera.AllComponents",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FCameraIntegrationAllComponentsTest::RunTest(const FString& Parameters)
 {
@@ -205,3 +207,5 @@ bool FCameraIntegrationAllComponentsTest::RunTest(const FString& Parameters)
 	TestActor->Destroy();
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

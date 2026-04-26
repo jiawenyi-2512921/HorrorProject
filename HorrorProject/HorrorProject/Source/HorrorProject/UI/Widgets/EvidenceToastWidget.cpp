@@ -5,12 +5,12 @@
 
 void UEvidenceToastWidget::ShowEvidenceToast(FName EvidenceId, const FHorrorEvidenceMetadata& Metadata)
 {
-	if (bIsVisible)
+	if (bToastVisible)
 	{
 		DismissToast();
 	}
 
-	bIsVisible = true;
+	bToastVisible = true;
 	BP_ShowToast(EvidenceId, Metadata.DisplayName, Metadata.Description);
 	BP_PlayFadeIn();
 
@@ -28,12 +28,12 @@ void UEvidenceToastWidget::ShowEvidenceToast(FName EvidenceId, const FHorrorEvid
 
 void UEvidenceToastWidget::ShowSimpleToast(FName EvidenceId, const FText& DisplayName)
 {
-	if (bIsVisible)
+	if (bToastVisible)
 	{
 		DismissToast();
 	}
 
-	bIsVisible = true;
+	bToastVisible = true;
 	BP_ShowToast(EvidenceId, DisplayName, FText::GetEmpty());
 	BP_PlayFadeIn();
 
@@ -51,7 +51,7 @@ void UEvidenceToastWidget::ShowSimpleToast(FName EvidenceId, const FText& Displa
 
 void UEvidenceToastWidget::DismissToast()
 {
-	if (!bIsVisible)
+	if (!bToastVisible)
 	{
 		return;
 	}
@@ -61,7 +61,7 @@ void UEvidenceToastWidget::DismissToast()
 		World->GetTimerManager().ClearTimer(DismissTimerHandle);
 	}
 
-	bIsVisible = false;
+	bToastVisible = false;
 	BP_PlayFadeOut();
 	BP_DismissToast();
 }

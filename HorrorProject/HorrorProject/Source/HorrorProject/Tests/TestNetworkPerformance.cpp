@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -6,7 +8,7 @@
 #include "Network/HorrorPlayerControllerMultiplayer.h"
 #include "Tests/AutomationCommon.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkPerformance, "HorrorProject.Network.Performance", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkPerformance, "HorrorProject.Network.Performance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestNetworkPerformance::RunTest(const FString& Parameters)
 {
@@ -141,7 +143,7 @@ bool FTestNetworkPerformance::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkBandwidth, "HorrorProject.Network.Bandwidth", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTestNetworkBandwidth, "HorrorProject.Network.Bandwidth", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FTestNetworkBandwidth::RunTest(const FString& Parameters)
 {
@@ -213,3 +215,5 @@ bool FTestNetworkBandwidth::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

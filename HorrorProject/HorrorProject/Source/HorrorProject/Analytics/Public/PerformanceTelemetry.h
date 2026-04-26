@@ -7,7 +7,7 @@
 #include "PerformanceTelemetry.generated.h"
 
 USTRUCT(BlueprintType)
-struct FPerformanceSnapshot
+struct FPerformanceTelemetrySnapshot
 {
 	GENERATED_BODY()
 
@@ -57,17 +57,17 @@ public:
 	float GetMemoryUsageMB() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
-	FPerformanceSnapshot GetCurrentSnapshot() const;
+	FPerformanceTelemetrySnapshot GetCurrentSnapshot() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
-	TArray<FPerformanceSnapshot> GetPerformanceHistory() const { return PerformanceHistory; }
+	TArray<FPerformanceTelemetrySnapshot> GetPerformanceHistory() const { return PerformanceHistory; }
 
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void ResetStats();
 
 protected:
 	UPROPERTY()
-	TArray<FPerformanceSnapshot> PerformanceHistory;
+	TArray<FPerformanceTelemetrySnapshot> PerformanceHistory;
 
 	UPROPERTY()
 	float MinFPS = TNumericLimits<float>::Max();
@@ -87,6 +87,6 @@ protected:
 	static constexpr int32 MaxHistorySize = 1000;
 
 private:
-	void RecordSnapshot(const FPerformanceSnapshot& Snapshot);
+	void RecordSnapshot(const FPerformanceTelemetrySnapshot& Snapshot);
 	float CalculateMemoryUsage() const;
 };

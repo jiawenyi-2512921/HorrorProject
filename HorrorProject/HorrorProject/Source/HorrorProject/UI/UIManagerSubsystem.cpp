@@ -42,7 +42,7 @@ UUserWidget* UUIManagerSubsystem::CreateWidget(TSubclassOf<UUserWidget> WidgetCl
 		return nullptr;
 	}
 
-	UUserWidget* NewWidget = CreateWidget<UUserWidget>(World, WidgetClass);
+	UUserWidget* NewWidget = ::CreateWidget<UUserWidget>(World, WidgetClass);
 	if (NewWidget)
 	{
 		ManagedWidgets.Add(WidgetName, NewWidget);

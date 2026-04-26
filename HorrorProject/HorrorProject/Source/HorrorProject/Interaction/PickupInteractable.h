@@ -49,6 +49,7 @@ protected:
 private:
 	bool TryAddToInventory(AActor* InstigatorActor);
 	void DestroyPickup();
+	void DestroyPickupActor();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Pickup", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UStaticMeshComponent> PickupMesh;

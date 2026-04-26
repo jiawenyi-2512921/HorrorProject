@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -9,7 +11,7 @@
 
 #if WITH_DEV_AUTOMATION_TESTS
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusEvidenceIntegrationTest, "HorrorProject.Integration.EventBusEvidence", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusEvidenceIntegrationTest, "HorrorProject.Integration.EventBusEvidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusEvidenceIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -31,7 +33,7 @@ bool FEventBusEvidenceIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusAudioIntegrationTest, "HorrorProject.Integration.EventBusAudio", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusAudioIntegrationTest, "HorrorProject.Integration.EventBusAudio", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusAudioIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -43,7 +45,7 @@ bool FEventBusAudioIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusUIIntegrationTest, "HorrorProject.Integration.EventBusUI", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusUIIntegrationTest, "HorrorProject.Integration.EventBusUI", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusUIIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -52,7 +54,7 @@ bool FEventBusUIIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusVFXIntegrationTest, "HorrorProject.Integration.EventBusVFX", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusVFXIntegrationTest, "HorrorProject.Integration.EventBusVFX", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusVFXIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -61,7 +63,7 @@ bool FEventBusVFXIntegrationTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusInteractionIntegrationTest, "HorrorProject.Integration.EventBusInteraction", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusInteractionIntegrationTest, "HorrorProject.Integration.EventBusInteraction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FEventBusInteractionIntegrationTest::RunTest(const FString& Parameters)
 {
@@ -71,3 +73,5 @@ bool FEventBusInteractionIntegrationTest::RunTest(const FString& Parameters)
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

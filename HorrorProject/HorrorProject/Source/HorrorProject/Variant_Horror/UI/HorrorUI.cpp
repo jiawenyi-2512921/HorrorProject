@@ -6,7 +6,7 @@
 #include "Game/HorrorGameModeBase.h"
 #include "Player/HorrorPlayerCharacter.h"
 #include "Player/Components/VHSEffectComponent.h"
-#include "HorrorCharacter.h"
+#include "Variant_Horror/HorrorCharacter.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -42,7 +42,7 @@ FHorrorArchiveSnapshot UHorrorUI::BuildArchiveSnapshot(const UInventoryComponent
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorUIArchiveSnapshotIncludesMetadataTest,
 	"HorrorProject.UI.Archive.SnapshotIncludesMetadata",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorUIArchiveSnapshotIncludesMetadataTest::RunTest(const FString& Parameters)
 {

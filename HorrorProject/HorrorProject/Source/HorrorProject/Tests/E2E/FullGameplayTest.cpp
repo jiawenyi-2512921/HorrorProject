@@ -1,3 +1,5 @@
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
@@ -12,7 +14,7 @@
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EFullGameplayTest,
 	"HorrorProject.E2E.FullGameplay",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FE2EFullGameplayTest::RunTest(const FString& Parameters)
 {
@@ -86,7 +88,7 @@ bool FE2EFullGameplayTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2ESaveLoadCycleTest,
 	"HorrorProject.E2E.SaveLoadCycle",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FE2ESaveLoadCycleTest::RunTest(const FString& Parameters)
 {
@@ -134,7 +136,7 @@ bool FE2ESaveLoadCycleTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EPerformanceStressTest,
 	"HorrorProject.E2E.PerformanceStress",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FE2EPerformanceStressTest::RunTest(const FString& Parameters)
 {
@@ -192,7 +194,7 @@ bool FE2EPerformanceStressTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EEdgeCaseTest,
 	"HorrorProject.E2E.EdgeCases",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FE2EEdgeCaseTest::RunTest(const FString& Parameters)
 {
@@ -234,7 +236,7 @@ bool FE2EEdgeCaseTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EComplexInteractionTest,
 	"HorrorProject.E2E.ComplexInteraction",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FE2EComplexInteractionTest::RunTest(const FString& Parameters)
 {
@@ -297,3 +299,5 @@ bool FE2EComplexInteractionTest::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR

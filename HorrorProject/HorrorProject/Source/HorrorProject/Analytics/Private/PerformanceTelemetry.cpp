@@ -6,7 +6,7 @@
 
 void UPerformanceTelemetry::Update(float DeltaTime)
 {
-	FPerformanceSnapshot Snapshot;
+	FPerformanceTelemetrySnapshot Snapshot;
 
 	// Calculate FPS
 	Snapshot.FPS = DeltaTime > 0.0f ? 1.0f / DeltaTime : 0.0f;
@@ -39,13 +39,13 @@ float UPerformanceTelemetry::GetMemoryUsageMB() const
 	return CalculateMemoryUsage();
 }
 
-FPerformanceSnapshot UPerformanceTelemetry::GetCurrentSnapshot() const
+FPerformanceTelemetrySnapshot UPerformanceTelemetry::GetCurrentSnapshot() const
 {
 	if (PerformanceHistory.Num() > 0)
 	{
 		return PerformanceHistory.Last();
 	}
-	return FPerformanceSnapshot();
+	return FPerformanceTelemetrySnapshot();
 }
 
 void UPerformanceTelemetry::ResetStats()
@@ -58,7 +58,7 @@ void UPerformanceTelemetry::ResetStats()
 	SampleCount = 0;
 }
 
-void UPerformanceTelemetry::RecordSnapshot(const FPerformanceSnapshot& Snapshot)
+void UPerformanceTelemetry::RecordSnapshot(const FPerformanceTelemetrySnapshot& Snapshot)
 {
 	PerformanceHistory.Add(Snapshot);
 
