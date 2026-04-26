@@ -19,7 +19,7 @@ namespace HorrorVHSDefaults
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSEffectComponentTracksBodycamStateTest,
 	"HorrorProject.Player.VHS.TracksBodycamState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FVHSEffectComponentTracksBodycamStateTest::RunTest(const FString& Parameters)
 {
@@ -57,7 +57,7 @@ bool FVHSEffectComponentTracksBodycamStateTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FVHSEffectComponentPostProcessBindingTest,
 	"HorrorProject.Player.VHS.PostProcessBindingFollowsFeedbackState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FVHSEffectComponentPostProcessBindingTest::RunTest(const FString& Parameters)
 {

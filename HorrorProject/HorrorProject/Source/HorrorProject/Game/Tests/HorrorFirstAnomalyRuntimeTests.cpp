@@ -10,7 +10,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAnomalyDirectorRequiresRecordingTest,
 	"HorrorProject.Game.FoundFootage.FirstAnomaly.RequiresRecording",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAnomalyDirectorRequiresRecordingTest::RunTest(const FString& Parameters)
 {
@@ -52,7 +52,7 @@ bool FHorrorAnomalyDirectorRequiresRecordingTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAnomalyDirectorImportPendingCandidateSanitizesRestoredStateTest,
 	"HorrorProject.Game.FoundFootage.FirstAnomaly.ImportPendingCandidateSanitizesRestoredState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorAnomalyDirectorImportPendingCandidateSanitizesRestoredStateTest::RunTest(const FString& Parameters)
 {

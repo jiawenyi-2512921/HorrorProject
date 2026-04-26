@@ -12,7 +12,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorLifecycleTest,
 	"HorrorProject.Game.Encounter.Director.Lifecycle",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorLifecycleTest::RunTest(const FString& Parameters)
 {
@@ -107,7 +107,7 @@ bool FHorrorEncounterDirectorLifecycleTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorSpawnsAuthoredThreatTest,
 	"HorrorProject.Game.Encounter.Director.SpawnsAuthoredThreat",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorSpawnsAuthoredThreatTest::RunTest(const FString& Parameters)
 {
@@ -163,7 +163,7 @@ bool FHorrorEncounterDirectorSpawnsAuthoredThreatTest::RunTest(const FString& Pa
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest,
 	"HorrorProject.Game.Encounter.Director.SpawnsAuthoredThreatWithRotatedDirector",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest::RunTest(const FString& Parameters)
 {
@@ -211,7 +211,7 @@ bool FHorrorEncounterDirectorSpawnsAuthoredThreatWithRotatedDirectorTest::RunTes
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorThreatlessRevealTest,
 	"HorrorProject.Game.Encounter.Director.ThreatlessReveal",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorThreatlessRevealTest::RunTest(const FString& Parameters)
 {
@@ -253,7 +253,7 @@ bool FHorrorEncounterDirectorThreatlessRevealTest::RunTest(const FString& Parame
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorRadiusSemanticsTest,
 	"HorrorProject.Game.Encounter.Director.RadiusSemantics",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorRadiusSemanticsTest::RunTest(const FString& Parameters)
 {
@@ -303,7 +303,7 @@ bool FHorrorEncounterDirectorRadiusSemanticsTest::RunTest(const FString& Paramet
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorThreatDetectionDivergenceTest,
 	"HorrorProject.Game.Encounter.Director.ThreatDetectionDivergence",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorThreatDetectionDivergenceTest::RunTest(const FString& Parameters)
 {
@@ -346,7 +346,7 @@ bool FHorrorEncounterDirectorThreatDetectionDivergenceTest::RunTest(const FStrin
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetReusesThreatTest,
 	"HorrorProject.Game.Encounter.Director.ResetReusesThreat",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetReusesThreatTest::RunTest(const FString& Parameters)
 {
@@ -404,7 +404,7 @@ bool FHorrorEncounterDirectorResetReusesThreatTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorRevealCanAvoidRouteGateTest,
 	"HorrorProject.Game.Encounter.Director.RevealCanAvoidRouteGate",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorRevealCanAvoidRouteGateTest::RunTest(const FString& Parameters)
 {
@@ -447,7 +447,7 @@ bool FHorrorEncounterDirectorRevealCanAvoidRouteGateTest::RunTest(const FString&
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetFromPrimedClearsStateTest,
 	"HorrorProject.Game.Encounter.Director.ResetFromPrimedClearsState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetFromPrimedClearsStateTest::RunTest(const FString& Parameters)
 {
@@ -482,7 +482,7 @@ bool FHorrorEncounterDirectorResetFromPrimedClearsStateTest::RunTest(const FStri
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest,
 	"HorrorProject.Game.Encounter.Director.ResetFromRevealedClearsGateAndThreat",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest::RunTest(const FString& Parameters)
 {
@@ -529,7 +529,7 @@ bool FHorrorEncounterDirectorResetFromRevealedClearsGateAndThreatTest::RunTest(c
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorResolveFailurePreservesStateTest,
 	"HorrorProject.Game.Encounter.Director.ResolveFailurePreservesState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorResolveFailurePreservesStateTest::RunTest(const FString& Parameters)
 {
@@ -571,7 +571,7 @@ bool FHorrorEncounterDirectorResolveFailurePreservesStateTest::RunTest(const FSt
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEncounterDirectorFailedRevealDoesNotMutateStateTest,
 	"HorrorProject.Game.Encounter.Director.FailedRevealDoesNotMutateState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEncounterDirectorFailedRevealDoesNotMutateStateTest::RunTest(const FString& Parameters)
 {

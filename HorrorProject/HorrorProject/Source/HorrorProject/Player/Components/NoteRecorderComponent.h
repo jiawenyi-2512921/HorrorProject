@@ -8,7 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FNoteRecordedSignature, FName, NoteId, int32, TotalRecordedNotes);
 
-UCLASS()
+#if WITH_DEV_AUTOMATION_TESTS
+UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UNoteRecorderDelegateProbe : public UObject
 {
 	GENERATED_BODY()
@@ -23,6 +24,7 @@ public:
 	TArray<FName> NoteIds;
 	TArray<int32> TotalRecordedNoteCounts;
 };
+#endif
 
 USTRUCT(BlueprintType)
 struct HORRORPROJECT_API FHorrorNoteMetadata

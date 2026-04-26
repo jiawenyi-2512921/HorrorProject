@@ -54,7 +54,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentObjectiveHitTest,
 	"HorrorProject.Player.Interaction.ObjectiveHit",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentObjectiveHitTest::RunTest(const FString& Parameters)
 {
@@ -116,7 +116,7 @@ bool FInteractionComponentObjectiveHitTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentRejectsMissingCandidateTest,
 	"HorrorProject.Player.Interaction.RejectsMissingCandidate",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentRejectsMissingCandidateTest::RunTest(const FString& Parameters)
 {
@@ -166,7 +166,7 @@ bool FInteractionComponentRejectsMissingCandidateTest::RunTest(const FString& Pa
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentDispatchesInterfaceThroughExecuteTest,
 	"HorrorProject.Player.Interaction.DispatchesInterfaceThroughExecute",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentDispatchesInterfaceThroughExecuteTest::RunTest(const FString& Parameters)
 {
@@ -215,7 +215,7 @@ bool FInteractionComponentDispatchesInterfaceThroughExecuteTest::RunTest(const F
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentComponentInterfaceTargetTest,
 	"HorrorProject.Player.Interaction.ComponentInterfaceTarget",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentComponentInterfaceTargetTest::RunTest(const FString& Parameters)
 {
@@ -265,7 +265,7 @@ bool FInteractionComponentComponentInterfaceTargetTest::RunTest(const FString& P
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest,
 	"HorrorProject.Player.Interaction.LegacyDoorTimelineFallbackIsOptIn",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest::RunTest(const FString& Parameters)
 {
@@ -323,7 +323,7 @@ bool FInteractionComponentLegacyDoorTimelineFallbackIsOptInTest::RunTest(const F
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractionComponentSweepScoringPrefersCenterlineTest,
 	"HorrorProject.Player.Interaction.SweepScoringPrefersCenterline",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInteractionComponentSweepScoringPrefersCenterlineTest::RunTest(const FString& Parameters)
 {

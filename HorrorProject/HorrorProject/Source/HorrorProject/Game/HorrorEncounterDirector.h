@@ -20,7 +20,8 @@ enum class EHorrorEncounterPhase : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHorrorEncounterPhaseChangedSignature, EHorrorEncounterPhase, NewPhase, FName, EncounterId);
 
-UCLASS()
+#if WITH_DEV_AUTOMATION_TESTS
+UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UHorrorEncounterPhaseDelegateProbe : public UObject
 {
 	GENERATED_BODY()
@@ -32,6 +33,7 @@ public:
 	TArray<EHorrorEncounterPhase> PhaseValues;
 	TArray<FName> EncounterIds;
 };
+#endif
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorEncounterDirector : public AActor

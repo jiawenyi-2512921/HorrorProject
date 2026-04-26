@@ -1,9 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "Save/HorrorSaveGame.h"
-
 #if WITH_DEV_AUTOMATION_TESTS
 
+#include "Save/HorrorSaveGame.h"
 #include "Engine/World.h"
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Game/HorrorFoundFootageContract.h"
@@ -72,7 +71,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorFoundFootageSaveStateRoundTripTest,
 	"HorrorProject.Save.FoundFootageContract.RoundTripsSaveState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorFoundFootageSaveStateRoundTripTest::RunTest(const FString& Parameters)
 {
@@ -104,7 +103,7 @@ bool FHorrorFoundFootageSaveStateRoundTripTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveImportIdsSanitizesAndPreservesOrderTest,
 	"HorrorProject.Save.ImportIds.SanitizesAndPreservesOrder",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveImportIdsSanitizesAndPreservesOrderTest::RunTest(const FString& Parameters)
 {
@@ -136,7 +135,7 @@ bool FHorrorSaveImportIdsSanitizesAndPreservesOrderTest::RunTest(const FString& 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveGameSnapshotContainsDay1StateTest,
 	"HorrorProject.Save.SaveGame.ContainsDay1SnapshotState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveGameSnapshotContainsDay1StateTest::RunTest(const FString& Parameters)
 {
@@ -188,7 +187,7 @@ bool FHorrorSaveGameSnapshotContainsDay1StateTest::RunTest(const FString& Parame
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveSubsystemSnapshotRequiresCompleteTargetsTest,
 	"HorrorProject.Save.Subsystem.SnapshotRequiresCompleteTargets",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveSubsystemSnapshotRequiresCompleteTargetsTest::RunTest(const FString& Parameters)
 {
@@ -219,7 +218,7 @@ bool FHorrorSaveSubsystemSnapshotRequiresCompleteTargetsTest::RunTest(const FStr
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveSubsystemSnapshotRoundTripTest,
 	"HorrorProject.Save.Subsystem.SnapshotRoundTripsDay1State",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveSubsystemSnapshotRoundTripTest::RunTest(const FString& Parameters)
 {
@@ -314,7 +313,7 @@ bool FHorrorSaveSubsystemSnapshotRoundTripTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveSubsystemSnapshotRoundTripsPendingFirstAnomalyCandidateTest,
 	"HorrorProject.Save.Subsystem.SnapshotRoundTripsPendingFirstAnomalyCandidate",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveSubsystemSnapshotRoundTripsPendingFirstAnomalyCandidateTest::RunTest(const FString& Parameters)
 {
@@ -389,7 +388,7 @@ bool FHorrorSaveSubsystemSnapshotRoundTripsPendingFirstAnomalyCandidateTest::Run
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveSubsystemApplySnapshotDoesNotReplayEventsTest,
 	"HorrorProject.Save.Subsystem.ApplySnapshotDoesNotReplayEvents",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveSubsystemApplySnapshotDoesNotReplayEventsTest::RunTest(const FString& Parameters)
 {
@@ -473,7 +472,7 @@ bool FHorrorSaveSubsystemApplySnapshotDoesNotReplayEventsTest::RunTest(const FSt
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorSaveSubsystemSanitizesCrossStreamObjectiveStateTest,
 	"HorrorProject.Save.Subsystem.SanitizesCrossStreamObjectiveState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorSaveSubsystemSanitizesCrossStreamObjectiveStateTest::RunTest(const FString& Parameters)
 {

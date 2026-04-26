@@ -13,7 +13,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorThreatAIStateTest,
 	"HorrorProject.AI.Threat.StateAndDetection",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorThreatAIStateTest::RunTest(const FString& Parameters)
 {
@@ -87,7 +87,7 @@ bool FHorrorThreatAIStateTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorThreatAIControllerPossessionTest,
 	"HorrorProject.AI.Threat.ControllerPossession",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorThreatAIControllerPossessionTest::RunTest(const FString& Parameters)
 {

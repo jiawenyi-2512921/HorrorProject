@@ -2,6 +2,7 @@
 
 #include "Player/Components/QuantumCameraComponent.h"
 
+#if WITH_DEV_AUTOMATION_TESTS
 void UQuantumCameraRuntimeDelegateProbe::HandleCameraAcquiredChanged(bool bNewAcquired)
 {
 	++AcquiredBroadcastCount;
@@ -20,14 +21,12 @@ void UQuantumCameraRuntimeDelegateProbe::HandleCameraModeChanged(EQuantumCameraM
 	ModeValues.Add(NewMode);
 }
 
-#if WITH_DEV_AUTOMATION_TESTS
-
 #include "Misc/AutomationTest.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FQuantumCameraComponentTracksRuntimeModesTest,
 	"HorrorProject.Player.QuantumCamera.TracksRuntimeModes",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FQuantumCameraComponentTracksRuntimeModesTest::RunTest(const FString& Parameters)
 {
@@ -79,7 +78,7 @@ bool FQuantumCameraComponentTracksRuntimeModesTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FQuantumCameraComponentBroadcastsRuntimeDelegatesTest,
 	"HorrorProject.Player.QuantumCamera.BroadcastsRuntimeDelegates",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FQuantumCameraComponentBroadcastsRuntimeDelegatesTest::RunTest(const FString& Parameters)
 {

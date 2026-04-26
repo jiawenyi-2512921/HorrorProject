@@ -61,7 +61,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusDirectPublishTest,
 	"HorrorProject.Game.EventBus.DirectPublishBroadcastsAndStoresHistory",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 {
@@ -189,7 +189,7 @@ bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusMetadataGuardrailsTest,
 	"HorrorProject.Game.EventBus.MetadataRegistrationGuardrails",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusMetadataGuardrailsTest::RunTest(const FString& Parameters)
 {
@@ -246,7 +246,7 @@ bool FHorrorEventBusMetadataGuardrailsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusInvalidPublishTest,
 	"HorrorProject.Game.EventBus.InvalidTagPublishFailsWithoutHistory",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusInvalidPublishTest::RunTest(const FString& Parameters)
 {
@@ -279,7 +279,7 @@ bool FHorrorEventBusInvalidPublishTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusHistoryCapacityTest,
 	"HorrorProject.Game.EventBus.HistoryCapacityDropsOldestEntries",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusHistoryCapacityTest::RunTest(const FString& Parameters)
 {
@@ -311,7 +311,7 @@ bool FHorrorEventBusHistoryCapacityTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusGameModeObjectivePublishTest,
 	"HorrorProject.Game.EventBus.GameModeObjectiveEventsPublishOnce",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorEventBusGameModeObjectivePublishTest::RunTest(const FString& Parameters)
 {

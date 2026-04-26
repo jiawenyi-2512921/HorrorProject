@@ -18,7 +18,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FDeepWaterStationRouteKitSpawnsObjectiveNodesTest,
 	"HorrorProject.Game.DeepWaterStation.RouteKit.SpawnsObjectiveNodes",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& Parameters)
 {
@@ -242,7 +242,7 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FDeepWaterStationRouteKitObjectiveEncounterBridgeTest,
 	"HorrorProject.Game.DeepWaterStation.RouteKit.ObjectiveEncounterBridge",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FDeepWaterStationRouteKitObjectiveEncounterBridgeTest::RunTest(const FString& Parameters)
 {

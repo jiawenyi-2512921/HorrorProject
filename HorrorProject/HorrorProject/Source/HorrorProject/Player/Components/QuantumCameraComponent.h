@@ -20,7 +20,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuantumCameraModeChangedSignature, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuantumCameraAcquiredChangedSignature, bool, bNewAcquired);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuantumCameraEnabledChangedSignature, bool, bNewEnabled);
 
-UCLASS()
+#if WITH_DEV_AUTOMATION_TESTS
+UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UQuantumCameraRuntimeDelegateProbe : public UObject
 {
 	GENERATED_BODY()
@@ -42,6 +43,7 @@ public:
 	TArray<bool> EnabledValues;
 	TArray<EQuantumCameraMode> ModeValues;
 };
+#endif
 
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UQuantumCameraComponent : public UActorComponent

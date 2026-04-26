@@ -42,7 +42,7 @@ FHorrorArchiveSnapshot UHorrorUI::BuildArchiveSnapshot(const UInventoryComponent
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorUIArchiveSnapshotIncludesMetadataTest,
 	"HorrorProject.UI.Archive.SnapshotIncludesMetadata",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorUIArchiveSnapshotIncludesMetadataTest::RunTest(const FString& Parameters)
 {

@@ -9,7 +9,8 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorThreatActiveChangedSignature, bool, bIsActive);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorThreatDetectedTargetChangedSignature, AActor*, DetectedTarget);
 
-UCLASS()
+#if WITH_DEV_AUTOMATION_TESTS
+UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UHorrorThreatDelegateProbe : public UObject
 {
 	GENERATED_BODY()
@@ -24,6 +25,7 @@ public:
 	TArray<bool> ActiveValues;
 	TArray<TObjectPtr<AActor>> TargetValues;
 };
+#endif
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorThreatCharacter : public ACharacter

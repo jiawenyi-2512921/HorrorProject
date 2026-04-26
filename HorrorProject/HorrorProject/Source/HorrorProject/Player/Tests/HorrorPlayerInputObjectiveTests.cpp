@@ -12,6 +12,11 @@
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 
+// TODO(P5): SpawnActor<TestDouble> 当前回退为父类 spawn（无 UCLASS/GENERATED_BODY）；
+// BlueprintImplementableEvent 的 DoOpenArchive 在无 BP 子类时为空操作，导致
+// OpenArchiveForTest 实质是 no-op，断言"未解锁出口"为伪覆盖。
+// P5 重写时移除此 TestDouble，改为 AHorrorPlayerCharacter 在
+// #if WITH_DEV_AUTOMATION_TESTS 守卫下直接暴露 *ForTest() 接口。
 class AHorrorPlayerCharacterInputTestDouble : public AHorrorPlayerCharacter
 {
 public:
@@ -49,7 +54,7 @@ public:
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorPlayerInputDoesNotBypassRouteObjectivesTest,
 	"HorrorProject.Player.Input.DoesNotBypassRouteObjectives",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorPlayerInputDoesNotBypassRouteObjectivesTest::RunTest(const FString& Parameters)
 {

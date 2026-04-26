@@ -18,7 +18,7 @@ void UNoteRecorderDelegateProbe::HandleNoteRecorded(FName NoteId, int32 TotalRec
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoteRecorderComponentStoresUniqueNoteIdsTest,
 	"HorrorProject.Player.NoteRecorder.StoresUniqueNoteIds",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Parameters)
 {
@@ -90,7 +90,7 @@ bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Param
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FNoteRecorderComponentImportDoesNotBroadcastTest,
 	"HorrorProject.Player.NoteRecorder.ImportDoesNotBroadcast",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FNoteRecorderComponentImportDoesNotBroadcastTest::RunTest(const FString& Parameters)
 {

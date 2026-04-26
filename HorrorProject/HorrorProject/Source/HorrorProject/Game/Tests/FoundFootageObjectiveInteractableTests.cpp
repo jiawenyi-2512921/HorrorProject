@@ -33,7 +33,7 @@ namespace
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableFirstLoopTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.CompletesFirstLoop",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableFirstLoopTest::RunTest(const FString& Parameters)
 {
@@ -122,7 +122,7 @@ bool FFoundFootageObjectiveInteractableFirstLoopTest::RunTest(const FString& Par
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableWorldCanInteractTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.CanInteractUsesCompletionPreconditions",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableWorldCanInteractTest::RunTest(const FString& Parameters)
 {
@@ -185,7 +185,7 @@ bool FFoundFootageObjectiveInteractableWorldCanInteractTest::RunTest(const FStri
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FFoundFootageObjectiveInteractableWritesInstigatorProgressTest,
 	"HorrorProject.Game.FoundFootage.ObjectiveInteractable.WritesInstigatorProgress",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FFoundFootageObjectiveInteractableWritesInstigatorProgressTest::RunTest(const FString& Parameters)
 {

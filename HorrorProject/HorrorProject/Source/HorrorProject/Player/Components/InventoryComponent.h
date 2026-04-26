@@ -8,7 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEvidenceCollectedSignature, FName, EvidenceId, int32, TotalEvidenceCount);
 
-UCLASS()
+#if WITH_DEV_AUTOMATION_TESTS
+UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UInventoryEvidenceDelegateProbe : public UObject
 {
 	GENERATED_BODY()
@@ -23,6 +24,7 @@ public:
 	TArray<FName> EvidenceIds;
 	TArray<int32> TotalEvidenceCounts;
 };
+#endif
 
 USTRUCT(BlueprintType)
 struct HORRORPROJECT_API FHorrorEvidenceMetadata

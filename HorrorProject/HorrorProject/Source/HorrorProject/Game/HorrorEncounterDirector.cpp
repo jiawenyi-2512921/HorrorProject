@@ -7,11 +7,13 @@
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
 
+#if WITH_DEV_AUTOMATION_TESTS
 void UHorrorEncounterPhaseDelegateProbe::HandleEncounterPhaseChanged(EHorrorEncounterPhase NewPhase, FName EncounterId)
 {
 	PhaseValues.Add(NewPhase);
 	EncounterIds.Add(EncounterId);
 }
+#endif
 
 AHorrorEncounterDirector::AHorrorEncounterDirector()
 {

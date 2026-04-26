@@ -18,7 +18,7 @@ void UInventoryEvidenceDelegateProbe::HandleEvidenceCollected(FName EvidenceId, 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInventoryComponentStoresUniqueEvidenceIdsTest,
 	"HorrorProject.Player.Inventory.StoresUniqueEvidenceIds",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInventoryComponentStoresUniqueEvidenceIdsTest::RunTest(const FString& Parameters)
 {
@@ -90,7 +90,7 @@ bool FInventoryComponentStoresUniqueEvidenceIdsTest::RunTest(const FString& Para
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInventoryComponentImportDoesNotBroadcastTest,
 	"HorrorProject.Player.Inventory.ImportDoesNotBroadcast",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FInventoryComponentImportDoesNotBroadcastTest::RunTest(const FString& Parameters)
 {

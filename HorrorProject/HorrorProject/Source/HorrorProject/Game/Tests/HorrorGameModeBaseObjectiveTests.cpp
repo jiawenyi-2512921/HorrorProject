@@ -14,7 +14,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseObjectiveBridgeTest,
 	"HorrorProject.Game.GameModeBase.ObjectiveBridgeCompletesFirstLoop",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseObjectiveBridgeTest::RunTest(const FString& Parameters)
 {
@@ -62,7 +62,7 @@ bool FHorrorGameModeBaseObjectiveBridgeTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseAutoSpawnsRouteKitTest,
 	"HorrorProject.Game.GameModeBase.AutoSpawnsRouteKit",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 
 bool FHorrorGameModeBaseAutoSpawnsRouteKitTest::RunTest(const FString& Parameters)
 {
