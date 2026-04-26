@@ -108,12 +108,27 @@ void UDebugConsoleCommands::DebugNoClip(bool bEnable)
 
 void UDebugConsoleCommands::DebugTeleport(float X, float Y, float Z)
 {
+#if !UE_BUILD_SHIPPING
+	// Security: Validate coordinates
+	if (FMath::IsNaN(X) || FMath::IsNaN(Y) || FMath::IsNaN(Z))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid teleport coordinates: NaN values"));
+		return;
+	}
+
+	if (FMath::Abs(X) > 1000000.0f || FMath::Abs(Y) > 1000000.0f || FMath::Abs(Z) > 1000000.0f)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid teleport coordinates: out of bounds"));
+		return;
+	}
+
 	if (ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
 	{
 		FVector NewLocation(X, Y, Z);
 		Character->SetActorLocation(NewLocation);
 		UE_LOG(LogTemp, Log, TEXT("Teleported to: %s"), *NewLocation.ToString());
 	}
+#endif
 }
 
 void UDebugConsoleCommands::DebugSpawnEnemy(FString EnemyType)

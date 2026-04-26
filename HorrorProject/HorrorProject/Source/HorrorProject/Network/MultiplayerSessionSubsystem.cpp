@@ -53,6 +53,27 @@ void UMultiplayerSessionSubsystem::CreateSession(int32 NumPublicConnections, boo
 		return;
 	}
 
+	// Security: Validate input parameters
+	if (NumPublicConnections < 1 || NumPublicConnections > 64)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid NumPublicConnections: %d (must be 1-64)"), NumPublicConnections);
+		OnCreateSessionComplete.Broadcast(false);
+		return;
+	}
+
+	if (SessionName.IsEmpty() || SessionName.Len() > 64)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid SessionName length: %d"), SessionName.Len());
+		OnCreateSessionComplete.Broadcast(false);
+		return;
+	}
+
+	// Security: Sanitize session name
+	FString SanitizedName = SessionName;
+	SanitizedName.ReplaceInline(TEXT("<"), TEXT(""));
+	SanitizedName.ReplaceInline(TEXT(">"), TEXT(""));
+	SanitizedName.ReplaceInline(TEXT("&"), TEXT(""));
+
 	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession)
 	{
@@ -67,7 +88,7 @@ void UMultiplayerSessionSubsystem::CreateSession(int32 NumPublicConnections, boo
 	LastSessionSettings->bShouldAdvertise = true;
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
-	LastSessionSettings->Set(FName("SessionName"), SessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("SessionName"), SanitizedName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
@@ -80,6 +101,14 @@ void UMultiplayerSessionSubsystem::FindSessions(int32 MaxSearchResults, bool bIs
 {
 	if (!SessionInterface.IsValid())
 	{
+		OnFindSessionsComplete.Broadcast(false);
+		return;
+	}
+
+	// Security: Validate search parameters
+	if (MaxSearchResults < 1 || MaxSearchResults > 100)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid MaxSearchResults: %d (must be 1-100)"), MaxSearchResults);
 		OnFindSessionsComplete.Broadcast(false);
 		return;
 	}

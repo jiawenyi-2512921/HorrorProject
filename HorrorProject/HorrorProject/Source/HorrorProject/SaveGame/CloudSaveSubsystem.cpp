@@ -27,6 +27,14 @@ void UCloudSaveSubsystem::UploadSaveToCloud(int32 SlotIndex)
 		return;
 	}
 
+	// Security: Validate slot index
+	if (SlotIndex < 0 || SlotIndex >= 100)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid save slot index: %d"), SlotIndex);
+		OnCloudSaveComplete.Broadcast(SlotIndex, ECloudSaveStatus::Failed, TEXT("Invalid slot index"));
+		return;
+	}
+
 	if (SlotManager->IsSlotEmpty(SlotIndex))
 	{
 		OnCloudSaveComplete.Broadcast(SlotIndex, ECloudSaveStatus::Failed, TEXT("Save slot is empty"));
@@ -57,6 +65,14 @@ void UCloudSaveSubsystem::DownloadSaveFromCloud(int32 SlotIndex)
 	if (!IsCloudSaveEnabled())
 	{
 		OnCloudSaveComplete.Broadcast(SlotIndex, ECloudSaveStatus::Failed, TEXT("Cloud save not enabled"));
+		return;
+	}
+
+	// Security: Validate slot index
+	if (SlotIndex < 0 || SlotIndex >= 100)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid save slot index: %d"), SlotIndex);
+		OnCloudSaveComplete.Broadcast(SlotIndex, ECloudSaveStatus::Failed, TEXT("Invalid slot index"));
 		return;
 	}
 

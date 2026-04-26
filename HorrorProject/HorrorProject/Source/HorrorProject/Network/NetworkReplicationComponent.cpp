@@ -78,6 +78,34 @@ void UNetworkReplicationComponent::ServerSendTransform_Implementation(FVector Lo
 
 bool UNetworkReplicationComponent::ServerSendTransform_Validate(FVector Location, FRotator Rotation, float ClientTimestamp)
 {
+	// Security: Validate transform data
+	if (FMath::IsNaN(Location.X) || FMath::IsNaN(Location.Y) || FMath::IsNaN(Location.Z))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid location received: NaN values"));
+		return false;
+	}
+
+	if (FMath::Abs(Location.X) > 1000000.0f || FMath::Abs(Location.Y) > 1000000.0f || FMath::Abs(Location.Z) > 1000000.0f)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid location received: out of bounds"));
+		return false;
+	}
+
+	if (FMath::IsNaN(Rotation.Pitch) || FMath::IsNaN(Rotation.Yaw) || FMath::IsNaN(Rotation.Roll))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid rotation received: NaN values"));
+		return false;
+	}
+
+	// Security: Validate timestamp
+	float ServerTime = GetWorld()->GetTimeSeconds();
+	float Latency = FMath::Abs(ServerTime - ClientTimestamp);
+	if (Latency > 5.0f)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid timestamp: latency %.2f exceeds maximum"), Latency);
+		return false;
+	}
+
 	return true;
 }
 
