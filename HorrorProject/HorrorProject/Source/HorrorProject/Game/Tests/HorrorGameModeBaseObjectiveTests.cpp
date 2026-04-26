@@ -234,6 +234,53 @@ bool FHorrorGameModeBaseDrivesEncounterFromMilestonesTest::RunTest(const FString
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorGameModeBaseReusesPlacedEncounterDirectorTest,
+	"HorrorProject.Game.GameModeBase.ReusesPlacedEncounterDirector",
+	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorGameModeBaseReusesPlacedEncounterDirectorTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for placed encounter director coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AHorrorEncounterDirector* PlacedDirector = World->SpawnActor<AHorrorEncounterDirector>(FVector(123.0f, 0.0f, 0.0f), FRotator::ZeroRotator);
+	TestNotNull(TEXT("Placed encounter director should spawn before GameMode bootstrap."), PlacedDirector);
+	if (!PlacedDirector)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+	const float PlacedRevealRadius = PlacedDirector->RevealRadius;
+
+	AHorrorGameModeBase* GameMode = World->SpawnActor<AHorrorGameModeBase>();
+	TestNotNull(TEXT("Placed encounter director test should spawn GameMode."), GameMode);
+	if (!GameMode)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GameMode->DispatchBeginPlay();
+
+	int32 EncounterCount = 0;
+	for (TActorIterator<AHorrorEncounterDirector> It(World); It; ++It)
+	{
+		++EncounterCount;
+	}
+	TestEqual(TEXT("Pre-placed encounter director should be reused, not duplicated."), EncounterCount, 1);
+	TestEqual(TEXT("GameMode should expose the pre-placed encounter director."), GameMode->GetRuntimeEncounterDirector(), PlacedDirector);
+	TestEqual(TEXT("Pre-placed encounter director RevealRadius should not be overwritten by bootstrap."), PlacedDirector->RevealRadius, PlacedRevealRadius);
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorGameModeBaseRegistersDefaultObjectiveMetadataTest,
 	"HorrorProject.Game.GameModeBase.RegistersDefaultObjectiveMetadata",
 	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::ProductFilter)
