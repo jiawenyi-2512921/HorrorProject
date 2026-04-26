@@ -10,20 +10,24 @@
       "LoadingPhase": "Default"
     }
   ],
-	"Plugins": [
-		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true
+  "Plugins": [
+    {
+      "Name": "EnhancedInput",
+      "Enabled": true
+    },
+    {
+      "Name": "ModelingToolsEditorMode",
+      "Enabled": true
     },
     {
       "Name": "StateTree",
       "Enabled": true
     },
-		{
-			"Name": "GameplayStateTree",
-			"Enabled": true
-		}
-	],
+    {
+      "Name": "GameplayStateTree",
+      "Enabled": true
+    }
+  ],
   "TargetPlatforms": [],
   "AdditionalRootDirectories": [],
   "AdditionalPluginDirectories": [],
