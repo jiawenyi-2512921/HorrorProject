@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Audio/HorrorAudioLibrary.h"
+#include "Components/AudioComponent.h"
 #include "Engine/World.h"
 
 UHorrorAudioSubsystem* UHorrorAudioLibrary::GetHorrorAudioSubsystem(const UObject* WorldContextObject)

@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "GameplayTagContainer.h"
+#include "Sound/SoundAttenuation.h"
 #include "HorrorAudioSubsystem.generated.h"
 
 class USoundBase;
 class UAudioComponent;
+class USoundConcurrency;
 
 UENUM(BlueprintType)
 enum class EHorrorAudioCategory : uint8
@@ -67,6 +69,54 @@ struct HORRORPROJECT_API FHorrorAudioEventMapping
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio", meta=(ClampMin="0.0"))
 	float AttenuationRadius = 2000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+	TObjectPtr<USoundAttenuation> AttenuationSettings;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+	int32 Priority = 50;
+};
+
+USTRUCT(BlueprintType)
+struct HORRORPROJECT_API FHorrorAudioPoolEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<USoundBase> Sound;
+
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> Component;
+
+	UPROPERTY()
+	float LastUsedTime = 0.0f;
+
+	UPROPERTY()
+	bool bInUse = false;
+};
+
+USTRUCT(BlueprintType)
+struct HORRORPROJECT_API FHorrorAudioQueueEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<USoundBase> Sound;
+
+	UPROPERTY()
+	FVector Location = FVector::ZeroVector;
+
+	UPROPERTY()
+	float VolumeMultiplier = 1.0f;
+
+	UPROPERTY()
+	int32 Priority = 50;
+
+	UPROPERTY()
+	float QueueTime = 0.0f;
+
+	UPROPERTY()
+	bool bIs3D = true;
 };
 
 UCLASS()
@@ -120,6 +170,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	void UnregisterZoneConfig(FName ZoneId);
 
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	UAudioComponent* PlaySoundWithPriority(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	void QueueSound(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier = 1.0f);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	void SetOcclusionEnabled(bool bEnabled);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	void UpdateOcclusion(float DeltaTime);
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio")
+	int32 GetActiveAudioComponentCount() const;
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	void PreloadSound(USoundBase* Sound);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	void UnloadSound(USoundBase* Sound);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio")
 	TMap<EHorrorAudioCategory, float> CategoryVolumes;
@@ -136,7 +207,46 @@ protected:
 	UPROPERTY(Transient)
 	FName CurrentZoneId = NAME_None;
 
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Pool")
+	int32 MaxPooledComponents = 32;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Pool")
+	float PoolCleanupInterval = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Queue")
+	int32 MaxConcurrentSounds = 16;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion")
+	bool bEnableOcclusion = true;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion")
+	float OcclusionUpdateRate = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion")
+	float OcclusionVolumeMultiplier = 0.3f;
+
 private:
+	UPROPERTY(Transient)
+	TArray<FHorrorAudioPoolEntry> AudioPool;
+
+	UPROPERTY(Transient)
+	TArray<FHorrorAudioQueueEntry> AudioQueue;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UAudioComponent>> ActiveComponents;
+
+	UPROPERTY(Transient)
+	TSet<TObjectPtr<USoundBase>> PreloadedSounds;
+
+	float LastPoolCleanupTime = 0.0f;
+	float LastOcclusionUpdateTime = 0.0f;
+
 	void OnEventPublished(const struct FHorrorEventMessage& Message);
 	void InitializeDefaultVolumes();
+	void ProcessAudioQueue();
+	void CleanupAudioPool();
+	UAudioComponent* GetPooledComponent(USoundBase* Sound);
+	void ReturnComponentToPool(UAudioComponent* Component);
+	bool CanPlaySound() const;
+	void UpdateActiveSounds(float DeltaTime);
 };

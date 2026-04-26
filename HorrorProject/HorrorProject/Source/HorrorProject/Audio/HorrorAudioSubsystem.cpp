@@ -5,6 +5,10 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "Sound/SoundAttenuation.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "DrawDebugHelpers.h"
 
 void UHorrorAudioSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -260,4 +264,235 @@ void UHorrorAudioSubsystem::UnregisterZoneConfig(FName ZoneId)
 void UHorrorAudioSubsystem::OnEventPublished(const FHorrorEventMessage& Message)
 {
 	PlayEventSound(Message.EventTag, Message.SourceObject);
+}
+
+UAudioComponent* UHorrorAudioSubsystem::PlaySoundWithPriority(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier)
+{
+	if (!Sound || !GetWorld())
+	{
+		return nullptr;
+	}
+
+	if (!CanPlaySound())
+	{
+		QueueSound(Sound, Location, Priority, VolumeMultiplier);
+		return nullptr;
+	}
+
+	UAudioComponent* Component = GetPooledComponent(Sound);
+	if (!Component)
+	{
+		Component = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location, FRotator::ZeroRotator, VolumeMultiplier);
+	}
+	else
+	{
+		Component->SetWorldLocation(Location);
+		Component->SetVolumeMultiplier(VolumeMultiplier);
+		Component->Play();
+	}
+
+	if (Component)
+	{
+		ActiveComponents.Add(Component);
+	}
+
+	return Component;
+}
+
+void UHorrorAudioSubsystem::QueueSound(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier)
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	FHorrorAudioQueueEntry Entry;
+	Entry.Sound = Sound;
+	Entry.Location = Location;
+	Entry.VolumeMultiplier = VolumeMultiplier;
+	Entry.Priority = Priority;
+	Entry.QueueTime = GetWorld()->GetTimeSeconds();
+	Entry.bIs3D = true;
+
+	AudioQueue.Add(Entry);
+	AudioQueue.Sort([](const FHorrorAudioQueueEntry& A, const FHorrorAudioQueueEntry& B)
+	{
+		return A.Priority > B.Priority;
+	});
+}
+
+void UHorrorAudioSubsystem::SetOcclusionEnabled(bool bEnabled)
+{
+	bEnableOcclusion = bEnabled;
+}
+
+void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
+{
+	if (!bEnableOcclusion || !GetWorld())
+	{
+		return;
+	}
+
+	LastOcclusionUpdateTime += DeltaTime;
+	if (LastOcclusionUpdateTime < OcclusionUpdateRate)
+	{
+		return;
+	}
+
+	LastOcclusionUpdateTime = 0.0f;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (!PC || !PC->GetPawn())
+	{
+		return;
+	}
+
+	FVector ListenerLocation = PC->GetPawn()->GetActorLocation();
+
+	for (UAudioComponent* Component : ActiveComponents)
+	{
+		if (!Component || !Component->IsPlaying())
+		{
+			continue;
+		}
+
+		FVector SoundLocation = Component->GetComponentLocation();
+		FHitResult HitResult;
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(PC->GetPawn());
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			ListenerLocation,
+			SoundLocation,
+			ECC_Visibility,
+			QueryParams
+		);
+
+		if (bHit)
+		{
+			Component->SetVolumeMultiplier(Component->VolumeMultiplier * OcclusionVolumeMultiplier);
+		}
+	}
+}
+
+int32 UHorrorAudioSubsystem::GetActiveAudioComponentCount() const
+{
+	return ActiveComponents.Num();
+}
+
+void UHorrorAudioSubsystem::PreloadSound(USoundBase* Sound)
+{
+	if (Sound && !PreloadedSounds.Contains(Sound))
+	{
+		Sound->AddToRoot();
+		PreloadedSounds.Add(Sound);
+	}
+}
+
+void UHorrorAudioSubsystem::UnloadSound(USoundBase* Sound)
+{
+	if (Sound && PreloadedSounds.Contains(Sound))
+	{
+		Sound->RemoveFromRoot();
+		PreloadedSounds.Remove(Sound);
+	}
+}
+
+void UHorrorAudioSubsystem::ProcessAudioQueue()
+{
+	if (AudioQueue.Num() == 0 || !CanPlaySound())
+	{
+		return;
+	}
+
+	FHorrorAudioQueueEntry Entry = AudioQueue[0];
+	AudioQueue.RemoveAt(0);
+
+	PlaySoundWithPriority(Entry.Sound, Entry.Location, Entry.Priority, Entry.VolumeMultiplier);
+}
+
+void UHorrorAudioSubsystem::CleanupAudioPool()
+{
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	for (int32 i = AudioPool.Num() - 1; i >= 0; --i)
+	{
+		FHorrorAudioPoolEntry& Entry = AudioPool[i];
+
+		if (!Entry.bInUse && (CurrentTime - Entry.LastUsedTime) > 30.0f)
+		{
+			if (Entry.Component)
+			{
+				Entry.Component->DestroyComponent();
+			}
+			AudioPool.RemoveAt(i);
+		}
+	}
+
+	ActiveComponents.RemoveAll([](UAudioComponent* Component)
+	{
+		return !Component || !Component->IsPlaying();
+	});
+}
+
+UAudioComponent* UHorrorAudioSubsystem::GetPooledComponent(USoundBase* Sound)
+{
+	for (FHorrorAudioPoolEntry& Entry : AudioPool)
+	{
+		if (!Entry.bInUse && Entry.Sound == Sound)
+		{
+			Entry.bInUse = true;
+			Entry.LastUsedTime = GetWorld()->GetTimeSeconds();
+			return Entry.Component;
+		}
+	}
+
+	if (AudioPool.Num() < MaxPooledComponents)
+	{
+		FHorrorAudioPoolEntry NewEntry;
+		NewEntry.Sound = Sound;
+		NewEntry.Component = NewObject<UAudioComponent>(this);
+		NewEntry.Component->SetSound(Sound);
+		NewEntry.Component->RegisterComponent();
+		NewEntry.bInUse = true;
+		NewEntry.LastUsedTime = GetWorld()->GetTimeSeconds();
+
+		AudioPool.Add(NewEntry);
+		return NewEntry.Component;
+	}
+
+	return nullptr;
+}
+
+void UHorrorAudioSubsystem::ReturnComponentToPool(UAudioComponent* Component)
+{
+	for (FHorrorAudioPoolEntry& Entry : AudioPool)
+	{
+		if (Entry.Component == Component)
+		{
+			Entry.bInUse = false;
+			Entry.LastUsedTime = GetWorld()->GetTimeSeconds();
+			Component->Stop();
+			break;
+		}
+	}
+}
+
+bool UHorrorAudioSubsystem::CanPlaySound() const
+{
+	return ActiveComponents.Num() < MaxConcurrentSounds;
+}
+
+void UHorrorAudioSubsystem::UpdateActiveSounds(float DeltaTime)
+{
+	LastPoolCleanupTime += DeltaTime;
+	if (LastPoolCleanupTime >= PoolCleanupInterval)
+	{
+		CleanupAudioPool();
+		LastPoolCleanupTime = 0.0f;
+	}
+
+	ProcessAudioQueue();
+	UpdateOcclusion(DeltaTime);
 }
