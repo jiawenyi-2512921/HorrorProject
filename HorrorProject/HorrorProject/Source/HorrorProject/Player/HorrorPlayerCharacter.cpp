@@ -118,6 +118,11 @@ void AHorrorPlayerCharacter::BeginPlay()
 	{
 		HorrorGameMode->TryAcquireBodycam(TEXT("PlayerBootstrap"), true);
 	}
+
+	if (HorrorGameMode)
+	{
+		HorrorGameMode->SyncFoundFootageRuntimeStateToPlayer();
+	}
 }
 
 void AHorrorPlayerCharacter::PostInitializeComponents()
