@@ -53,9 +53,6 @@ public:
 	bool bEnableBodycamOnInteract = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Objectives")
-	bool bIsRecordingForFirstAnomalyRecord = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Objectives")
 	FHorrorEvidenceMetadata EvidenceMetadata;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Objectives")
