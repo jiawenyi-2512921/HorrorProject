@@ -330,14 +330,16 @@ if (Distance <= RevealRadius) {
 }
 ```
 
-### TODO Comments
+### Tracked Follow-Up Comments
 
 ```cpp
-// TODO: Implement network replication for multiplayer
-// FIXME: Memory leak in evidence collection
-// HACK: Temporary workaround for UE-12345
+// FOLLOWUP(UE-12345): Implement network replication for multiplayer
+// DEFECT(UE-12410): Resolve leak in evidence collection
+// TEMPORARY(UE-12422): Workaround for engine regression in editor preview
 // NOTE: This must be called before BeginPlay
 ```
+
+Every follow-up comment must include an issue ID and an owner in the tracking system. Raw reminder markers are not allowed in committed runtime code.
 
 ## Best Practices
 

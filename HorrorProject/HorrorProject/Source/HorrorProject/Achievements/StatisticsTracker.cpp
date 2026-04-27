@@ -1,6 +1,7 @@
 #include "StatisticsTracker.h"
 #include "StatisticsSubsystem.h"
 #include "GameplayMetrics.h"
+#include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
 UStatisticsTracker::UStatisticsTracker()
@@ -14,7 +15,14 @@ void UStatisticsTracker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	StatisticsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UStatisticsSubsystem>();
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		if (UGameInstance* GameInstance = World->GetGameInstance())
+		{
+			StatisticsSubsystem = GameInstance->GetSubsystem<UStatisticsSubsystem>();
+		}
+	}
 
 	if (StatisticsSubsystem)
 	{
@@ -22,16 +30,26 @@ void UStatisticsTracker::BeginPlay()
 	}
 
 	CurrentMetrics = UHorrorGameplayMetricsLibrary::CreateMetrics();
-	LastPosition = GetOwner()->GetActorLocation();
-	LastPositionUpdateTime = UGameplayStatics::GetTimeSeconds(GetWorld());
+	if (AActor* Owner = GetOwner())
+	{
+		LastPosition = Owner->GetActorLocation();
+	}
+	LastPositionUpdateTime = World ? UGameplayStatics::GetTimeSeconds(World) : 0.0f;
 }
 
 void UStatisticsTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	AActor* Owner = GetOwner();
+	UWorld* World = GetWorld();
+	if (!Owner || !World)
+	{
+		return;
+	}
+
 	// Track distance traveled
-	FVector CurrentPosition = GetOwner()->GetActorLocation();
+	FVector CurrentPosition = Owner->GetActorLocation();
 	float Distance = FVector::Dist(LastPosition, CurrentPosition);
 
 	if (Distance > 1.0f) // Minimum threshold
@@ -41,7 +59,7 @@ void UStatisticsTracker::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// Update session duration
-	CurrentMetrics.SessionDuration = UGameplayStatics::GetTimeSeconds(GetWorld()) - LastPositionUpdateTime;
+	CurrentMetrics.SessionDuration = UGameplayStatics::GetTimeSeconds(World) - LastPositionUpdateTime;
 }
 
 void UStatisticsTracker::TrackMovement(float Distance)

@@ -56,12 +56,19 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewindStartedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewindStoppedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewindProgressSignature, float, RewindTime);
 
+/**
+ * Adds Camera Recording Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UCameraRecordingComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultMaxRecordingDuration = 30.0f;
+	static constexpr float DefaultFrameCaptureRate = 30.0f;
+	static constexpr int32 DefaultMaxBufferFrames = 900;
+
 	UCameraRecordingComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -127,13 +134,13 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraRecording|Settings")
-	float MaxRecordingDuration = 30.0f;
+	float MaxRecordingDuration = DefaultMaxRecordingDuration;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraRecording|Settings")
-	float FrameCaptureRate = 30.0f;
+	float FrameCaptureRate = DefaultFrameCaptureRate;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraRecording|Settings")
-	int32 MaxBufferFrames = 900;
+	int32 MaxBufferFrames = DefaultMaxBufferFrames;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraRecording|Settings")
 	float RewindSpeed = 2.0f;

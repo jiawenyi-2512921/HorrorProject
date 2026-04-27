@@ -7,6 +7,9 @@
 #include "GameplayTagContainer.h"
 #include "HorrorSaveGame.generated.h"
 
+/**
+ * Stores persistent Horror Save Game data for save and restore workflows.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API UHorrorSaveGame : public USaveGame
 {

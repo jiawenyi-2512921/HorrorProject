@@ -7,18 +7,21 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$ProjectFile = Join-Path $ProjectRoot "HorrorProject.uproject"
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UE5Path = $UE5Root
-$Editor = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-$ReportDir = Join-Path $ProjectRoot "Saved\Automation"
+
+$ValidationCommon = Join-Path $PSScriptRoot "Validation\Common.ps1"
+. $ValidationCommon
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$UE5Root = Get-HorrorUERoot
+$Editor = Get-HorrorEditorCmd -UERoot $UE5Root
+$ReportRoot = Join-Path $ProjectRoot "Saved\Automation\Reports"
+$ReportDir = Join-Path $ReportRoot ("RunTests_{0}" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 
 Write-Host "=== HorrorProject Test Runner ===" -ForegroundColor Cyan
 Write-Host "Filter: $(if ($Filter) { $Filter } else { 'All tests' })"
 Write-Host ""
 
-# Create report directory
 New-Item -ItemType Directory -Force -Path $ReportDir | Out-Null
 
 # Build test command
@@ -26,18 +29,36 @@ $TestCmd = "Automation RunTests $(if ($Filter) { $Filter } else { 'HorrorProject
 if ($Verbose) {
     $TestCmd += " -Verbose"
 }
-$TestCmd += " -ReportOutputPath=`"$ReportDir`""
 
 Write-Host "Running tests..." -ForegroundColor Yellow
-& $Editor "$ProjectFile" -ExecCmds="$TestCmd" -Unattended -NullRHI -NoSplash -Log
+$TestArgs = @(
+    $ProjectFile,
+    "-ExecCmds=$TestCmd",
+    "-TestExit=Automation Test Queue Empty",
+    "-Unattended",
+    "-NullRHI",
+    "-NoSplash",
+    "-NoSound",
+    "-Log",
+    "-ReportOutputPath=$ReportDir"
+)
+
+& $Editor @TestArgs
+$EditorExitCode = $LASTEXITCODE
+if ($EditorExitCode -ne 0) {
+    Write-Host "UnrealEditor-Cmd exited with code $EditorExitCode" -ForegroundColor Red
+    exit $EditorExitCode
+}
 
 # Parse results
-$ResultFile = Get-ChildItem -Path $ReportDir -Filter "*.json" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$ResultFile = Get-ChildItem -Path $ReportDir -Filter "index.json" -Recurse -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
 
 if ($ResultFile) {
     $Results = Get-Content $ResultFile.FullName | ConvertFrom-Json
-    $Passed = ($Results.tests | Where-Object { $_.state -eq "Success" }).Count
-    $Failed = ($Results.tests | Where-Object { $_.state -eq "Fail" }).Count
+    $Passed = [int]$Results.succeeded + [int]$Results.succeededWithWarnings
+    $Failed = [int]$Results.failed
     $Total = $Results.tests.Count
 
     Write-Host ""
@@ -58,6 +79,7 @@ if ($ResultFile) {
     }
 } else {
     Write-Host "No test results found!" -ForegroundColor Red
+    Write-Host "Expected report under: $ReportDir" -ForegroundColor Gray
     exit 1
 }
 

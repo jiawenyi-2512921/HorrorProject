@@ -101,31 +101,11 @@ void UCameraBatteryComponent::UpdateBattery(float DeltaTime)
 
 	if (bIsCharging)
 	{
-		BatteryPercentage = FMath::Min(BatteryPercentage + ChargeRate * DeltaTime, 100.0f);
-
-		if (BatteryPercentage >= 100.0f)
-		{
-			StopCharging();
-		}
+		ApplyChargingDelta(DeltaTime);
 	}
 	else
 	{
-		float TotalDrain = 0.0f;
-
-		if (bIsRecordingDraining)
-		{
-			TotalDrain += RecordingDrainRate;
-		}
-
-		if (bIsFlashlightDraining)
-		{
-			TotalDrain += FlashlightDrainRate;
-		}
-
-		if (TotalDrain > 0.0f)
-		{
-			BatteryPercentage = FMath::Max(BatteryPercentage - TotalDrain * DeltaTime, 0.0f);
-		}
+		ApplyDrainDelta(DeltaTime);
 	}
 
 	if (!FMath::IsNearlyEqual(OldPercentage, BatteryPercentage, 0.01f))
@@ -133,6 +113,47 @@ void UCameraBatteryComponent::UpdateBattery(float DeltaTime)
 		BroadcastBatteryChange();
 	}
 
+	HandleBatteryThresholdEvents();
+}
+
+float UCameraBatteryComponent::GetActiveDrainRate() const
+{
+	float TotalDrain = 0.0f;
+
+	if (bIsRecordingDraining)
+	{
+		TotalDrain += RecordingDrainRate;
+	}
+
+	if (bIsFlashlightDraining)
+	{
+		TotalDrain += FlashlightDrainRate;
+	}
+
+	return TotalDrain;
+}
+
+void UCameraBatteryComponent::ApplyChargingDelta(float DeltaTime)
+{
+	BatteryPercentage = FMath::Min(BatteryPercentage + ChargeRate * DeltaTime, 100.0f);
+
+	if (BatteryPercentage >= 100.0f)
+	{
+		StopCharging();
+	}
+}
+
+void UCameraBatteryComponent::ApplyDrainDelta(float DeltaTime)
+{
+	const float TotalDrain = GetActiveDrainRate();
+	if (TotalDrain > 0.0f)
+	{
+		BatteryPercentage = FMath::Max(BatteryPercentage - TotalDrain * DeltaTime, 0.0f);
+	}
+}
+
+void UCameraBatteryComponent::HandleBatteryThresholdEvents()
+{
 	if (!bHasTriggeredLowWarning && IsBatteryLow() && !bIsCharging)
 	{
 		bHasTriggeredLowWarning = true;

@@ -8,6 +8,19 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 
+namespace HorrorMemoryTracker
+{
+	constexpr float BytesPerMegabyte = 1024.0f * 1024.0f;
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float MinMemoryBudgetMB = 100.0f;
+	constexpr float UpdateIntervalSeconds = 1.0f;
+
+	float BytesToMegabytes(uint64 Bytes)
+	{
+		return static_cast<float>(Bytes) / BytesPerMegabyte;
+	}
+}
+
 void UMemoryTracker::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -46,7 +59,12 @@ void UMemoryTracker::SetTrackingEnabled(bool bEnabled)
 		// Update memory stats every second
 		if (UWorld* World = GetWorld())
 		{
-			World->GetTimerManager().SetTimer(UpdateTimerHandle, this, &UMemoryTracker::UpdateMemoryStats, 1.0f, true);
+			World->GetTimerManager().SetTimer(
+				UpdateTimerHandle,
+				this,
+				&UMemoryTracker::UpdateMemoryStats,
+				HorrorMemoryTracker::UpdateIntervalSeconds,
+				true);
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("Memory tracking enabled"));
@@ -71,12 +89,12 @@ FHorrorMemoryTrackerStats UMemoryTracker::GetMemoryStats() const
 
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
 
-	Stats.UsedPhysicalMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
-	Stats.UsedVirtualMB = MemStats.UsedVirtual / (1024.0f * 1024.0f);
-	Stats.PeakUsedPhysicalMB = MemStats.PeakUsedPhysical / (1024.0f * 1024.0f);
-	Stats.PeakUsedVirtualMB = MemStats.PeakUsedVirtual / (1024.0f * 1024.0f);
-	Stats.AvailablePhysicalMB = MemStats.AvailablePhysical / (1024.0f * 1024.0f);
-	Stats.TotalPhysicalMB = MemStats.TotalPhysical / (1024.0f * 1024.0f);
+	Stats.UsedPhysicalMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.UsedPhysical);
+	Stats.UsedVirtualMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.UsedVirtual);
+	Stats.PeakUsedPhysicalMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.PeakUsedPhysical);
+	Stats.PeakUsedVirtualMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.PeakUsedVirtual);
+	Stats.AvailablePhysicalMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.AvailablePhysical);
+	Stats.TotalPhysicalMB = HorrorMemoryTracker::BytesToMegabytes(MemStats.TotalPhysical);
 
 	// Get texture memory if available
 	if (GEngine && GEngine->GetWorld())
@@ -94,7 +112,7 @@ FHorrorMemoryTrackerStats UMemoryTracker::GetMemoryStats() const
 
 void UMemoryTracker::SetMemoryBudgetMB(float BudgetMB)
 {
-	MemoryBudgetMB = FMath::Max(100.0f, BudgetMB);
+	MemoryBudgetMB = FMath::Max(HorrorMemoryTracker::MinMemoryBudgetMB, BudgetMB);
 	bBudgetExceededWarningShown = false;
 	UE_LOG(LogTemp, Log, TEXT("Memory budget set to: %.1f MB"), MemoryBudgetMB);
 }
@@ -108,7 +126,9 @@ bool UMemoryTracker::IsMemoryWithinBudget() const
 float UMemoryTracker::GetMemoryBudgetPercent() const
 {
 	const FHorrorMemoryTrackerStats Stats = GetMemoryStats();
-	return MemoryBudgetMB > 0.0f ? (Stats.UsedPhysicalMB / MemoryBudgetMB) * 100.0f : 0.0f;
+	return MemoryBudgetMB > 0.0f
+		? (Stats.UsedPhysicalMB / MemoryBudgetMB) * HorrorMemoryTracker::PercentMultiplier
+		: 0.0f;
 }
 
 void UMemoryTracker::MarkCheckpoint(const FString& CheckpointName)
@@ -189,7 +209,6 @@ void UMemoryTracker::UpdateMemoryStats()
 	PeakVirtualMB = FMath::Max(PeakVirtualMB, Stats.UsedVirtualMB);
 
 	// Record event if significant change
-	static float LastRecordedMemoryMB = 0.0f;
 	const float MemoryDelta = Stats.UsedPhysicalMB - LastRecordedMemoryMB;
 
 	if (FMath::Abs(MemoryDelta) > 10.0f) // 10MB threshold

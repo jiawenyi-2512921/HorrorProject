@@ -27,6 +27,9 @@ class HORRORPROJECT_API AHorrorCharacter : public AHorrorProjectCharacter
 	USpotLightComponent* SpotLight;
 	
 protected:
+	static constexpr float DefaultWalkSpeed = 250.0f;
+	static constexpr float DefaultSprintSpeed = 600.0f;
+	static constexpr float DefaultRecoveringWalkSpeed = 150.0f;
 
 	/** Fire weapon input action */
 	UPROPERTY(EditAnywhere, Category ="Input")
@@ -40,7 +43,7 @@ protected:
 
 	/** Default walk speed when not sprinting or recovering */
 	UPROPERTY(EditAnywhere, Category="Walk")
-	float WalkSpeed = 250.0f;
+	float WalkSpeed = DefaultWalkSpeed;
 
 	/** Time interval for sprinting stamina ticks */
 	UPROPERTY(EditAnywhere, Category="Sprint", meta = (ClampMin = 0, ClampMax = 1, Units = "s"))
@@ -55,11 +58,11 @@ protected:
 
 	/** Walk speed while sprinting */
 	UPROPERTY(EditAnywhere, Category="Sprint", meta = (ClampMin = 0, ClampMax = 10, Units = "cm/s"))
-	float SprintSpeed = 600.0f;
+	float SprintSpeed = DefaultSprintSpeed;
 
 	/** Walk speed while recovering stamina */
 	UPROPERTY(EditAnywhere, Category="Recovery", meta = (ClampMin = 0, ClampMax = 10, Units = "cm/s"))
-	float RecoveringWalkSpeed = 150.0f;
+	float RecoveringWalkSpeed = DefaultRecoveringWalkSpeed;
 
 	/** Time it takes for the sprint meter to recover */
 	UPROPERTY(EditAnywhere, Category="Recovery", meta = (ClampMin = 0, ClampMax = 10, Units = "s"))
@@ -71,9 +74,11 @@ protected:
 public:
 
 	/** Delegate called when the sprint meter should be updated */
+	UPROPERTY(BlueprintAssignable, Category="Sprint")
 	FUpdateSprintMeterDelegate OnSprintMeterUpdated;
 
 	/** Delegate called when we start and stop sprinting */
+	UPROPERTY(BlueprintAssignable, Category="Sprint")
 	FSprintStateChangedDelegate OnSprintStateChanged;
 
 protected:

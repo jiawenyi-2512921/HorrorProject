@@ -77,3 +77,17 @@ function Get-HorrorBuildScript {
 
     return $ScriptPath
 }
+
+function Get-HorrorEditorCmd {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$UERoot
+    )
+
+    $EditorPath = Join-Path $UERoot "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+    if (-not (Test-Path -LiteralPath $EditorPath)) {
+        throw "UnrealEditor-Cmd.exe not found: $EditorPath"
+    }
+
+    return $EditorPath
+}

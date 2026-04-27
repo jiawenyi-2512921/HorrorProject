@@ -43,6 +43,9 @@ public:
 	TArray<EQuantumCameraMode> ModeValues;
 };
 
+/**
+ * Adds Quantum Camera Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UQuantumCameraComponent : public UActorComponent
 {

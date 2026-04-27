@@ -7,6 +7,9 @@
 #include "Audio/HorrorAudioSubsystem.h"
 #include "HorrorAudioLibrary.generated.h"
 
+/**
+ * Exposes Blueprint helper functions for Horror Audio Library workflows.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorAudioLibrary : public UBlueprintFunctionLibrary
 {
@@ -40,8 +43,8 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Audio", meta=(WorldContext="WorldContextObject"))
 	static float GetHorrorCategoryVolume(const UObject* WorldContextObject, EHorrorAudioCategory Category);
 
-	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
-	static FHorrorAudioEventMapping MakeAudioEventMapping(FGameplayTag EventTag, USoundBase* Sound, float VolumeMultiplier = 1.0f, bool bUse3D = true, float AttenuationRadius = 2000.0f);
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio", meta=(CPP_Default_VolumeMultiplier="1.0", CPP_Default_bUse3D="true", CPP_Default_AttenuationRadius="2000.0"))
+	static FHorrorAudioEventMapping MakeAudioEventMapping(FGameplayTag EventTag, USoundBase* Sound, float VolumeMultiplier, bool bUse3D, float AttenuationRadius);
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	static FHorrorAudioZoneConfig MakeAudioZoneConfig(FName ZoneId, USoundBase* AmbientSound, float Volume = 0.5f, bool bLoop = true, float FadeIn = 2.0f, float FadeOut = 1.5f);

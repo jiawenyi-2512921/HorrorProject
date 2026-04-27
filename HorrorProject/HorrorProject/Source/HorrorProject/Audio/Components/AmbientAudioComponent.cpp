@@ -4,6 +4,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 
+namespace HorrorAmbientAudio
+{
+	constexpr float SecondsPerHour = 3600.0f;
+	constexpr float HoursPerDay = 24.0f;
+	constexpr float HalfDayHours = 12.0f;
+	constexpr float MinimumTimeOfDayMultiplier = 0.2f;
+}
+
 UAmbientAudioComponent::UAmbientAudioComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -58,17 +66,17 @@ void UAmbientAudioComponent::StartAmbient()
 
 	bIsAmbientPlaying = true;
 
-	if (AmbientType == EAmbientAudioType::Static && AudioLayers.Num() > 0)
+	if (AmbientType == EAmbientAudioType::Static && !AudioLayers.IsEmpty())
 	{
-		SetSound(AudioLayers[0].Sound);
-		FadeIn(AudioLayers[0].FadeInTime, AudioLayers[0].BaseVolume);
+		const FAmbientAudioLayer* StaticLayer = AudioLayers.GetData();
+		SetSound(StaticLayer->Sound);
+		FadeIn(StaticLayer->FadeInTime, StaticLayer->BaseVolume);
 		Play();
 	}
 	else if (AmbientType == EAmbientAudioType::Layered)
 	{
-		for (int32 i = 0; i < AudioLayers.Num(); ++i)
+		for (const FAmbientAudioLayer& Layer : AudioLayers)
 		{
-			const FAmbientAudioLayer& Layer = AudioLayers[i];
 			if (!Layer.Sound)
 			{
 				continue;
@@ -162,10 +170,11 @@ void UAmbientAudioComponent::RemoveLayer(int32 LayerIndex)
 
 	if (bIsAmbientPlaying && LayerComponents.IsValidIndex(LayerIndex))
 	{
-		UAudioComponent* LayerComp = LayerComponents[LayerIndex];
+		UAudioComponent* LayerComp = LayerComponents.GetData()[LayerIndex];
 		if (LayerComp && LayerComp->IsPlaying())
 		{
-			LayerComp->FadeOut(AudioLayers[LayerIndex].FadeOutTime, 0.0f);
+			const FAmbientAudioLayer* Layer = AudioLayers.GetData() + LayerIndex;
+			LayerComp->FadeOut(Layer->FadeOutTime, 0.0f);
 		}
 		LayerComponents.RemoveAt(LayerIndex);
 	}
@@ -180,7 +189,7 @@ void UAmbientAudioComponent::SetLayerVolume(int32 LayerIndex, float Volume, floa
 		return;
 	}
 
-	UAudioComponent* LayerComp = LayerComponents[LayerIndex];
+	UAudioComponent* LayerComp = LayerComponents.GetData()[LayerIndex];
 	if (LayerComp && LayerComp->IsPlaying())
 	{
 		if (FadeTime > 0.0f)
@@ -209,12 +218,16 @@ void UAmbientAudioComponent::UpdateLayeredAudio(float DeltaTime)
 
 	float TimeMultiplier = CalculateTimeOfDayMultiplier();
 
-	for (int32 i = 0; i < LayerComponents.Num(); ++i)
+	const int32 SharedLayerCount = FMath::Min(LayerComponents.Num(), AudioLayers.Num());
+	TObjectPtr<UAudioComponent>* LayerComponentCursor = LayerComponents.GetData();
+	const FAmbientAudioLayer* AudioLayerCursor = AudioLayers.GetData();
+	for (int32 i = 0; i < SharedLayerCount; ++i, ++LayerComponentCursor, ++AudioLayerCursor)
 	{
-		if (LayerComponents[i] && AudioLayers.IsValidIndex(i))
+		UAudioComponent* LayerComponent = LayerComponentCursor->Get();
+		if (LayerComponent)
 		{
-			float TargetVolume = AudioLayers[i].BaseVolume * TimeMultiplier * CurrentTimeOfDayIntensity;
-			LayerComponents[i]->SetVolumeMultiplier(TargetVolume);
+			float TargetVolume = AudioLayerCursor->BaseVolume * TimeMultiplier * CurrentTimeOfDayIntensity;
+			LayerComponent->SetVolumeMultiplier(TargetVolume);
 		}
 	}
 }
@@ -228,7 +241,7 @@ void UAmbientAudioComponent::UpdateRandomizedAudio(float DeltaTime)
 		TimeSinceLastRandomization = 0.0f;
 
 		int32 RandomIndex = FMath::RandRange(0, AudioLayers.Num() - 1);
-		const FAmbientAudioLayer& Layer = AudioLayers[RandomIndex];
+		const FAmbientAudioLayer& Layer = *(AudioLayers.GetData() + RandomIndex);
 
 		if (Layer.Sound)
 		{
@@ -248,12 +261,19 @@ void UAmbientAudioComponent::UpdateRandomizedAudio(float DeltaTime)
 
 void UAmbientAudioComponent::UpdateDynamicAudio(float DeltaTime)
 {
-	if (!GetWorld() || !GetWorld()->GetFirstPlayerController())
+	UWorld* World = GetWorld();
+	if (!World || MaxDistance <= KINDA_SMALL_NUMBER)
 	{
 		return;
 	}
 
-	APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	APawn* PlayerPawn = PlayerController->GetPawn();
 	if (!PlayerPawn)
 	{
 		return;
@@ -262,28 +282,33 @@ void UAmbientAudioComponent::UpdateDynamicAudio(float DeltaTime)
 	float Distance = FVector::Dist(GetComponentLocation(), PlayerPawn->GetActorLocation());
 	float DistanceRatio = FMath::Clamp(1.0f - (Distance / MaxDistance), 0.0f, 1.0f);
 
-	if (AudioLayers.Num() > 0)
+	if (!AudioLayers.IsEmpty())
 	{
-		float TargetVolume = AudioLayers[0].BaseVolume * DistanceRatio;
+		const FAmbientAudioLayer* StaticLayer = AudioLayers.GetData();
+		float TargetVolume = StaticLayer->BaseVolume * DistanceRatio;
 		SetVolumeMultiplier(TargetVolume);
 	}
 }
 
 float UAmbientAudioComponent::CalculateTimeOfDayMultiplier() const
 {
-	if (!GetWorld())
+	const UWorld* World = GetWorld();
+	if (!World)
 	{
 		return 1.0f;
 	}
 
-	float CurrentHour = GetWorld()->GetTimeSeconds() / 3600.0f;
-	CurrentHour = FMath::Fmod(CurrentHour, 24.0f);
+	float CurrentHour = World->GetTimeSeconds() / HorrorAmbientAudio::SecondsPerHour;
+	CurrentHour = FMath::Fmod(CurrentHour, HorrorAmbientAudio::HoursPerDay);
 
 	float HourDifference = FMath::Abs(CurrentHour - PeakHour);
-	if (HourDifference > 12.0f)
+	if (HourDifference > HorrorAmbientAudio::HalfDayHours)
 	{
-		HourDifference = 24.0f - HourDifference;
+		HourDifference = HorrorAmbientAudio::HoursPerDay - HourDifference;
 	}
 
-	return FMath::Clamp(1.0f - (HourDifference / 12.0f), 0.2f, 1.0f);
+	return FMath::Clamp(
+		1.0f - (HourDifference / HorrorAmbientAudio::HalfDayHours),
+		HorrorAmbientAudio::MinimumTimeOfDayMultiplier,
+		1.0f);
 }

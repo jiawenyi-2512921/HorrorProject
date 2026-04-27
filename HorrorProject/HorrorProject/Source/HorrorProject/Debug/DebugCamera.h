@@ -68,7 +68,11 @@ protected:
 	bool bIsActive;
 
 private:
-	APlayerController* OriginalController;
-	APawn* OriginalPawn;
+	UPROPERTY(Transient)
+	TObjectPtr<APlayerController> OriginalController = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<APawn> OriginalPawn = nullptr;
+
 	FVector MovementInput;
 };

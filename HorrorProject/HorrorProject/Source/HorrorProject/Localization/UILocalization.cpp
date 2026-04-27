@@ -6,12 +6,20 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 
 void UUILocalizationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UGameInstance* GameInstance = GetWorld()->GetGameInstance())
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
 		{
@@ -23,11 +31,15 @@ void UUILocalizationComponent::BeginPlay()
 
 void UUILocalizationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UGameInstance* GameInstance = GetWorld()->GetGameInstance())
+	UWorld* World = GetWorld();
+	if (World)
 	{
-		if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
+		if (UGameInstance* GameInstance = World->GetGameInstance())
 		{
-			LocalizationSubsystem->OnLanguageChanged.RemoveDynamic(this, &UUILocalizationComponent::OnLanguageChanged);
+			if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
+			{
+				LocalizationSubsystem->OnLanguageChanged.RemoveDynamic(this, &UUILocalizationComponent::OnLanguageChanged);
+			}
 		}
 	}
 
@@ -36,7 +48,13 @@ void UUILocalizationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UUILocalizationComponent::UpdateLocalization()
 {
-	if (UGameInstance* GameInstance = GetWorld()->GetGameInstance())
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	if (UGameInstance* GameInstance = World->GetGameInstance())
 	{
 		if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
 		{
@@ -51,11 +69,11 @@ void UUILocalizationComponent::UpdateLocalization()
 			}
 
 			// Update images
+			const FString LanguageCode = LocalizationSubsystem->GetLanguageCode(LocalizationSubsystem->GetCurrentLanguage());
 			for (const FLocalizedImageWidget& ImageWidget : LocalizedImageWidgets)
 			{
 				if (ImageWidget.Image)
 				{
-					FString LanguageCode = LocalizationSubsystem->GetLanguageCode(LocalizationSubsystem->GetCurrentLanguage());
 					UTexture2D* LocalizedTexture = GetLocalizedTexture(ImageWidget.LocalizationKey, LanguageCode);
 					if (LocalizedTexture)
 					{

@@ -109,7 +109,12 @@ void UObjectPoolSubsystem::ClearAllPools()
 
 void UObjectPoolSubsystem::SetMaxPoolSize(UClass* ObjectClass, int32 MaxSize)
 {
-	MaxPoolSizes.Add(ObjectClass, MaxSize);
+	if (!ObjectClass)
+	{
+		return;
+	}
+
+	MaxPoolSizes.Add(ObjectClass, FMath::Max(0, MaxSize));
 }
 
 void UObjectPoolSubsystem::SetPoolCleanupInterval(float Interval)
@@ -124,7 +129,13 @@ void UObjectPoolSubsystem::SetPoolCleanupInterval(float Interval)
 
 void UObjectPoolSubsystem::CleanupPools()
 {
-	float CurrentTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float CurrentTime = World->GetTimeSeconds();
 
 	for (auto& PoolPair : ObjectPools)
 	{
@@ -140,13 +151,24 @@ void UObjectPoolSubsystem::CleanupPools()
 
 void UObjectPoolSubsystem::CleanupPool(UClass* ObjectClass)
 {
+	if (!ObjectClass)
+	{
+		return;
+	}
+
 	FPooledObjectEntryArray* Pool = ObjectPools.Find(ObjectClass);
 	if (!Pool)
 	{
 		return;
 	}
 
-	float CurrentTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float CurrentTime = World->GetTimeSeconds();
 
 	Pool->Entries.RemoveAll([CurrentTime, this](const FPooledObjectEntry& Entry)
 	{

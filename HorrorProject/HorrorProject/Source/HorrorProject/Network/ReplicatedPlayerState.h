@@ -13,6 +13,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHidingStateChanged, bool, bIsHidi
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventoryChanged, const TArray<FString>&, Items);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeathEvent);
 
+/**
+ * Defines Replicated Player State behavior for the Network module.
+ */
 UCLASS()
 class HORRORPROJECT_API AReplicatedPlayerState : public APlayerState
 {

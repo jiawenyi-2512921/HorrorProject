@@ -6,12 +6,18 @@
 #include "GameFramework/GameModeBase.h"
 #include "HorrorGameModeMultiplayer.generated.h"
 
+/**
+ * Defines Horror Game Mode Multiplayer behavior for the Network module.
+ */
 UCLASS()
 class HORRORPROJECT_API AHorrorGameModeMultiplayer : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultLobbyWaitTimeSeconds = 30.0f;
+	static constexpr float DefaultGameDurationSeconds = 1800.0f;
+
 	AHorrorGameModeMultiplayer();
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
@@ -27,10 +33,10 @@ public:
 	int32 MaxPlayers = 4;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
-	float LobbyWaitTime = 30.0f;
+	float LobbyWaitTime = DefaultLobbyWaitTimeSeconds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
-	float GameDuration = 1800.0f; // 30 minutes
+	float GameDuration = DefaultGameDurationSeconds; // 30 minutes
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	bool bAutoStartGame = true;

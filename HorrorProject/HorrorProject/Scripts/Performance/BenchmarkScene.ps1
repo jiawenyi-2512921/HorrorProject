@@ -2,14 +2,22 @@
 # Runs automated performance tests and generates reports
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [string]$UEPath = "",
     [string]$MapName = "/Game/Maps/DeepWaterStation_Main",
     [int]$DurationSeconds = 300,
     [string]$OutputDir = "Saved\Profiling"
 )
 
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+
+$UE5Root = Get-HorrorUERoot
 if (-not $UEPath) {
     $UEPath = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor.exe"
 }
@@ -28,7 +36,7 @@ if (-not (Test-Path $UEPath)) {
     exit 1
 }
 
-$ProjectFile = Join-Path $ProjectPath "HorrorProject.uproject"
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectPath
 if (-not (Test-Path $ProjectFile)) {
     Write-Error "Project file not found: $ProjectFile"
     exit 1

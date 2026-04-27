@@ -101,7 +101,8 @@ bool FInteractionComponentObjectiveHitTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Bodycam direct completion should work before interaction routing."), Bodycam->TryCompleteObjective(GameMode));
 	GameMode->ImportFoundFootageSaveState(FHorrorFoundFootageSaveState());
 	TestTrue(TEXT("Bodycam should allow completion after state reset."), Bodycam->CanCompleteObjective(GameMode));
-	TestNotNull(TEXT("Bodycam world should expose the interaction test game mode."), Bodycam->GetWorld() ? Bodycam->GetWorld()->GetAuthGameMode<AHorrorGameModeBase>() : nullptr);
+	UWorld* BodycamWorld = Bodycam->GetWorld();
+	TestNotNull(TEXT("Bodycam world should expose the interaction test game mode."), BodycamWorld ? BodycamWorld->GetAuthGameMode<AHorrorGameModeBase>() : nullptr);
 	TestTrue(TEXT("Bodycam class should implement the interactable interface."), Bodycam->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()));
 	TestTrue(TEXT("Bodycam native CanInteract_Implementation should accept the objective hit."), Bodycam->CanInteract_Implementation(PlayerCharacter, ObjectiveHit));
 	TestTrue(TEXT("Bodycam native Interact_Implementation should complete the objective hit."), Bodycam->Interact_Implementation(PlayerCharacter, ObjectiveHit));

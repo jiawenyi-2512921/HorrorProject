@@ -5,6 +5,11 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 
+namespace
+{
+	constexpr float MaxReplicatedCoordinate = 1000000.0f;
+}
+
 UNetworkReplicationComponent::UNetworkReplicationComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -41,8 +46,14 @@ void UNetworkReplicationComponent::TickComponent(float DeltaTime, ELevelTick Tic
 
 	if (Owner->HasAuthority())
 	{
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			return;
+		}
+
 		// Server: Update replicated transform at specified rate
-		float CurrentTime = GetWorld()->GetTimeSeconds();
+		float CurrentTime = World->GetTimeSeconds();
 		if (CurrentTime - LastReplicationTime >= 1.0f / ReplicationRate)
 		{
 			ReplicatedTransform.Location = Owner->GetActorLocation();
@@ -62,10 +73,12 @@ void UNetworkReplicationComponent::TickComponent(float DeltaTime, ELevelTick Tic
 
 void UNetworkReplicationComponent::ServerSendTransform_Implementation(FVector Location, FRotator Rotation, float ClientTimestamp)
 {
-	if (AActor* Owner = GetOwner())
+	AActor* Owner = GetOwner();
+	UWorld* World = GetWorld();
+	if (Owner && World)
 	{
 		// Apply client prediction with server reconciliation
-		float ServerTime = GetWorld()->GetTimeSeconds();
+		float ServerTime = World->GetTimeSeconds();
 		float Latency = ServerTime - ClientTimestamp;
 
 		if (bEnableClientPrediction && Latency < 0.5f)
@@ -85,7 +98,9 @@ bool UNetworkReplicationComponent::ServerSendTransform_Validate(FVector Location
 		return false;
 	}
 
-	if (FMath::Abs(Location.X) > 1000000.0f || FMath::Abs(Location.Y) > 1000000.0f || FMath::Abs(Location.Z) > 1000000.0f)
+	if (FMath::Abs(Location.X) > MaxReplicatedCoordinate
+		|| FMath::Abs(Location.Y) > MaxReplicatedCoordinate
+		|| FMath::Abs(Location.Z) > MaxReplicatedCoordinate)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Invalid location received: out of bounds"));
 		return false;
@@ -98,7 +113,14 @@ bool UNetworkReplicationComponent::ServerSendTransform_Validate(FVector Location
 	}
 
 	// Security: Validate timestamp
-	float ServerTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid timestamp: world unavailable"));
+		return false;
+	}
+
+	float ServerTime = World->GetTimeSeconds();
 	float Latency = FMath::Abs(ServerTime - ClientTimestamp);
 	if (Latency > 5.0f)
 	{
@@ -124,7 +146,8 @@ void UNetworkReplicationComponent::SetTargetTransform(FVector Location, FRotator
 bool UNetworkReplicationComponent::IsNetworkReady() const
 {
 	AActor* Owner = GetOwner();
-	return Owner && Owner->GetWorld() && Owner->GetWorld()->GetNetMode() != NM_Standalone;
+	UWorld* World = Owner ? Owner->GetWorld() : nullptr;
+	return World && World->GetNetMode() != NM_Standalone;
 }
 
 void UNetworkReplicationComponent::OnRep_ReplicatedTransform()
@@ -149,10 +172,10 @@ void UNetworkReplicationComponent::UpdateInterpolation(float DeltaTime)
 
 void UNetworkReplicationComponent::CalculatePing()
 {
-	if (GetWorld())
+	if (UWorld* World = GetWorld())
 	{
 		float ServerTime = ServerTimestamp;
-		float ClientTime = GetWorld()->GetTimeSeconds();
+		float ClientTime = World->GetTimeSeconds();
 		CurrentPing = FMath::Abs(ClientTime - ServerTime) * 1000.0f; // Convert to ms
 	}
 }

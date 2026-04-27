@@ -249,6 +249,7 @@ bool UConfigManager::SerializeToJson(UObject* Object, TSharedPtr<FJsonObject>& O
 		return false;
 	}
 
+	FString PropertyName;
 	for (TFieldIterator<FProperty> PropIt(Object->GetClass()); PropIt; ++PropIt)
 	{
 		FProperty* Property = *PropIt;
@@ -257,7 +258,7 @@ bool UConfigManager::SerializeToJson(UObject* Object, TSharedPtr<FJsonObject>& O
 			continue;
 		}
 
-		FString PropertyName = Property->GetName();
+		PropertyName = Property->GetName();
 		void* ValuePtr = Property->ContainerPtrToValuePtr<void>(Object);
 
 		if (FBoolProperty* BoolProp = CastField<FBoolProperty>(Property))
@@ -292,6 +293,7 @@ bool UConfigManager::DeserializeFromJson(const TSharedPtr<FJsonObject>& Json, UO
 		return false;
 	}
 
+	FString PropertyName;
 	for (TFieldIterator<FProperty> PropIt(Object->GetClass()); PropIt; ++PropIt)
 	{
 		FProperty* Property = *PropIt;
@@ -300,7 +302,7 @@ bool UConfigManager::DeserializeFromJson(const TSharedPtr<FJsonObject>& Json, UO
 			continue;
 		}
 
-		FString PropertyName = Property->GetName();
+		PropertyName = Property->GetName();
 		if (!Json->HasField(PropertyName))
 		{
 			continue;

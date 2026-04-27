@@ -18,10 +18,11 @@ void UCameraRecordingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CameraComponent = GetOwner()->FindComponentByClass<UQuantumCameraComponent>();
+	AActor* Owner = GetOwner();
+	CameraComponent = Owner ? Owner->FindComponentByClass<UQuantumCameraComponent>() : nullptr;
 	if (!CameraComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CameraRecordingComponent: No QuantumCameraComponent found on %s"), *GetOwner()->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("CameraRecordingComponent: No QuantumCameraComponent found on %s"), Owner ? *Owner->GetName() : TEXT("unknown owner"));
 	}
 }
 
@@ -172,9 +173,9 @@ FCameraRecordingMetadata UCameraRecordingComponent::GetRecordingMetadata() const
 	Metadata.RecordingStartTime = RecordingStartTimestamp;
 	Metadata.bHasAudio = RecordingStartSound != nullptr;
 
-	if (RecordingBuffer.Num() > 0)
+	if (!RecordingBuffer.IsEmpty())
 	{
-		Metadata.StartLocation = RecordingBuffer[0].Location;
+		Metadata.StartLocation = RecordingBuffer.GetData()->Location;
 	}
 
 	return Metadata;
@@ -206,9 +207,16 @@ void UCameraRecordingComponent::CaptureFrame(float DeltaTime)
 			RecordingBuffer.RemoveAt(0);
 		}
 
+		AActor* Owner = GetOwner();
+		if (!Owner)
+		{
+			StopRecording();
+			return;
+		}
+
 		FCameraRecordingFrame NewFrame;
-		NewFrame.Location = GetOwner()->GetActorLocation();
-		NewFrame.Rotation = GetOwner()->GetActorRotation();
+		NewFrame.Location = Owner->GetActorLocation();
+		NewFrame.Rotation = Owner->GetActorRotation();
 		NewFrame.Timestamp = CurrentRecordingDuration;
 
 		RecordingBuffer.Add(NewFrame);
@@ -242,7 +250,13 @@ void UCameraRecordingComponent::ProcessRewind(float DeltaTime)
 			return;
 		}
 
-		const FCameraRecordingFrame& Frame = RecordingBuffer[CurrentRewindFrameIndex];
+		if (!RecordingBuffer.IsValidIndex(CurrentRewindFrameIndex))
+		{
+			StopRewind();
+			return;
+		}
+
+		const FCameraRecordingFrame& Frame = *(RecordingBuffer.GetData() + CurrentRewindFrameIndex);
 		OnRewindProgress.Broadcast(Frame.Timestamp);
 	}
 }

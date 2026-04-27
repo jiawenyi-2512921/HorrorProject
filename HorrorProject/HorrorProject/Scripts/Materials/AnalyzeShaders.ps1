@@ -1,11 +1,22 @@
 # AnalyzeShaders.ps1 - Shader Complexity Analysis Tool
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Materials\ShaderAnalysis.json"
+    [string]$ProjectPath = "",
+    [string]$OutputPath = ""
 )
 
 $ErrorActionPreference = "Continue"
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $PSScriptRoot "ShaderAnalysis.json"
+}
 
 Write-Host "=== Shader Complexity Analysis ===" -ForegroundColor Cyan
 Write-Host "Project Path: $ProjectPath" -ForegroundColor Yellow

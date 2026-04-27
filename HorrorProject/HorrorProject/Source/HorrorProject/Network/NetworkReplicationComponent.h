@@ -28,12 +28,17 @@ struct FReplicatedTransform
 	{}
 };
 
+/**
+ * Adds Network Replication Component behavior to its owning actor in the Network module.
+ */
 UCLASS(ClassGroup=(Network), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UNetworkReplicationComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultReplicationRate = 30.0f;
+
 	UNetworkReplicationComponent();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -41,7 +46,7 @@ public:
 
 	// Replication settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
-	float ReplicationRate = 30.0f;
+	float ReplicationRate = DefaultReplicationRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
 	float InterpolationSpeed = 10.0f;
@@ -57,7 +62,7 @@ public:
 	float ServerTimestamp;
 
 	// Client prediction
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Unreliable, WithValidation)
 	void ServerSendTransform(FVector Location, FRotator Rotation, float ClientTimestamp);
 
 	UFUNCTION(NetMulticast, Reliable)

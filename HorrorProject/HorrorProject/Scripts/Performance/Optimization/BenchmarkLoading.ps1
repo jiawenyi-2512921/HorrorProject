@@ -3,13 +3,18 @@
 # Measures level loading performance
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Benchmarks",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [string[]]$Maps = @("MainLevel"),
     [int]$Iterations = 3
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Benchmarks" }
 
 Write-Host "=== Loading Time Benchmark Tool ===" -ForegroundColor Cyan
 Write-Host "Iterations per map: $Iterations"

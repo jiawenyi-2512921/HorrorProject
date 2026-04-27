@@ -10,18 +10,27 @@
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
 
+namespace
+{
+	const FVector FlashlightRelativeLocation(30.0f, 17.5f, -5.0f);
+	const FRotator FlashlightRelativeRotation(-18.6f, -1.3f, 5.26f);
+	constexpr float FlashlightAttenuationRadius = 1050.0f;
+	constexpr float FlashlightInnerConeAngle = 18.7f;
+	constexpr float FlashlightOuterConeAngle = 45.24f;
+}
+
 AHorrorCharacter::AHorrorCharacter()
 {
 	// create the spotlight
 	SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
 	SpotLight->SetupAttachment(GetFirstPersonCameraComponent());
 
-	SpotLight->SetRelativeLocationAndRotation(FVector(30.0f, 17.5f, -5.0f), FRotator(-18.6f, -1.3f, 5.26f));
+	SpotLight->SetRelativeLocationAndRotation(FlashlightRelativeLocation, FlashlightRelativeRotation);
 	SpotLight->Intensity = 0.5;
 	SpotLight->SetIntensityUnits(ELightUnits::Lumens);
-	SpotLight->AttenuationRadius = 1050.0f;
-	SpotLight->InnerConeAngle = 18.7f;
-	SpotLight->OuterConeAngle = 45.24f;
+	SpotLight->AttenuationRadius = FlashlightAttenuationRadius;
+	SpotLight->InnerConeAngle = FlashlightInnerConeAngle;
+	SpotLight->OuterConeAngle = FlashlightOuterConeAngle;
 }
 
 void AHorrorCharacter::BeginPlay()
@@ -32,18 +41,27 @@ void AHorrorCharacter::BeginPlay()
 	SprintMeter = SprintTime;
 
 	// Initialize the walk speed
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->MaxWalkSpeed = WalkSpeed;
+	}
 
 	// start the sprint tick timer
-	GetWorld()->GetTimerManager().SetTimer(SprintTimer, this, &AHorrorCharacter::SprintFixedTick, SprintFixedTickTime, true);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(SprintTimer, this, &AHorrorCharacter::SprintFixedTick, SprintFixedTickTime, true);
+	}
 }
 
 void AHorrorCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-
 	// clear the sprint timer
-	GetWorld()->GetTimerManager().ClearTimer(SprintTimer);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(SprintTimer);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void AHorrorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

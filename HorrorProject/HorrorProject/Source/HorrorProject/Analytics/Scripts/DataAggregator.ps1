@@ -2,13 +2,18 @@
 # Copyright Epic Games, Inc. All Rights Reserved.
 
 param(
-    [string]$InputPath = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Analytics",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Analytics\Aggregated",
+    [string]$InputPath = "",
+    [string]$OutputPath = "",
     [switch]$IncludeTelemetry,
     [switch]$Verbose
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($InputPath)) { $InputPath = Join-Path $ProjectRoot "Saved\Analytics" }
+if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $ProjectRoot "Saved\Analytics\Aggregated" }
 
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")

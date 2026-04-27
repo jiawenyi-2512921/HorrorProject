@@ -1,16 +1,26 @@
 #include "StatisticsSubsystem.h"
+#include "StatisticsSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace HorrorStatisticsSave
+{
+	const FString SlotName(TEXT("HorrorProject_Statistics"));
+	constexpr int32 UserIndex = 0;
+	constexpr int32 SaveVersion = 1;
+	constexpr float SecondsPerHour = 3600.0f;
+	constexpr float CentimetersPerMeter = 100.0f;
+}
 
 void UStatisticsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	InitializeDefaultStatistics();
-	LoadStatistics();
-
 	SessionStartTime = 0.0f;
 	TotalPlayTime = 0.0f;
 	bSessionActive = false;
+
+	InitializeDefaultStatistics();
+	LoadStatistics();
 
 	UE_LOG(LogTemp, Log, TEXT("StatisticsSubsystem initialized"));
 }
@@ -183,14 +193,69 @@ void UStatisticsSubsystem::UpdatePlayTime()
 
 void UStatisticsSubsystem::SaveStatistics()
 {
-	// TODO: Implement save to file or save game system
-	UE_LOG(LogTemp, Log, TEXT("Saving statistics..."));
+	if (bSessionActive)
+	{
+		UpdatePlayTime();
+	}
+
+	UHorrorStatisticsSaveGame* SaveGame = Cast<UHorrorStatisticsSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UHorrorStatisticsSaveGame::StaticClass()));
+	if (!SaveGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unable to create statistics save game object"));
+		return;
+	}
+
+	SaveGame->SaveVersion = HorrorStatisticsSave::SaveVersion;
+	SaveGame->SavedAtUtc = FDateTime::UtcNow();
+	SaveGame->PlayerStats = PlayerStats;
+	SaveGame->PlayerStats.TotalPlayTime = TotalPlayTime;
+	SaveGame->CustomStatistics = CustomStatistics;
+	SaveGame->TotalPlayTime = TotalPlayTime;
+
+	if (!UGameplayStatics::SaveGameToSlot(SaveGame, HorrorStatisticsSave::SlotName, HorrorStatisticsSave::UserIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to save statistics to slot '%s'"), *HorrorStatisticsSave::SlotName);
+	}
 }
 
 void UStatisticsSubsystem::LoadStatistics()
 {
-	// TODO: Implement load from file or save game system
-	UE_LOG(LogTemp, Log, TEXT("Loading statistics..."));
+	if (!UGameplayStatics::DoesSaveGameExist(HorrorStatisticsSave::SlotName, HorrorStatisticsSave::UserIndex))
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("No statistics save exists in slot '%s'"), *HorrorStatisticsSave::SlotName);
+		return;
+	}
+
+	UHorrorStatisticsSaveGame* SaveGame = Cast<UHorrorStatisticsSaveGame>(
+		UGameplayStatics::LoadGameFromSlot(HorrorStatisticsSave::SlotName, HorrorStatisticsSave::UserIndex));
+	if (!SaveGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load statistics from slot '%s'"), *HorrorStatisticsSave::SlotName);
+		return;
+	}
+
+	if (SaveGame->SaveVersion != HorrorStatisticsSave::SaveVersion)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ignoring unsupported statistics save version %d"), SaveGame->SaveVersion);
+		return;
+	}
+
+	PlayerStats = SaveGame->PlayerStats;
+	TotalPlayTime = FMath::Max(0.0f, SaveGame->TotalPlayTime);
+	PlayerStats.TotalPlayTime = TotalPlayTime;
+
+	TMap<FName, float> Defaults = CustomStatistics;
+	CustomStatistics = SaveGame->CustomStatistics;
+	for (const TPair<FName, float>& Pair : Defaults)
+	{
+		if (!CustomStatistics.Contains(Pair.Key))
+		{
+			CustomStatistics.Add(Pair.Key, Pair.Value);
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Loaded %d custom statistics"), CustomStatistics.Num());
 }
 
 FString UStatisticsSubsystem::GenerateStatisticsReport() const
@@ -200,13 +265,13 @@ FString UStatisticsSubsystem::GenerateStatisticsReport() const
 	Report += TEXT("=== PLAYER STATISTICS REPORT ===\n\n");
 
 	// Play Time
-	float Hours = TotalPlayTime / 3600.0f;
+	const float Hours = TotalPlayTime / HorrorStatisticsSave::SecondsPerHour;
 	Report += FString::Printf(TEXT("Total Play Time: %.2f hours\n"), Hours);
 
 	// Exploration
 	Report += TEXT("\n--- EXPLORATION ---\n");
 	Report += FString::Printf(TEXT("Rooms Explored: %d\n"), PlayerStats.RoomsExplored);
-	Report += FString::Printf(TEXT("Distance Traveled: %.2f meters\n"), PlayerStats.DistanceTraveled / 100.0f);
+	Report += FString::Printf(TEXT("Distance Traveled: %.2f meters\n"), PlayerStats.DistanceTraveled / HorrorStatisticsSave::CentimetersPerMeter);
 	Report += FString::Printf(TEXT("Secrets Found: %d\n"), PlayerStats.SecretsFound);
 
 	// Collection

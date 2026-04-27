@@ -6,6 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "FootstepAudioComponent.generated.h"
 
+namespace HorrorFootstepAudioDefaults
+{
+	inline constexpr float WalkSpeedThresholdCmPerSecond = 200.0f;
+	inline constexpr float RunSpeedThresholdCmPerSecond = 400.0f;
+}
+
 UENUM(BlueprintType)
 enum class EFootstepSurfaceType : uint8
 {
@@ -46,6 +52,9 @@ struct HORRORPROJECT_API FFootstepSoundSet
 	float PitchVariation = 0.1f;
 };
 
+/**
+ * Adds Footstep Audio Component behavior to its owning actor in the Audio module.
+ */
 UCLASS(ClassGroup=(Audio), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UFootstepAudioComponent : public UActorComponent
 {
@@ -89,10 +98,10 @@ protected:
 	EFootstepSurfaceType CurrentSurface = EFootstepSurfaceType::Concrete;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Footstep Audio")
-	float WalkSpeedThreshold = 200.0f;
+	float WalkSpeedThreshold = HorrorFootstepAudioDefaults::WalkSpeedThresholdCmPerSecond;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Footstep Audio")
-	float RunSpeedThreshold = 400.0f;
+	float RunSpeedThreshold = HorrorFootstepAudioDefaults::RunSpeedThresholdCmPerSecond;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Footstep Audio")
 	float FootstepInterval = 0.5f;

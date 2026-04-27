@@ -6,6 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "HorrorPlayerControllerMultiplayer.generated.h"
 
+/**
+ * Defines Horror Player Controller Multiplayer behavior for the Network module.
+ */
 UCLASS()
 class HORRORPROJECT_API AHorrorPlayerControllerMultiplayer : public APlayerController
 {

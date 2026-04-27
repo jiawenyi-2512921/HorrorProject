@@ -4,14 +4,51 @@
 
 param(
     [switch]$Export = $false,
-    [string]$OutputPath = "D:\gptzuo\ContextVault\metrics.json"
+    [string]$OutputPath = ""
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
+. (Join-Path $PSScriptRoot "MonitoringCommon.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$WorkspaceRoot = Split-Path -Parent (Split-Path -Parent $ProjectRoot)
+$VaultRoot = if ($env:CONTEXTVAULT_ROOT) { $env:CONTEXTVAULT_ROOT } else { Join-Path $WorkspaceRoot "ContextVault" }
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $VaultRoot "metrics.json"
+}
 
 Write-Host "=== Metrics Collection ===" -ForegroundColor Cyan
 Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
+
+function Get-LatestFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [string]$Filter
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+
+    return Get-ChildItem -LiteralPath $Path -Filter $Filter -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+}
+
+function Get-LogIssueCount {
+    param(
+        [string[]]$Lines,
+        [string]$Pattern
+    )
+
+    if (-not $Lines) {
+        return 0
+    }
+
+    return @($Lines | Select-String -Pattern $Pattern -CaseSensitive:$false).Count
+}
 
 $metrics = @{
     Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -115,10 +152,63 @@ Write-Host "  Disk: $($metrics.Performance.DiskFreeGB)GB free ($($metrics.Perfor
 
 # Quality Metrics
 Write-Host "`nCollecting Quality Metrics..." -ForegroundColor Yellow
-$metrics.Quality.BuildStatus = "Success" # Placeholder
-$metrics.Quality.BuildWarnings = 0 # Placeholder
-$metrics.Quality.BuildErrors = 0 # Placeholder
-$metrics.Quality.CodeQualityScore = 95 # Estimated
+$latestCompilationLog = Get-LatestFile -Path (Join-Path $ProjectRoot "Saved\Logs") -Filter "CompilationValidation_*.log"
+$latestPackageLog = Get-LatestFile -Path (Join-Path $ProjectRoot "Build\Logs\Package") -Filter "Package_*.log"
+$securityReportPath = Join-Path $ProjectRoot "Docs\Security\SecurityAnalysisProbe.json"
+
+$buildWarnings = 0
+$buildErrors = 0
+$buildStatus = "Unknown"
+
+if ($latestCompilationLog) {
+    $compilationLines = Get-Content -LiteralPath $latestCompilationLog.FullName -ErrorAction SilentlyContinue
+    $buildWarnings += Get-LogIssueCount -Lines $compilationLines -Pattern '(^|\s)(warning|warning C\d+)[:\s]'
+    $buildErrors += Get-LogIssueCount -Lines $compilationLines -Pattern '(^|\s)(error|error C\d+)[:\s]'
+
+    if ($compilationLines -match 'Result:\s+Succeeded') {
+        $buildStatus = "Success"
+    } elseif ($compilationLines -match 'Result:\s+Failed|BUILD FAILED') {
+        $buildStatus = "Failed"
+    }
+}
+
+if ($latestPackageLog) {
+    $packageLines = Get-Content -LiteralPath $latestPackageLog.FullName -ErrorAction SilentlyContinue
+    $buildWarnings += Get-LogIssueCount -Lines $packageLines -Pattern '\[(WARN|WARNING)\]|:\s*Warning:'
+    $buildErrors += Get-LogIssueCount -Lines $packageLines -Pattern '\[ERROR\]|:\s*Error:|PACKAGE FAILED'
+
+    if ($packageLines -match 'PACKAGE FAILED') {
+        $buildStatus = "Failed"
+    } elseif ($buildStatus -eq "Unknown" -and $packageLines -match 'PACKAGE COMPLETE') {
+        $buildStatus = "Success"
+    }
+}
+
+$securitySummary = $null
+if (Test-Path -LiteralPath $securityReportPath) {
+    try {
+        $securitySummary = (Get-Content -LiteralPath $securityReportPath -Raw | ConvertFrom-Json).Summary
+    } catch {
+        Write-Warning "Unable to parse security report: $securityReportPath"
+    }
+}
+
+$criticalIssues = if ($securitySummary) { [int]$securitySummary.Critical } else { 0 }
+$highIssues = if ($securitySummary) { [int]$securitySummary.High } else { 0 }
+$mediumIssues = if ($securitySummary) { [int]$securitySummary.Medium } else { 0 }
+$lowIssues = if ($securitySummary) { [int]$securitySummary.Low } else { 0 }
+$qualityPenalty = ($criticalIssues * 25) + ($highIssues * 15) + ($mediumIssues * 5) + [math]::Min(10, $lowIssues * 0.02) + ($buildErrors * 10) + ($buildWarnings * 2)
+
+$metrics.Quality.BuildStatus = $buildStatus
+$metrics.Quality.BuildWarnings = $buildWarnings
+$metrics.Quality.BuildErrors = $buildErrors
+$metrics.Quality.LatestCompilationLog = if ($latestCompilationLog) { $latestCompilationLog.FullName } else { "" }
+$metrics.Quality.LatestPackageLog = if ($latestPackageLog) { $latestPackageLog.FullName } else { "" }
+$metrics.Quality.SecurityCritical = $criticalIssues
+$metrics.Quality.SecurityHigh = $highIssues
+$metrics.Quality.SecurityMedium = $mediumIssues
+$metrics.Quality.SecurityLow = $lowIssues
+$metrics.Quality.CodeQualityScore = [math]::Max(0, [math]::Round(100 - $qualityPenalty, 1))
 
 # Check for common issues
 $issueCount = 0
@@ -126,6 +216,9 @@ if ($metrics.Git.UncommittedFiles -gt 50) { $issueCount++ }
 if ($metrics.Performance.CPU -gt 90) { $issueCount++ }
 if ($metrics.Performance.MemoryPercent -gt 90) { $issueCount++ }
 if ($metrics.Performance.DiskFreeGB -lt 100) { $issueCount++ }
+if ($metrics.Quality.BuildStatus -ne "Success") { $issueCount++ }
+if ($metrics.Quality.BuildWarnings -gt 0) { $issueCount++ }
+if (($criticalIssues + $highIssues + $mediumIssues) -gt 0) { $issueCount++ }
 
 $metrics.Quality.IssueCount = $issueCount
 $metrics.Quality.HealthScore = [math]::Max(0, 100 - ($issueCount * 10))
@@ -142,6 +235,7 @@ $remainingAgents = 99 - $completedAgents
 $hoursElapsed = 23 # Update based on project start
 $velocity = if ($hoursElapsed -gt 0) { [math]::Round($completedAgents / $hoursElapsed, 2) } else { 0 }
 $estimatedHoursRemaining = if ($velocity -gt 0) { [math]::Round($remainingAgents / $velocity, 1) } else { 0 }
+$estimatedCompletion = if ($estimatedHoursRemaining -gt 0) { (Get-Date).AddHours($estimatedHoursRemaining) } else { Get-Date }
 
 $metrics.Velocity = @{
     CompletedAgents = $completedAgents
@@ -159,6 +253,7 @@ Write-Host "  Estimated Remaining: $estimatedHoursRemaining hours" -ForegroundCo
 # Export to JSON if requested
 if ($Export) {
     Write-Host "`nExporting metrics to JSON..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $OutputPath) | Out-Null
     $metrics | ConvertTo-Json -Depth 10 | Set-Content -Path $OutputPath
     Write-Host "  Exported to: $OutputPath" -ForegroundColor Green
 }
@@ -175,6 +270,6 @@ if ($metrics.Quality.HealthScore -ge 90) {
 }
 
 Write-Host "Development Progress: $($metrics.Velocity.ProgressPercent)% complete" -ForegroundColor Cyan
-Write-Host "Estimated Completion: $(Get-Date).AddHours($estimatedHoursRemaining).ToString('yyyy-MM-dd HH:mm')" -ForegroundColor Cyan
+Write-Host "Estimated Completion: $($estimatedCompletion.ToString('yyyy-MM-dd HH:mm'))" -ForegroundColor Cyan
 
 Write-Host "`n=== Collection Complete ===" -ForegroundColor Cyan

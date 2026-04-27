@@ -1,5 +1,11 @@
 #include "GameplayMetrics.h"
 
+namespace HorrorGameplayMetrics
+{
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float SecondsPerMinute = 60.0f;
+}
+
 FHorrorGameplayMetrics UHorrorGameplayMetricsLibrary::CreateMetrics()
 {
 	FHorrorGameplayMetrics Metrics;
@@ -87,7 +93,7 @@ FString UHorrorGameplayMetricsLibrary::GenerateMetricsReport(const FHorrorGamepl
 	Report += FString::Printf(TEXT("Failed Interactions: %d\n"), Metrics.FailedInteractions);
 
 	float SuccessRate = Metrics.TotalInteractions > 0
-		? (float)(Metrics.TotalInteractions - Metrics.FailedInteractions) / Metrics.TotalInteractions * 100.0f
+		? (float)(Metrics.TotalInteractions - Metrics.FailedInteractions) / Metrics.TotalInteractions * HorrorGameplayMetrics::PercentMultiplier
 		: 0.0f;
 	Report += FString::Printf(TEXT("Interaction Success Rate: %.2f%%\n"), SuccessRate);
 
@@ -103,7 +109,7 @@ FString UHorrorGameplayMetricsLibrary::GenerateMetricsReport(const FHorrorGamepl
 
 	// Session
 	Report += TEXT("\n--- SESSION ---\n");
-	Report += FString::Printf(TEXT("Session Duration: %.2f minutes\n"), Metrics.SessionDuration / 60.0f);
+	Report += FString::Printf(TEXT("Session Duration: %.2f minutes\n"), Metrics.SessionDuration / HorrorGameplayMetrics::SecondsPerMinute);
 	Report += FString::Printf(TEXT("Saves: %d\n"), Metrics.SaveCount);
 	Report += FString::Printf(TEXT("Loads: %d\n"), Metrics.LoadCount);
 

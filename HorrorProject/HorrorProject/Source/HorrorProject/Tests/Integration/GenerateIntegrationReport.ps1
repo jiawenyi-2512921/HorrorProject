@@ -4,11 +4,16 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$TestResults,
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Automation\Reports",
-    [string]$ReportName = "IntegrationTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+    [string]$OutputPath = "",
+    [string]$ReportName = "IntegrationTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html",
+    [switch]$OpenReport
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $ProjectRoot "Saved\Automation\Reports" }
 
 # Ensure output directory exists
 if (-not (Test-Path $OutputPath)) {
@@ -183,7 +188,9 @@ Write-Host ""
 Write-Host "Report generated successfully!" -ForegroundColor Green
 Write-Host "Location: $ReportFile" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Opening report in browser..." -ForegroundColor Yellow
-Start-Process $ReportFile
+if ($OpenReport) {
+    Write-Host "Opening report in browser..." -ForegroundColor Yellow
+    Start-Process $ReportFile
+}
 
 exit 0

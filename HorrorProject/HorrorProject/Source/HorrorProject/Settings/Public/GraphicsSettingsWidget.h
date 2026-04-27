@@ -102,6 +102,13 @@ private:
 	UPROPERTY()
 	TObjectPtr<UGraphicsSettings> GraphicsSettings;
 
+	void ResolveGraphicsSettings();
+	void BindDisplayControls();
+	void BindQualityControls();
+	void BindAdvancedControls();
+	void RefreshDisplayControls();
+	void RefreshQualityControls();
+	void RefreshAdvancedControls();
 	void PopulateResolutions();
 	void PopulateQualityPresets();
 };

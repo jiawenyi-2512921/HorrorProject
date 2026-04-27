@@ -8,6 +8,9 @@
 #include "Evidence/ArchiveSubsystem.h"
 #include "ArchiveViewerWidget.generated.h"
 
+/**
+ * Presents Archive Viewer Widget UI for player-facing HorrorProject workflows.
+ */
 UCLASS(Abstract, BlueprintType, Blueprintable)
 class HORRORPROJECT_API UArchiveViewerWidget : public UUserWidget
 {

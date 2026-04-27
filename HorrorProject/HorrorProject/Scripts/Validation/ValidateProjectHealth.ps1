@@ -2,7 +2,11 @@
 
 param(
     [switch]$SkipBuild,
-    [switch]$EditorOnly
+    [switch]$EditorOnly,
+    [switch]$Package,
+    [string]$PackageConfiguration = "Development",
+    [string]$PackagePlatform = "Win64",
+    [string]$PackageOutputDir = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,6 +35,14 @@ Write-Host "Project: $ProjectRoot" -ForegroundColor Yellow
 
 Invoke-HealthStep -Name "PowerShell syntax" -Action {
     & (Join-Path $PSScriptRoot "ValidatePowerShellSyntax.ps1")
+}
+
+Invoke-HealthStep -Name "Portable script paths" -Action {
+    & (Join-Path $PSScriptRoot "CheckPortablePaths.ps1")
+}
+
+Invoke-HealthStep -Name "Gameplay review fixes" -Action {
+    & (Join-Path $PSScriptRoot "CheckReviewFixes.ps1")
 }
 
 Invoke-HealthStep -Name "Final integration quality gate" -Action {
@@ -62,6 +74,16 @@ if (-not $SkipBuild) {
 
 Invoke-HealthStep -Name "Compilation report" -Action {
     & (Join-Path $PSScriptRoot "GenerateCompilationReport.ps1")
+}
+
+if ($Package) {
+    if ([string]::IsNullOrWhiteSpace($PackageOutputDir)) {
+        $PackageOutputDir = Join-Path $ProjectRoot "Build\Packages\Health-$PackageConfiguration-$PackagePlatform"
+    }
+
+    Invoke-HealthStep -Name "Package $PackageConfiguration $PackagePlatform" -Action {
+        & (Join-Path $ProjectRoot "Scripts\Automation\Package.ps1") -Configuration $PackageConfiguration -Platform $PackagePlatform -OutputDir $PackageOutputDir
+    }
 }
 
 Write-Host "`n[SUCCESS] HorrorProject health validation completed" -ForegroundColor Green

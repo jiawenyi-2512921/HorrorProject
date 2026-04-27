@@ -1,10 +1,18 @@
 # Generate Comprehensive Security Report for HorrorProject
 
 param(
-    [string]$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
+    [string]$ProjectRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
+}
 
 Write-Host "Generating Comprehensive Security Report..." -ForegroundColor Cyan
 Write-Host "=" * 80 -ForegroundColor Gray

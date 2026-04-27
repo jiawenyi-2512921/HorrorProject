@@ -18,6 +18,9 @@ enum class ESaveGameValidationResult : uint8
 	ChecksumMismatch
 };
 
+/**
+ * Defines Save Game Validator behavior for the SaveGame module.
+ */
 UCLASS()
 class HORRORPROJECT_API USaveGameValidator : public UObject
 {

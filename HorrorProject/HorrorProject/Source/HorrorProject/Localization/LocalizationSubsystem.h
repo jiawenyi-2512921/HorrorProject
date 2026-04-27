@@ -10,14 +10,17 @@ UENUM(BlueprintType)
 enum class ELanguage : uint8
 {
 	English UMETA(DisplayName = "English"),
-	Chinese UMETA(DisplayName = "中文"),
-	Japanese UMETA(DisplayName = "日本語"),
-	Korean UMETA(DisplayName = "한국어"),
-	Spanish UMETA(DisplayName = "Español")
+	Chinese UMETA(DisplayName = "Chinese"),
+	Japanese UMETA(DisplayName = "Japanese"),
+	Korean UMETA(DisplayName = "Korean"),
+	Spanish UMETA(DisplayName = "Spanish")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageChanged, ELanguage, NewLanguage);
 
+/**
+ * Coordinates Localization Subsystem services for the Localization module.
+ */
 UCLASS()
 class HORRORPROJECT_API ULocalizationSubsystem : public UGameInstanceSubsystem
 {

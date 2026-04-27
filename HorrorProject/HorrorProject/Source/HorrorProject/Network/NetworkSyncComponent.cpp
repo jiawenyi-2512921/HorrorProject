@@ -5,6 +5,11 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 
+namespace
+{
+	constexpr float BytesPerKilobyte = 1024.0f;
+}
+
 UNetworkSyncComponent::UNetworkSyncComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -43,20 +48,22 @@ void UNetworkSyncComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	BandwidthResetTimer += DeltaTime;
 	if (BandwidthResetTimer >= 1.0f)
 	{
-		CurrentBandwidth = BytesSentThisSecond / 1024.0f; // KB/s
+		CurrentBandwidth = BytesSentThisSecond / BytesPerKilobyte; // KB/s
 		BytesSentThisSecond = 0;
 		BandwidthResetTimer = 0.0f;
 	}
 
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AActor* Owner = GetOwner();
+	UWorld* World = GetWorld();
+	if (Owner && Owner->HasAuthority() && World)
 	{
-		float CurrentTime = GetWorld()->GetTimeSeconds();
+		float CurrentTime = World->GetTimeSeconds();
 		if (CurrentTime - LastSyncTime >= SyncInterval)
 		{
 			if (ShouldSyncTransform())
 			{
-				LastSyncedPosition = GetOwner()->GetActorLocation();
-				LastSyncedRotation = GetOwner()->GetActorRotation();
+				LastSyncedPosition = Owner->GetActorLocation();
+				LastSyncedRotation = Owner->GetActorRotation();
 			}
 			LastSyncTime = CurrentTime;
 		}
@@ -65,7 +72,8 @@ void UNetworkSyncComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 void UNetworkSyncComponent::SyncFloat(const FString& VarName, float Value)
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AActor* Owner = GetOwner();
+	if (Owner && Owner->HasAuthority())
 	{
 		FSyncedVariable* Var = FindVariable(VarName);
 		if (!Var)
@@ -86,7 +94,8 @@ void UNetworkSyncComponent::SyncFloat(const FString& VarName, float Value)
 
 void UNetworkSyncComponent::SyncInt(const FString& VarName, int32 Value)
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AActor* Owner = GetOwner();
+	if (Owner && Owner->HasAuthority())
 	{
 		FSyncedVariable* Var = FindVariable(VarName);
 		if (!Var)
@@ -107,7 +116,8 @@ void UNetworkSyncComponent::SyncInt(const FString& VarName, int32 Value)
 
 void UNetworkSyncComponent::SyncBool(const FString& VarName, bool Value)
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AActor* Owner = GetOwner();
+	if (Owner && Owner->HasAuthority())
 	{
 		FSyncedVariable* Var = FindVariable(VarName);
 		if (!Var)
@@ -128,7 +138,8 @@ void UNetworkSyncComponent::SyncBool(const FString& VarName, bool Value)
 
 void UNetworkSyncComponent::SyncVector(const FString& VarName, FVector Value)
 {
-	if (GetOwner() && GetOwner()->HasAuthority())
+	AActor* Owner = GetOwner();
+	if (Owner && Owner->HasAuthority())
 	{
 		FSyncedVariable* Var = FindVariable(VarName);
 		if (!Var)
@@ -226,13 +237,14 @@ const FSyncedVariable* UNetworkSyncComponent::FindVariable(const FString& VarNam
 
 bool UNetworkSyncComponent::ShouldSyncTransform() const
 {
-	if (!bEnableDeltaCompression || !GetOwner())
+	const AActor* Owner = GetOwner();
+	if (!bEnableDeltaCompression || !Owner)
 	{
 		return true;
 	}
 
-	FVector CurrentPos = GetOwner()->GetActorLocation();
-	FRotator CurrentRot = GetOwner()->GetActorRotation();
+	FVector CurrentPos = Owner->GetActorLocation();
+	FRotator CurrentRot = Owner->GetActorRotation();
 
 	float PosDelta = FVector::Dist(CurrentPos, LastSyncedPosition);
 	float RotDelta = FMath::Abs((CurrentRot - LastSyncedRotation).Yaw);

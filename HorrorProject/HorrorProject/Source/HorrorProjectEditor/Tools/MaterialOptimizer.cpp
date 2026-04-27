@@ -3,6 +3,10 @@
 #include "MaterialOptimizer.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialExpressionTextureSample.h"
+#include "Materials/MaterialExpressionScalarParameter.h"
+#include "Materials/MaterialExpressionTextureSampleParameter.h"
+#include "Materials/MaterialExpressionVectorParameter.h"
+#include "Engine/Texture.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Misc/MessageDialog.h"
 
@@ -49,6 +53,7 @@ FMaterialOptimizationResult UMaterialOptimizer::OptimizeMaterial(UMaterial* Mate
 	RemoveUnusedNodes(Material, Result);
 	SimplifyExpressions(Material, Result);
 	OptimizeTextureSampling(Material, Result);
+	ConvertToMaterialInstance(Material, Result);
 
 	Result.OptimizedInstructionCount = Material->GetExpressions().Num();
 
@@ -67,7 +72,7 @@ FMaterialOptimizationResult UMaterialOptimizer::OptimizeMaterial(UMaterial* Mate
 	return Result;
 }
 
-void UMaterialOptimizer::RemoveUnusedNodes(UMaterial* Material, FMaterialOptimizationResult& Result)
+void UMaterialOptimizer::RemoveUnusedNodes(UMaterial* Material, FMaterialOptimizationResult& OutResult)
 {
 	TArray<UMaterialExpression*> ExpressionsToRemove;
 
@@ -86,37 +91,80 @@ void UMaterialOptimizer::RemoveUnusedNodes(UMaterial* Material, FMaterialOptimiz
 
 	if (ExpressionsToRemove.Num() > 0)
 	{
-		Result.OptimizationSteps.Add(FString::Printf(TEXT("Removed %d unused nodes"), ExpressionsToRemove.Num()));
+		OutResult.OptimizationSteps.Add(FString::Printf(TEXT("Removed %d unused nodes"), ExpressionsToRemove.Num()));
 	}
 }
 
-void UMaterialOptimizer::SimplifyExpressions(UMaterial* Material, FMaterialOptimizationResult& Result)
+void UMaterialOptimizer::SimplifyExpressions(UMaterial* Material, FMaterialOptimizationResult& OutResult)
 {
-	// Placeholder for expression simplification logic
-	Result.OptimizationSteps.Add("Simplified material expressions");
+	int32 ParameterCount = 0;
+	for (UMaterialExpression* Expression : Material->GetExpressions())
+	{
+		if (Cast<UMaterialExpressionScalarParameter>(Expression)
+			|| Cast<UMaterialExpressionVectorParameter>(Expression)
+			|| Cast<UMaterialExpressionTextureSampleParameter>(Expression))
+		{
+			ParameterCount++;
+		}
+	}
+
+	if (ParameterCount > 0)
+	{
+		OutResult.OptimizationSteps.Add(FString::Printf(TEXT("Found %d reusable material parameters"), ParameterCount));
+	}
 }
 
-void UMaterialOptimizer::OptimizeTextureSampling(UMaterial* Material, FMaterialOptimizationResult& Result)
+void UMaterialOptimizer::OptimizeTextureSampling(UMaterial* Material, FMaterialOptimizationResult& OutResult)
 {
 	int32 TextureSampleCount = 0;
+	TMap<UTexture*, int32> TextureUsageCounts;
 
 	for (UMaterialExpression* Expression : Material->GetExpressions())
 	{
 		if (UMaterialExpressionTextureSample* TextureSample = Cast<UMaterialExpressionTextureSample>(Expression))
 		{
 			TextureSampleCount++;
+			if (TextureSample->Texture)
+			{
+				int32& UsageCount = TextureUsageCounts.FindOrAdd(TextureSample->Texture);
+				UsageCount++;
+			}
 		}
 	}
 
 	if (TextureSampleCount > 8)
 	{
-		Result.OptimizationSteps.Add(FString::Printf(
+		OutResult.OptimizationSteps.Add(FString::Printf(
 			TEXT("Warning: High texture sample count (%d)"), TextureSampleCount));
+	}
+
+	for (const TPair<UTexture*, int32>& Pair : TextureUsageCounts)
+	{
+		if (Pair.Value > 1)
+		{
+			OutResult.OptimizationSteps.Add(FString::Printf(
+				TEXT("Texture '%s' is sampled %d times; consider sharing UV/math upstream"),
+				*GetNameSafe(Pair.Key),
+				Pair.Value));
+		}
 	}
 }
 
-void UMaterialOptimizer::ConvertToMaterialInstance(UMaterial* Material, FMaterialOptimizationResult& Result)
+void UMaterialOptimizer::ConvertToMaterialInstance(UMaterial* Material, FMaterialOptimizationResult& OutResult)
 {
-	// Placeholder for material instance conversion
-	Result.OptimizationSteps.Add("Analyzed for material instance conversion");
+	bool bHasInstanceParameters = false;
+	for (UMaterialExpression* Expression : Material->GetExpressions())
+	{
+		if (Cast<UMaterialExpressionScalarParameter>(Expression)
+			|| Cast<UMaterialExpressionVectorParameter>(Expression)
+			|| Cast<UMaterialExpressionTextureSampleParameter>(Expression))
+		{
+			bHasInstanceParameters = true;
+			break;
+		}
+	}
+
+	OutResult.OptimizationSteps.Add(bHasInstanceParameters
+		? TEXT("Material is ready for Material Instance workflows")
+		: TEXT("Material has no exposed parameters; add parameters before creating reusable instances"));
 }

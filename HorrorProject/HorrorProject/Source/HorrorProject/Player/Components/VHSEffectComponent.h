@@ -16,6 +16,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBodycamAcquiredChangedSignature, bo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBodycamEnabledChangedSignature, bool, bIsEnabled);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FVHSFeedbackChangedSignature, bool, bIsActive, EQuantumCameraMode, CameraMode);
 
+/**
+ * Adds VHSEffect Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UVHSEffectComponent : public UActorComponent
 {

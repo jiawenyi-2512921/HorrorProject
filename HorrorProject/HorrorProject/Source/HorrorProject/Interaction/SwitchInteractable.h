@@ -29,6 +29,8 @@ class HORRORPROJECT_API ASwitchInteractable : public ABaseInteractable
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultHandleAngleDegrees = 45.0f;
+
 	ASwitchInteractable();
 
 	virtual bool CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const override;
@@ -88,10 +90,10 @@ private:
 	TObjectPtr<USoundBase> DeactivateSound = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch|Visual", meta=(AllowPrivateAccess="true"))
-	FRotator OnRotation = FRotator(0.0f, 0.0f, 45.0f);
+	FRotator OnRotation = FRotator(0.0f, 0.0f, DefaultHandleAngleDegrees);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch|Visual", meta=(AllowPrivateAccess="true"))
-	FRotator OffRotation = FRotator(0.0f, 0.0f, -45.0f);
+	FRotator OffRotation = FRotator(0.0f, 0.0f, -DefaultHandleAngleDegrees);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch|Visual", meta=(AllowPrivateAccess="true"))
 	float AnimationSpeed = 5.0f;

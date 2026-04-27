@@ -15,6 +15,7 @@ AHorrorPlayerController::AHorrorPlayerController()
 {
 	// set the player camera manager class
 	PlayerCameraManagerClass = AHorrorProjectCameraManager::StaticClass();
+	bEnableMotionControls = false;
 }
 
 void AHorrorPlayerController::BeginPlay()
@@ -48,7 +49,7 @@ void AHorrorPlayerController::OnPossess(APawn* aPawn)
 	Super::OnPossess(aPawn);
 
 	// only spawn UI on local player controllers
-	if (IsLocalPlayerController())
+	if (IsLocalPlayerController() && bAutoCreateHorrorUI)
 	{
 		// set up the UI for the character
 		if (AHorrorCharacter* HorrorCharacter = Cast<AHorrorCharacter>(aPawn))

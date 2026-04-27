@@ -71,6 +71,9 @@ struct FHorrorGameplayMetrics
 	{}
 };
 
+/**
+ * Exposes Blueprint helper functions for Horror Gameplay Metrics Library workflows.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorGameplayMetricsLibrary : public UObject
 {

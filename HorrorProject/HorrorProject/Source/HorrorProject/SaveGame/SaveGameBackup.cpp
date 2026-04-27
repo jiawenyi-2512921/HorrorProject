@@ -6,6 +6,52 @@
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Misc/FileHelper.h"
 
+namespace
+{
+	class FBackupVisitor : public IPlatformFile::FDirectoryVisitor
+	{
+	public:
+		FBackupVisitor(TArray<FSaveGameBackupInfo>& InBackups, const FString& InPrefix, int32 InSlotIndex)
+			: Backups(InBackups)
+			, Prefix(InPrefix)
+			, SlotIndex(InSlotIndex)
+		{}
+
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (!bIsDirectory)
+			{
+				AddBackupInfo(FilenameOrDirectory);
+			}
+			return true;
+		}
+
+	private:
+		TArray<FSaveGameBackupInfo>& Backups;
+		const FString& Prefix;
+		int32 SlotIndex;
+
+		void AddBackupInfo(const TCHAR* FilenameOrDirectory)
+		{
+			const FString Filename = FPaths::GetCleanFilename(FilenameOrDirectory);
+			if (!Filename.StartsWith(Prefix))
+			{
+				return;
+			}
+
+			FSaveGameBackupInfo Info;
+			Info.BackupName = Filename;
+			Info.SlotIndex = SlotIndex;
+			Info.FileSizeBytes = IFileManager::Get().FileSize(FilenameOrDirectory);
+
+			const FString TimeStr = Filename.RightChop(Prefix.Len()).LeftChop(4);
+			FDateTime::Parse(TimeStr, Info.BackupTime);
+
+			Backups.Add(Info);
+		}
+	};
+}
+
 bool USaveGameBackup::CreateBackup(int32 SlotIndex)
 {
 	const FString SourcePath = FPaths::ProjectSavedDir() / TEXT("SaveGames") / GetSlotFileName(SlotIndex);
@@ -78,41 +124,6 @@ TArray<FSaveGameBackupInfo> USaveGameBackup::GetBackupsForSlot(int32 SlotIndex) 
 	const FString SlotPrefix = FString::Printf(TEXT("SaveSlot_%d_Backup_"), SlotIndex);
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-	class FBackupVisitor : public IPlatformFile::FDirectoryVisitor
-	{
-	public:
-		TArray<FSaveGameBackupInfo>& BackupsRef;
-		const FString& PrefixRef;
-		int32 SlotIdx;
-
-		FBackupVisitor(TArray<FSaveGameBackupInfo>& InBackups, const FString& InPrefix, int32 InSlotIdx)
-			: BackupsRef(InBackups), PrefixRef(InPrefix), SlotIdx(InSlotIdx)
-		{}
-
-		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
-		{
-			if (!bIsDirectory)
-			{
-				FString Filename = FPaths::GetCleanFilename(FilenameOrDirectory);
-				if (Filename.StartsWith(PrefixRef))
-				{
-					FSaveGameBackupInfo Info;
-					Info.BackupName = Filename;
-					Info.SlotIndex = SlotIdx;
-					Info.FileSizeBytes = IFileManager::Get().FileSize(FilenameOrDirectory);
-
-					// Parse timestamp from filename
-					FString TimeStr = Filename.RightChop(PrefixRef.Len()).LeftChop(4); // Remove .sav
-					FDateTime::Parse(TimeStr, Info.BackupTime);
-
-					BackupsRef.Add(Info);
-				}
-			}
-			return true;
-		}
-	};
-
 	FBackupVisitor Visitor(Backups, SlotPrefix, SlotIndex);
 	PlatformFile.IterateDirectory(*BackupDir, Visitor);
 
@@ -131,9 +142,13 @@ void USaveGameBackup::CleanupOldBackups(int32 SlotIndex)
 
 	if (Backups.Num() > MaxBackupsPerSlot)
 	{
-		for (int32 i = MaxBackupsPerSlot; i < Backups.Num(); ++i)
+		int32 BackupIndex = 0;
+		for (const FSaveGameBackupInfo& Backup : Backups)
 		{
-			DeleteBackup(Backups[i].BackupName);
+			if (BackupIndex++ >= MaxBackupsPerSlot)
+			{
+				DeleteBackup(Backup.BackupName);
+			}
 		}
 	}
 }

@@ -12,6 +12,7 @@ class UTextureRenderTarget2D;
 class USceneCaptureComponent2D;
 class USoundBase;
 class UQuantumCameraComponent;
+class UCameraComponent;
 
 USTRUCT(BlueprintType)
 struct HORRORPROJECT_API FCameraPhotoMetadata
@@ -19,10 +20,10 @@ struct HORRORPROJECT_API FCameraPhotoMetadata
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category="Photo")
-	FGuid PhotoId;
+	FGuid PhotoId = FGuid();
 
 	UPROPERTY(BlueprintReadOnly, Category="Photo")
-	FDateTime CaptureTimestamp;
+	FDateTime CaptureTimestamp = FDateTime();
 
 	UPROPERTY(BlueprintReadOnly, Category="Photo")
 	FVector CaptureLocation = FVector::ZeroVector;
@@ -42,11 +43,7 @@ struct HORRORPROJECT_API FCameraPhotoMetadata
 	UPROPERTY(BlueprintReadOnly, Category="Photo")
 	bool bFlashUsed = false;
 
-	FCameraPhotoMetadata()
-	{
-		PhotoId = FGuid::NewGuid();
-		CaptureTimestamp = FDateTime::Now();
-	}
+	FCameraPhotoMetadata() = default;
 };
 
 USTRUCT(BlueprintType)
@@ -68,12 +65,24 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhotoTakenSignature, const FCamer
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFlashFiredSignature, float, Intensity);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhotoStoredSignature, FGuid, PhotoId);
 
+/**
+ * Adds Camera Photo Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UCameraPhotoComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr int32 DefaultPhotoResolutionWidth = 1920;
+	static constexpr int32 DefaultPhotoResolutionHeight = 1080;
+	static constexpr int32 DefaultThumbnailResolutionWidth = 256;
+	static constexpr int32 DefaultThumbnailResolutionHeight = 144;
+	static constexpr int32 DefaultMaxPhotoCapacity = 36;
+	static constexpr float DefaultFlashIntensity = 5000.0f;
+	static constexpr float DefaultEvidenceDetectionRadius = 2000.0f;
+	static constexpr float InitialLastPhotoTime = -999.0f;
+
 	UCameraPhotoComponent();
 
 	virtual void BeginPlay() override;
@@ -129,19 +138,19 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
-	int32 PhotoResolutionWidth = 1920;
+	int32 PhotoResolutionWidth = DefaultPhotoResolutionWidth;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
-	int32 PhotoResolutionHeight = 1080;
+	int32 PhotoResolutionHeight = DefaultPhotoResolutionHeight;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
-	int32 ThumbnailResolutionWidth = 256;
+	int32 ThumbnailResolutionWidth = DefaultThumbnailResolutionWidth;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
-	int32 ThumbnailResolutionHeight = 144;
+	int32 ThumbnailResolutionHeight = DefaultThumbnailResolutionHeight;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
-	int32 MaxPhotoCapacity = 36;
+	int32 MaxPhotoCapacity = DefaultMaxPhotoCapacity;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Settings")
 	float PhotoCooldownTime = 0.5f;
@@ -150,7 +159,7 @@ protected:
 	bool bFlashEnabled = true;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Flash")
-	float FlashIntensity = 5000.0f;
+	float FlashIntensity = DefaultFlashIntensity;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Flash")
 	float FlashDuration = 0.1f;
@@ -171,7 +180,7 @@ protected:
 	bool bAutoDetectEvidence = true;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Evidence")
-	float EvidenceDetectionRadius = 2000.0f;
+	float EvidenceDetectionRadius = DefaultEvidenceDetectionRadius;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraPhoto|Evidence")
 	FGameplayTag PhotoEvidenceTag;
@@ -192,15 +201,24 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UQuantumCameraComponent> QuantumCamera;
 
-	float LastPhotoTime = -999.0f;
+	float LastPhotoTime = InitialLastPhotoTime;
 	bool bIsCapturing = false;
 
 	void InitializeCaptureComponents();
 	void SetupCaptureComponent();
+	UCameraComponent* BeginPhotoCapture();
+	void CompletePhotoCapture(const FCameraPhoto& Photo);
+	bool AreCaptureComponentsReady() const;
+	UCameraComponent* ResolvePlayerCamera() const;
+	void SyncCaptureComponentToCamera(const UCameraComponent* PlayerCamera);
+	void CaptureSceneToRenderTarget(UTextureRenderTarget2D* RenderTarget);
 	UTexture2D* CaptureToTexture(UTextureRenderTarget2D* RenderTarget);
+	FCameraPhoto BuildCapturedPhoto(bool bFlashUsed, UTexture2D* PhotoTexture, UTexture2D* ThumbnailTexture);
 	void TriggerFlashEffect(float Intensity);
 	void PlayShutterSound();
 	TArray<FName> DetectEvidenceInView();
+	TArray<FHitResult> TraceEvidenceInView(const UCameraComponent* PlayerCamera) const;
+	void CollectEvidenceTagsFromHits(const TArray<FHitResult>& HitResults, TArray<FName>* OutDetectedEvidence) const;
 	FCameraPhotoMetadata BuildPhotoMetadata(bool bFlashUsed);
 	void StorePhoto(const FCameraPhoto& Photo);
 };

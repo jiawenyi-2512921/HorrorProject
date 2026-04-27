@@ -9,6 +9,9 @@
 class AHorrorEncounterDirector;
 class AHorrorThreatCharacter;
 
+/**
+ * Implements actor-level Horror Encounter Node behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorEncounterNode : public AHorrorObjectiveNode
 {

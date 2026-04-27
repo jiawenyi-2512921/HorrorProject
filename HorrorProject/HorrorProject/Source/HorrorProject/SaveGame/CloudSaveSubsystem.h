@@ -29,6 +29,9 @@ enum class ECloudSaveStatus : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCloudSaveComplete, int32, SlotIndex, ECloudSaveStatus, Status, const FString&, ErrorMessage);
 
+/**
+ * Coordinates Cloud Save Subsystem services for the SaveGame module.
+ */
 UCLASS()
 class HORRORPROJECT_API UCloudSaveSubsystem : public UGameInstanceSubsystem
 {

@@ -6,12 +6,30 @@
 #include "Misc/Paths.h"
 #include "Engine/Engine.h"
 
+namespace HorrorMemoryDiagnostics
+{
+	constexpr float DefaultLeakThresholdMB = 100.0f;
+	constexpr float BytesPerMegabyte = 1024.0f * 1024.0f;
+	constexpr int64 BytesPerMegabyteInt = 1024 * 1024;
+	constexpr int32 MaxHistorySamples = 300;
+	constexpr int32 LeakTrendSampleCount = 10;
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float CriticalUsagePercent = 90.0f;
+	constexpr float WarningUsagePercent = 80.0f;
+	constexpr float SpikeThresholdMB = 50.0f;
+
+	float BytesToMegabytes(uint64 Bytes)
+	{
+		return static_cast<float>(Bytes) / BytesPerMegabyte;
+	}
+}
+
 UMemoryDiagnostics::UMemoryDiagnostics()
 {
 	bIsMonitoring = false;
 	MonitoringInterval = 5.0f;
 	BaselineMemoryMB = 0.0f;
-	MemoryLeakThresholdMB = 100.0f;
+	MemoryLeakThresholdMB = HorrorMemoryDiagnostics::DefaultLeakThresholdMB;
 }
 
 void UMemoryDiagnostics::StartMonitoring(float Interval)
@@ -23,9 +41,16 @@ void UMemoryDiagnostics::StartMonitoring(float Interval)
 
 	// Set baseline
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-	BaselineMemoryMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
+	BaselineMemoryMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedPhysical);
 
-	GetWorld()->GetTimerManager().SetTimer(MonitoringTimer,
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		bIsMonitoring = false;
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(MonitoringTimer,
 		this, &UMemoryDiagnostics::CollectMemoryData,
 		MonitoringInterval, true);
 
@@ -37,7 +62,10 @@ void UMemoryDiagnostics::StopMonitoring()
 {
 	if (!bIsMonitoring) return;
 
-	GetWorld()->GetTimerManager().ClearTimer(MonitoringTimer);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(MonitoringTimer);
+	}
 	bIsMonitoring = false;
 
 	UE_LOG(LogTemp, Log, TEXT("Memory monitoring stopped"));
@@ -49,16 +77,16 @@ void UMemoryDiagnostics::CollectMemoryData()
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
 
 	Snapshot.Timestamp = FDateTime::Now();
-	Snapshot.UsedPhysicalMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
-	Snapshot.UsedVirtualMB = MemStats.UsedVirtual / (1024.0f * 1024.0f);
-	Snapshot.AvailablePhysicalMB = MemStats.AvailablePhysical / (1024.0f * 1024.0f);
-	Snapshot.PeakUsedPhysicalMB = MemStats.PeakUsedPhysical / (1024.0f * 1024.0f);
-	Snapshot.TotalAllocations = MemStats.TotalPhysical / (1024 * 1024);
+	Snapshot.UsedPhysicalMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedPhysical);
+	Snapshot.UsedVirtualMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedVirtual);
+	Snapshot.AvailablePhysicalMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.AvailablePhysical);
+	Snapshot.PeakUsedPhysicalMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.PeakUsedPhysical);
+	Snapshot.TotalAllocations = MemStats.TotalPhysical / HorrorMemoryDiagnostics::BytesPerMegabyteInt;
 
 	MemoryHistory.Add(Snapshot);
 
-	// Keep only last 300 samples
-	if (MemoryHistory.Num() > 300)
+	// Keep only the most recent samples.
+	if (MemoryHistory.Num() > HorrorMemoryDiagnostics::MaxHistorySamples)
 	{
 		MemoryHistory.RemoveAt(0);
 	}
@@ -66,7 +94,7 @@ void UMemoryDiagnostics::CollectMemoryData()
 	CheckMemoryThresholds(Snapshot);
 
 	// Periodic leak detection
-	if (MemoryHistory.Num() % 10 == 0)
+	if (MemoryHistory.Num() % HorrorMemoryDiagnostics::LeakTrendSampleCount == 0)
 	{
 		AnalyzeMemoryTrend();
 	}
@@ -74,14 +102,14 @@ void UMemoryDiagnostics::CollectMemoryData()
 
 void UMemoryDiagnostics::CheckMemoryThresholds(const FMemorySnapshot& Snapshot)
 {
-	float UsagePercent = (Snapshot.UsedPhysicalMB / (Snapshot.UsedPhysicalMB + Snapshot.AvailablePhysicalMB)) * 100.0f;
+	float UsagePercent = (Snapshot.UsedPhysicalMB / (Snapshot.UsedPhysicalMB + Snapshot.AvailablePhysicalMB)) * HorrorMemoryDiagnostics::PercentMultiplier;
 
-	if (UsagePercent > 90.0f)
+	if (UsagePercent > HorrorMemoryDiagnostics::CriticalUsagePercent)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CRITICAL: Memory usage at %.1f%% (%.2f MB used)"),
 			UsagePercent, Snapshot.UsedPhysicalMB);
 	}
-	else if (UsagePercent > 80.0f)
+	else if (UsagePercent > HorrorMemoryDiagnostics::WarningUsagePercent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WARNING: High memory usage at %.1f%% (%.2f MB used)"),
 			UsagePercent, Snapshot.UsedPhysicalMB);
@@ -90,10 +118,10 @@ void UMemoryDiagnostics::CheckMemoryThresholds(const FMemorySnapshot& Snapshot)
 	// Check for sudden spikes
 	if (MemoryHistory.Num() > 1)
 	{
-		const FMemorySnapshot& Previous = MemoryHistory[MemoryHistory.Num() - 2];
+		const FMemorySnapshot& Previous = MemoryHistory.Last(1);
 		float MemoryIncrease = Snapshot.UsedPhysicalMB - Previous.UsedPhysicalMB;
 
-		if (MemoryIncrease > 50.0f)
+		if (MemoryIncrease > HorrorMemoryDiagnostics::SpikeThresholdMB)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Memory spike detected: +%.2f MB in %.2f seconds"),
 				MemoryIncrease, MonitoringInterval);
@@ -103,11 +131,11 @@ void UMemoryDiagnostics::CheckMemoryThresholds(const FMemorySnapshot& Snapshot)
 
 void UMemoryDiagnostics::AnalyzeMemoryTrend()
 {
-	if (MemoryHistory.Num() < 10) return;
+	if (MemoryHistory.Num() < HorrorMemoryDiagnostics::LeakTrendSampleCount) return;
 
 	// Check for consistent memory growth (potential leak)
-	int32 StartIndex = FMath::Max(0, MemoryHistory.Num() - 10);
-	float StartMemory = MemoryHistory[StartIndex].UsedPhysicalMB;
+	int32 StartIndex = FMath::Max(0, MemoryHistory.Num() - HorrorMemoryDiagnostics::LeakTrendSampleCount);
+	float StartMemory = (MemoryHistory.GetData() + StartIndex)->UsedPhysicalMB;
 	float CurrentMemory = MemoryHistory.Last().UsedPhysicalMB;
 	float MemoryGrowth = CurrentMemory - StartMemory;
 
@@ -126,9 +154,9 @@ FHorrorMemoryDiagnosticsStats UMemoryDiagnostics::GetCurrentStats() const
 	if (MemoryHistory.Num() == 0)
 	{
 		FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-		Stats.CurrentUsedMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
-		Stats.AvailableMB = MemStats.AvailablePhysical / (1024.0f * 1024.0f);
-		Stats.UsagePercent = (Stats.CurrentUsedMB / (Stats.CurrentUsedMB + Stats.AvailableMB)) * 100.0f;
+		Stats.CurrentUsedMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedPhysical);
+		Stats.AvailableMB = HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.AvailablePhysical);
+		Stats.UsagePercent = (Stats.CurrentUsedMB / (Stats.CurrentUsedMB + Stats.AvailableMB)) * HorrorMemoryDiagnostics::PercentMultiplier;
 		return Stats;
 	}
 
@@ -147,7 +175,7 @@ FHorrorMemoryDiagnosticsStats UMemoryDiagnostics::GetCurrentStats() const
 	Stats.PeakUsedMB = PeakUsed;
 	Stats.AverageUsedMB = TotalUsed / MemoryHistory.Num();
 	Stats.AvailableMB = Latest.AvailablePhysicalMB;
-	Stats.UsagePercent = (Stats.CurrentUsedMB / (Stats.CurrentUsedMB + Stats.AvailableMB)) * 100.0f;
+	Stats.UsagePercent = (Stats.CurrentUsedMB / (Stats.CurrentUsedMB + Stats.AvailableMB)) * HorrorMemoryDiagnostics::PercentMultiplier;
 
 	return Stats;
 }
@@ -260,16 +288,19 @@ void UMemoryDiagnostics::DumpMemoryStats()
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
 
 	UE_LOG(LogTemp, Log, TEXT("=== MEMORY STATISTICS ==="));
-	UE_LOG(LogTemp, Log, TEXT("Total Physical: %.2f MB"), MemStats.TotalPhysical / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Used Physical: %.2f MB"), MemStats.UsedPhysical / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Peak Used Physical: %.2f MB"), MemStats.PeakUsedPhysical / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Available Physical: %.2f MB"), MemStats.AvailablePhysical / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Total Virtual: %.2f MB"), MemStats.TotalVirtual / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Used Virtual: %.2f MB"), MemStats.UsedVirtual / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Peak Used Virtual: %.2f MB"), MemStats.PeakUsedVirtual / (1024.0f * 1024.0f));
-	UE_LOG(LogTemp, Log, TEXT("Available Virtual: %.2f MB"), MemStats.AvailableVirtual / (1024.0f * 1024.0f));
+	UE_LOG(LogTemp, Log, TEXT("Total Physical: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.TotalPhysical));
+	UE_LOG(LogTemp, Log, TEXT("Used Physical: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedPhysical));
+	UE_LOG(LogTemp, Log, TEXT("Peak Used Physical: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.PeakUsedPhysical));
+	UE_LOG(LogTemp, Log, TEXT("Available Physical: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.AvailablePhysical));
+	UE_LOG(LogTemp, Log, TEXT("Total Virtual: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.TotalVirtual));
+	UE_LOG(LogTemp, Log, TEXT("Used Virtual: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.UsedVirtual));
+	UE_LOG(LogTemp, Log, TEXT("Peak Used Virtual: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.PeakUsedVirtual));
+	UE_LOG(LogTemp, Log, TEXT("Available Virtual: %.2f MB"), HorrorMemoryDiagnostics::BytesToMegabytes(MemStats.AvailableVirtual));
 
 	// Execute engine memory commands
-	GetWorld()->Exec(GetWorld(), TEXT("stat memory"));
-	GetWorld()->Exec(GetWorld(), TEXT("memreport"));
+	if (UWorld* World = GetWorld())
+	{
+		World->Exec(World, TEXT("stat memory"));
+		World->Exec(World, TEXT("memreport"));
+	}
 }

@@ -7,9 +7,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$VaultRoot = "D:\gptzuo\ContextVault"
-$DashboardFile = "$VaultRoot\DASHBOARD.md"
+. (Join-Path $PSScriptRoot "MonitoringCommon.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$WorkspaceRoot = Split-Path -Parent (Split-Path -Parent $ProjectRoot)
+$VaultRoot = if ($env:CONTEXTVAULT_ROOT) { $env:CONTEXTVAULT_ROOT } else { Join-Path $WorkspaceRoot "ContextVault" }
+$DashboardFile = Join-Path $VaultRoot "DASHBOARD.md"
 
 Write-Host "=== Dashboard Update Script ===" -ForegroundColor Cyan
 Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
@@ -101,7 +104,7 @@ if (Test-Path $DashboardFile) {
 }
 
 # Update PROGRESS_TRACKER.md
-$trackerFile = "$VaultRoot\PROGRESS_TRACKER.md"
+$trackerFile = Join-Path $VaultRoot "PROGRESS_TRACKER.md"
 if (Test-Path $trackerFile) {
     $trackerContent = Get-Content $trackerFile -Raw
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -111,7 +114,7 @@ if (Test-Path $trackerFile) {
 }
 
 # Update ALERTS.md
-$alertsFile = "$VaultRoot\ALERTS.md"
+$alertsFile = Join-Path $VaultRoot "ALERTS.md"
 if (Test-Path $alertsFile) {
     $alertsContent = Get-Content $alertsFile -Raw
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"

@@ -3,12 +3,17 @@
 # Optimizes mesh complexity and LOD settings
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Optimization\Meshes",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [switch]$DryRun = $false
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Optimization\Meshes" }
 
 Write-Host "=== Mesh Optimization Tool ===" -ForegroundColor Cyan
 Write-Host "Mode: $(if ($DryRun) { 'Dry Run (Preview Only)' } else { 'Execute' })"

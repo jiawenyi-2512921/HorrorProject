@@ -6,6 +6,9 @@
 #include "UObject/NoExportTypes.h"
 #include "InputValidator.generated.h"
 
+/**
+ * Defines Input Validator behavior for the Security module.
+ */
 UCLASS()
 class HORRORPROJECT_API UInputValidator : public UObject
 {

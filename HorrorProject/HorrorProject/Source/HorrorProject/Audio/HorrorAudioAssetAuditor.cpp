@@ -5,6 +5,17 @@
 #include "Misc/FileHelper.h"
 #include "HAL/PlatformFileManager.h"
 
+namespace HorrorAudioAudit
+{
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float KilobytesPerMegabyte = 1024.0f;
+	constexpr float ShortSoundDurationSeconds = 2.0f;
+	constexpr float LongStreamingDurationSeconds = 10.0f;
+	constexpr int32 MaxRecommendedSampleRate = 48000;
+	constexpr int32 AmbientSampleRateThreshold = 44100;
+	constexpr int32 MaxStereoChannelCount = 2;
+}
+
 TArray<FAudioAssetReport> UHorrorAudioAssetAuditor::AuditAllAudioAssets(const FString& ContentPath)
 {
 	TArray<FAudioAssetReport> Reports;
@@ -58,6 +69,20 @@ void UHorrorAudioAssetAuditor::GenerateAuditReport(const TArray<FAudioAssetRepor
 	FString ReportContent = TEXT("Horror Project Audio Asset Audit Report\n");
 	ReportContent += TEXT("========================================\n\n");
 
+	AppendAuditSummary(ReportContent, Reports);
+	ReportContent += TEXT("Detailed Asset Reports:\n");
+	ReportContent += TEXT("----------------------\n\n");
+
+	for (const FAudioAssetReport& Report : Reports)
+	{
+		AppendAssetReport(ReportContent, Report);
+	}
+
+	FFileHelper::SaveStringToFile(ReportContent, *OutputPath);
+}
+
+void UHorrorAudioAssetAuditor::AppendAuditSummary(FString& ReportContent, const TArray<FAudioAssetReport>& Reports)
+{
 	int32 TotalAssets = Reports.Num();
 	int32 AssetsNeedingOptimization = 0;
 	float TotalDuration = 0.0f;
@@ -76,37 +101,32 @@ void UHorrorAudioAssetAuditor::GenerateAuditReport(const TArray<FAudioAssetRepor
 	ReportContent += FString::Printf(TEXT("Total Assets: %d\n"), TotalAssets);
 	ReportContent += FString::Printf(TEXT("Assets Needing Optimization: %d (%.1f%%)\n"),
 		AssetsNeedingOptimization,
-		TotalAssets > 0 ? (float)AssetsNeedingOptimization / TotalAssets * 100.0f : 0.0f);
+		TotalAssets > 0 ? (float)AssetsNeedingOptimization / TotalAssets * HorrorAudioAudit::PercentMultiplier : 0.0f);
 	ReportContent += FString::Printf(TEXT("Total Duration: %.2f seconds\n"), TotalDuration);
-	ReportContent += FString::Printf(TEXT("Total Size: %.2f MB\n\n"), TotalSize / 1024.0f);
+	ReportContent += FString::Printf(TEXT("Total Size: %.2f MB\n\n"), TotalSize / HorrorAudioAudit::KilobytesPerMegabyte);
+}
 
-	ReportContent += TEXT("Detailed Asset Reports:\n");
-	ReportContent += TEXT("----------------------\n\n");
+void UHorrorAudioAssetAuditor::AppendAssetReport(FString& ReportContent, const FAudioAssetReport& Report)
+{
+	ReportContent += FString::Printf(TEXT("Asset: %s\n"), *Report.AssetName);
+	ReportContent += FString::Printf(TEXT("  Path: %s\n"), *Report.AssetPath);
+	ReportContent += FString::Printf(TEXT("  Sample Rate: %d Hz\n"), Report.SampleRate);
+	ReportContent += FString::Printf(TEXT("  Channels: %d\n"), Report.NumChannels);
+	ReportContent += FString::Printf(TEXT("  Duration: %.2f seconds\n"), Report.Duration);
+	ReportContent += FString::Printf(TEXT("  Size: %d KB\n"), Report.FileSizeKB);
+	ReportContent += FString::Printf(TEXT("  Compression: %s\n"), *Report.CompressionQuality);
+	ReportContent += FString::Printf(TEXT("  Looping: %s\n"), Report.bIsLooping ? TEXT("Yes") : TEXT("No"));
 
-	for (const FAudioAssetReport& Report : Reports)
+	if (Report.bNeedsOptimization && Report.OptimizationSuggestions.Num() > 0)
 	{
-		ReportContent += FString::Printf(TEXT("Asset: %s\n"), *Report.AssetName);
-		ReportContent += FString::Printf(TEXT("  Path: %s\n"), *Report.AssetPath);
-		ReportContent += FString::Printf(TEXT("  Sample Rate: %d Hz\n"), Report.SampleRate);
-		ReportContent += FString::Printf(TEXT("  Channels: %d\n"), Report.NumChannels);
-		ReportContent += FString::Printf(TEXT("  Duration: %.2f seconds\n"), Report.Duration);
-		ReportContent += FString::Printf(TEXT("  Size: %d KB\n"), Report.FileSizeKB);
-		ReportContent += FString::Printf(TEXT("  Compression: %s\n"), *Report.CompressionQuality);
-		ReportContent += FString::Printf(TEXT("  Looping: %s\n"), Report.bIsLooping ? TEXT("Yes") : TEXT("No"));
-
-		if (Report.bNeedsOptimization && Report.OptimizationSuggestions.Num() > 0)
+		ReportContent += TEXT("  Optimization Suggestions:\n");
+		for (const FString& Suggestion : Report.OptimizationSuggestions)
 		{
-			ReportContent += TEXT("  Optimization Suggestions:\n");
-			for (const FString& Suggestion : Report.OptimizationSuggestions)
-			{
-				ReportContent += FString::Printf(TEXT("    - %s\n"), *Suggestion);
-			}
+			ReportContent += FString::Printf(TEXT("    - %s\n"), *Suggestion);
 		}
-
-		ReportContent += TEXT("\n");
 	}
 
-	FFileHelper::SaveStringToFile(ReportContent, *OutputPath);
+	ReportContent += TEXT("\n");
 }
 
 bool UHorrorAudioAssetAuditor::OptimizeAudioAsset(USoundWave* SoundWave, bool bForceMonoForShortSounds, int32 TargetSampleRate)
@@ -158,7 +178,7 @@ bool UHorrorAudioAssetAuditor::ShouldBeMonoSound(USoundWave* SoundWave)
 		return false;
 	}
 
-	if (SoundWave->Duration < 2.0f)
+	if (SoundWave->Duration < HorrorAudioAudit::ShortSoundDurationSeconds)
 	{
 		return true;
 	}
@@ -184,13 +204,14 @@ bool UHorrorAudioAssetAuditor::ShouldReduceSampleRate(USoundWave* SoundWave)
 
 	int32 CurrentSampleRate = SoundWave->GetSampleRateForCurrentPlatform();
 
-	if (CurrentSampleRate > 48000)
+	if (CurrentSampleRate > HorrorAudioAudit::MaxRecommendedSampleRate)
 	{
 		return true;
 	}
 
 	FString AssetName = SoundWave->GetName().ToLower();
-	if ((AssetName.Contains(TEXT("ambient")) || AssetName.Contains(TEXT("background"))) && CurrentSampleRate > 44100)
+	if ((AssetName.Contains(TEXT("ambient")) || AssetName.Contains(TEXT("background")))
+		&& CurrentSampleRate > HorrorAudioAudit::AmbientSampleRateThreshold)
 	{
 		return true;
 	}
@@ -208,42 +229,45 @@ FString UHorrorAudioAssetAuditor::GetCompressionQualityString(USoundWave* SoundW
 	return TEXT("Platform Default");
 }
 
-void UHorrorAudioAssetAuditor::AddOptimizationSuggestions(FAudioAssetReport& Report, USoundWave* SoundWave)
+void UHorrorAudioAssetAuditor::AddOptimizationSuggestions(FAudioAssetReport& OutReport, USoundWave* SoundWave)
 {
 	if (!SoundWave)
 	{
 		return;
 	}
 
-	Report.bNeedsOptimization = false;
+	OutReport.bNeedsOptimization = false;
 
 	if (ShouldBeMonoSound(SoundWave) && SoundWave->NumChannels > 1)
 	{
-		Report.OptimizationSuggestions.Add(TEXT("Convert to mono - short sound effects don't benefit from stereo"));
-		Report.bNeedsOptimization = true;
+		OutReport.OptimizationSuggestions.Add(TEXT("Convert to mono - short sound effects don't benefit from stereo"));
+		OutReport.bNeedsOptimization = true;
 	}
 
 	if (ShouldReduceSampleRate(SoundWave))
 	{
-		Report.OptimizationSuggestions.Add(FString::Printf(TEXT("Reduce sample rate from %d Hz to 44100 Hz"), Report.SampleRate));
-		Report.bNeedsOptimization = true;
+		OutReport.OptimizationSuggestions.Add(FString::Printf(
+			TEXT("Reduce sample rate from %d Hz to %d Hz"),
+			OutReport.SampleRate,
+			HorrorAudioAudit::AmbientSampleRateThreshold));
+		OutReport.bNeedsOptimization = true;
 	}
 
-	if (Report.Duration > 10.0f && !SoundWave->bStreaming)
+	if (OutReport.Duration > HorrorAudioAudit::LongStreamingDurationSeconds && !SoundWave->bStreaming)
 	{
-		Report.OptimizationSuggestions.Add(TEXT("Enable streaming for long audio files"));
-		Report.bNeedsOptimization = true;
+		OutReport.OptimizationSuggestions.Add(TEXT("Enable streaming for long audio files"));
+		OutReport.bNeedsOptimization = true;
 	}
 
-	if (Report.NumChannels > 2)
+	if (OutReport.NumChannels > HorrorAudioAudit::MaxStereoChannelCount)
 	{
-		Report.OptimizationSuggestions.Add(FString::Printf(TEXT("Reduce channels from %d to stereo (2)"), Report.NumChannels));
-		Report.bNeedsOptimization = true;
+		OutReport.OptimizationSuggestions.Add(FString::Printf(TEXT("Reduce channels from %d to stereo (2)"), OutReport.NumChannels));
+		OutReport.bNeedsOptimization = true;
 	}
 
 	FString AssetName = SoundWave->GetName().ToLower();
 	if (AssetName.Contains(TEXT("ambient")) && !SoundWave->bLooping)
 	{
-		Report.OptimizationSuggestions.Add(TEXT("Consider enabling looping for ambient sounds"));
+		OutReport.OptimizationSuggestions.Add(TEXT("Consider enabling looping for ambient sounds"));
 	}
 }

@@ -10,6 +10,13 @@ class UBoxComponent;
 class USphereComponent;
 class UShapeComponent;
 
+namespace HorrorAudioZoneTriggerDefaults
+{
+	inline constexpr float BoxExtentXYCm = 500.0f;
+	inline constexpr float BoxExtentZCm = 200.0f;
+	inline constexpr float SphereRadiusCm = 500.0f;
+}
+
 UENUM(BlueprintType)
 enum class EHorrorAudioZoneTriggerShape : uint8
 {
@@ -17,6 +24,9 @@ enum class EHorrorAudioZoneTriggerShape : uint8
 	Sphere UMETA(DisplayName="Sphere")
 };
 
+/**
+ * Defines Horror Audio Zone Trigger behavior for the Audio module.
+ */
 UCLASS(ClassGroup=(Horror), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UHorrorAudioZoneTrigger : public UActorComponent
 {
@@ -35,10 +45,13 @@ public:
 	EHorrorAudioZoneTriggerShape TriggerShape = EHorrorAudioZoneTriggerShape::Box;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Audio", meta=(EditCondition="TriggerShape == EHorrorAudioZoneTriggerShape::Box", EditConditionHides))
-	FVector BoxExtent = FVector(500.0f, 500.0f, 200.0f);
+	FVector BoxExtent = FVector(
+		HorrorAudioZoneTriggerDefaults::BoxExtentXYCm,
+		HorrorAudioZoneTriggerDefaults::BoxExtentXYCm,
+		HorrorAudioZoneTriggerDefaults::BoxExtentZCm);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Audio", meta=(EditCondition="TriggerShape == EHorrorAudioZoneTriggerShape::Sphere", EditConditionHides, ClampMin="0.0"))
-	float SphereRadius = 500.0f;
+	float SphereRadius = HorrorAudioZoneTriggerDefaults::SphereRadiusCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Audio")
 	bool bAutoActivateTrigger = true;

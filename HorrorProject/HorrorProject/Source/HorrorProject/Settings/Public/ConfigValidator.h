@@ -62,6 +62,8 @@ public:
 	FValidationResult GetLastValidationResult() const { return LastValidationResult; }
 
 private:
+	void ValidateGraphicsQualitySettings(const UGraphicsSettings* Settings);
+	void ValidateGraphicsDisplaySettings(UGraphicsSettings* Settings);
 	bool ValidateResolution(const FIntPoint& Resolution);
 	bool ValidateVolumeRange(float Volume);
 	bool ValidateKeyBindings(UControlSettings* Settings);

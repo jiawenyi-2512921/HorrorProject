@@ -5,6 +5,9 @@
 #include "AchievementDefinition.h"
 #include "AchievementNotification.generated.h"
 
+/**
+ * Defines Achievement Notification behavior for the Achievements module.
+ */
 UCLASS()
 class HORRORPROJECT_API UAchievementNotification : public UUserWidget
 {

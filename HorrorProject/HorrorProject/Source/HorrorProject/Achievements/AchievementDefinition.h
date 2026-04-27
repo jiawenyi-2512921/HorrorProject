@@ -112,6 +112,9 @@ struct FAchievementData
 	{}
 };
 
+/**
+ * Defines Achievement Definition Catalog data used by the Achievements module.
+ */
 UCLASS()
 class HORRORPROJECT_API UAchievementDefinitionCatalog : public UDataAsset
 {

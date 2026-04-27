@@ -111,7 +111,7 @@ void UPerformanceProfiler::RecordSample(const FName& ScopeName, double DurationM
 	}
 }
 
-FHorrorPerformanceScopeStats UPerformanceProfiler::GetStats(FName ScopeName) const
+FHorrorPerformanceScopeStats UPerformanceProfiler::GetStats(const FName& ScopeName) const
 {
 	FScopeLock Lock(&const_cast<FCriticalSection&>(DataMutex));
 
@@ -192,19 +192,5 @@ UPerformanceProfiler* UPerformanceProfiler::Get(UWorld* World)
 		return nullptr;
 	}
 
-	// Store in world subsystem or game instance
-	// For simplicity, using a static instance per world
-	static TMap<UWorld*, UPerformanceProfiler*> WorldProfilers;
-
-	UPerformanceProfiler** Found = WorldProfilers.Find(World);
-	if (Found && *Found)
-	{
-		return *Found;
-	}
-
-	UPerformanceProfiler* NewProfiler = NewObject<UPerformanceProfiler>();
-	NewProfiler->AddToRoot(); // Prevent GC
-	WorldProfilers.Add(World, NewProfiler);
-
-	return NewProfiler;
+	return World->GetSubsystem<UPerformanceProfiler>();
 }

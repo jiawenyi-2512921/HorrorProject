@@ -36,7 +36,14 @@ bool ABaseInteractable::Interact_Implementation(AActor* InstigatorActor, const F
 
 	// Update state
 	bHasBeenInteracted = true;
-	LastInteractionTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+	if (const UWorld* World = GetWorld())
+	{
+		LastInteractionTime = World->GetTimeSeconds();
+	}
+	else
+	{
+		LastInteractionTime = 0.0f;
+	}
 
 	// Play sound
 	PlayInteractionSound();
@@ -79,10 +86,11 @@ void ABaseInteractable::OnInteract(AActor* InstigatorActor, const FHitResult& Hi
 
 void ABaseInteractable::PlayInteractionSound() const
 {
-	if (InteractionSound && GetWorld())
+	UWorld* World = GetWorld();
+	if (InteractionSound && World)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			GetWorld(),
+			World,
 			InteractionSound,
 			GetActorLocation()
 		);

@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -18,7 +18,11 @@ class UVHSEffectComponent;
 class UFlashlightComponent;
 class UFearComponent;
 class UNoiseGeneratorComponent;
+class UEvidenceCollectionComponent;
 
+/**
+ * Implements actor-level Horror Player Character behavior for the Player module.
+ */
 UCLASS()
 class HORRORPROJECT_API AHorrorPlayerCharacter : public AHorrorCharacter
 {
@@ -35,6 +39,7 @@ public:
 	UFlashlightComponent* GetFlashlightComponent() const { return Flashlight; }
 	UFearComponent* GetFearComponent() const { return Fear; }
 	UNoiseGeneratorComponent* GetNoiseGeneratorComponent() const { return NoiseGenerator; }
+	UEvidenceCollectionComponent* GetEvidenceCollectionComponent() const { return EvidenceCollection; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
@@ -137,4 +142,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UNoiseGeneratorComponent> NoiseGenerator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UEvidenceCollectionComponent> EvidenceCollection;
 };

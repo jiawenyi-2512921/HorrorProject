@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "ObjectPoolSubsystem.generated.h"
 
@@ -49,6 +50,12 @@ class HORRORPROJECT_API UObjectPoolSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	static constexpr int32 DefaultConfiguredMaxPoolSize = 64;
+	static constexpr float DefaultConfiguredCleanupInterval = 30.0f;
+	static constexpr float DefaultObjectTimeoutSeconds = 60.0f;
+	static constexpr int32 DefaultMaxAudioComponents = 32;
+	static constexpr int32 DefaultMaxNiagaraComponents = 48;
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
@@ -95,19 +102,19 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Performance|ObjectPool")
-	int32 DefaultMaxPoolSize = 64;
+	int32 DefaultMaxPoolSize = DefaultConfiguredMaxPoolSize;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Performance|ObjectPool")
-	float DefaultCleanupInterval = 30.0f;
+	float DefaultCleanupInterval = DefaultConfiguredCleanupInterval;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Performance|ObjectPool")
-	float ObjectTimeoutSeconds = 60.0f;
+	float ObjectTimeoutSeconds = DefaultObjectTimeoutSeconds;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Performance|ObjectPool")
-	int32 MaxAudioComponents = 32;
+	int32 MaxAudioComponents = DefaultMaxAudioComponents;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Performance|ObjectPool")
-	int32 MaxNiagaraComponents = 48;
+	int32 MaxNiagaraComponents = DefaultMaxNiagaraComponents;
 
 private:
 	UPROPERTY(Transient)
@@ -117,7 +124,7 @@ private:
 	TMap<UClass*, int32> MaxPoolSizes;
 
 	float LastCleanupTime = 0.0f;
-	float CleanupInterval = 30.0f;
+	float CleanupInterval = DefaultConfiguredCleanupInterval;
 	FTimerHandle CleanupTimerHandle;
 
 	void CleanupPools();
@@ -130,6 +137,8 @@ template<typename T>
 T* UObjectPoolSubsystem::AcquireObject(UObject* Outer)
 {
 	UClass* ObjectClass = T::StaticClass();
+	UWorld* World = GetWorld();
+	const float CurrentTime = World ? World->GetTimeSeconds() : 0.0f;
 
 	// Try to find available object in pool
 	FPooledObjectEntry* Entry = FindAvailableEntry(ObjectClass);
@@ -137,7 +146,7 @@ T* UObjectPoolSubsystem::AcquireObject(UObject* Outer)
 	if (Entry && Entry->Object)
 	{
 		Entry->bInUse = true;
-		Entry->LastUsedTime = GetWorld()->GetTimeSeconds();
+		Entry->LastUsedTime = CurrentTime;
 		Entry->UseCount++;
 		ResetPooledObject(Entry->Object);
 		return Cast<T>(Entry->Object);
@@ -145,7 +154,8 @@ T* UObjectPoolSubsystem::AcquireObject(UObject* Outer)
 
 	// Create new object if pool is empty or below max size
 	FPooledObjectEntryArray& Pool = ObjectPools.FindOrAdd(ObjectClass);
-	int32 MaxSize = MaxPoolSizes.Contains(ObjectClass) ? MaxPoolSizes[ObjectClass] : DefaultMaxPoolSize;
+	const int32* MaxSizeOverride = MaxPoolSizes.Find(ObjectClass);
+	int32 MaxSize = MaxSizeOverride ? *MaxSizeOverride : DefaultMaxPoolSize;
 
 	if (Pool.Entries.Num() < MaxSize)
 	{
@@ -154,7 +164,7 @@ T* UObjectPoolSubsystem::AcquireObject(UObject* Outer)
 		FPooledObjectEntry NewEntry;
 		NewEntry.Object = CreatedObject;
 		NewEntry.bInUse = true;
-		NewEntry.LastUsedTime = GetWorld()->GetTimeSeconds();
+		NewEntry.LastUsedTime = CurrentTime;
 		NewEntry.UseCount = 1;
 
 		Pool.Entries.Add(NewEntry);
@@ -185,7 +195,8 @@ void UObjectPoolSubsystem::ReleaseObject(T* Object)
 		if (Entry.Object == Object)
 		{
 			Entry.bInUse = false;
-			Entry.LastUsedTime = GetWorld()->GetTimeSeconds();
+			UWorld* World = GetWorld();
+			Entry.LastUsedTime = World ? World->GetTimeSeconds() : 0.0f;
 			ResetPooledObject(Object);
 			break;
 		}

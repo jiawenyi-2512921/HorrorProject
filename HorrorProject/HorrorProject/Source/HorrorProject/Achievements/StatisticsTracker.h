@@ -5,6 +5,9 @@
 #include "Components/ActorComponent.h"
 #include "StatisticsTracker.generated.h"
 
+/**
+ * Defines Statistics Tracker behavior for the Achievements module.
+ */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UStatisticsTracker : public UActorComponent
 {

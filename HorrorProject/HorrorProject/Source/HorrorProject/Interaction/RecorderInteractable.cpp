@@ -8,6 +8,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 
+namespace
+{
+	const FVector RecorderInteractionExtent(50.0f, 50.0f, 50.0f);
+}
+
 ARecorderInteractable::ARecorderInteractable()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -21,7 +26,7 @@ ARecorderInteractable::ARecorderInteractable()
 
 	InteractionVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionVolume"));
 	InteractionVolume->SetupAttachment(RecorderMesh);
-	InteractionVolume->SetBoxExtent(FVector(50.0f, 50.0f, 50.0f));
+	InteractionVolume->SetBoxExtent(RecorderInteractionExtent);
 	InteractionVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractionVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -64,12 +69,15 @@ void ARecorderInteractable::BeginPlay()
 
 void ARecorderInteractable::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-
 	if (AudioFinishedTimer.IsValid())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(AudioFinishedTimer);
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(AudioFinishedTimer);
+		}
 	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ARecorderInteractable::Tick(float DeltaTime)

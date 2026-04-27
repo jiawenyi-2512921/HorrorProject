@@ -4,6 +4,12 @@
 #include "Internationalization/Culture.h"
 #include "Internationalization/Internationalization.h"
 
+namespace
+{
+	constexpr float GameplayDefaultAutoSaveIntervalSeconds = 300.0f;
+	constexpr float GameplayDefaultFieldOfView = 90.0f;
+}
+
 UGameplaySettings::UGameplaySettings()
 {
 	Difficulty = EDifficultyLevel::Normal;
@@ -19,12 +25,12 @@ UGameplaySettings::UGameplaySettings()
 	HUDOpacity = 1.0f;
 
 	bEnableAutoSave = true;
-	AutoSaveInterval = 300.0f;
+	AutoSaveInterval = GameplayDefaultAutoSaveIntervalSeconds;
 	bEnableQuickTimeEvents = true;
 	bEnableTutorialHints = true;
 	bEnableObjectiveHints = true;
 
-	FieldOfView = 90.0f;
+	FieldOfView = GameplayDefaultFieldOfView;
 	bEnableCameraShake = true;
 	CameraShakeIntensity = 1.0f;
 	bEnableHeadBob = true;

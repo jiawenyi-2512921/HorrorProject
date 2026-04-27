@@ -37,11 +37,10 @@ public:
 	static TArray<FAssetValidationResult> GetValidationResults();
 
 private:
+	static bool ValidateLoadedAsset(UObject* Asset, FAssetValidationResult& Result);
 	static bool ValidateTexture(UObject* Asset, FAssetValidationResult& Result);
 	static bool ValidateStaticMesh(UObject* Asset, FAssetValidationResult& Result);
 	static bool ValidateMaterial(UObject* Asset, FAssetValidationResult& Result);
 	static bool ValidateSound(UObject* Asset, FAssetValidationResult& Result);
 	static bool ValidateBlueprint(UObject* Asset, FAssetValidationResult& Result);
-
-	static TArray<FAssetValidationResult> ValidationResults;
 };

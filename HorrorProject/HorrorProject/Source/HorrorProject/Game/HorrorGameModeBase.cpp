@@ -16,6 +16,15 @@
 
 namespace
 {
+	struct FHorrorGameModeDefaultMilestoneMetadata
+	{
+		FGameplayTag EventTag;
+		FName SourceId;
+		FName TrailerBeatId;
+		const TCHAR* HintFallback;
+		const TCHAR* DebugLabel;
+	};
+
 	void PublishFoundFootageEvents(
 		UWorld* World,
 		const FHorrorFoundFootageContract& Contract,
@@ -38,6 +47,18 @@ namespace
 			EventBus->Publish(RecordedEvent.EventTag, RecordedEvent.SourceId, Contract.GetStateForEvent(RecordedEvent.EventTag), SourceObject);
 		}
 	}
+
+	void RegisterHorrorGameModeMilestoneMetadata(
+		UHorrorEventBusSubsystem& EventBus,
+		const FHorrorGameModeDefaultMilestoneMetadata& Default)
+	{
+		FHorrorObjectiveMessageMetadata Metadata;
+		Metadata.TrailerBeatId = Default.TrailerBeatId;
+		Metadata.ObjectiveHint = FText::AsCultureInvariant(Default.HintFallback);
+		Metadata.DebugLabel = FText::AsCultureInvariant(Default.DebugLabel);
+		EventBus.RegisterObjectiveMetadata(Default.EventTag, Default.SourceId, Metadata);
+	}
+
 }
 
 namespace HorrorObjectiveMilestoneCheckpoints
@@ -55,6 +76,31 @@ namespace HorrorObjectiveMilestoneSources
 	const FName FirstAnomaly(TEXT("FirstAnomaly"));
 	const FName Archive(TEXT("Archive"));
 	const FName Exit(TEXT("Exit"));
+}
+
+namespace
+{
+	FName GetHorrorGameModeMilestoneCheckpoint(FGameplayTag StateTag)
+	{
+		if (StateTag == HorrorFoundFootageTags::FirstNoteCollectedState())
+		{
+			return HorrorObjectiveMilestoneCheckpoints::FirstNoteCollected;
+		}
+		if (StateTag == HorrorFoundFootageTags::FirstAnomalyRecordedState())
+		{
+			return HorrorObjectiveMilestoneCheckpoints::FirstAnomalyRecorded;
+		}
+		if (StateTag == HorrorFoundFootageTags::ArchiveReviewedState())
+		{
+			return HorrorObjectiveMilestoneCheckpoints::ArchiveReviewed;
+		}
+		if (StateTag == HorrorFoundFootageTags::ExitUnlockedState())
+		{
+			return HorrorObjectiveMilestoneCheckpoints::ExitUnlocked;
+		}
+
+		return NAME_None;
+	}
 }
 
 AHorrorGameModeBase::AHorrorGameModeBase()
@@ -427,58 +473,17 @@ void AHorrorGameModeBase::RegisterDefaultObjectiveMetadata()
 		return;
 	}
 
-	const struct FDefaultMilestoneMetadata
-	{
-		FGameplayTag EventTag;
-		FName SourceId;
-		FName TrailerBeatId;
-		const TCHAR* HintFallback;
-		const TCHAR* DebugLabel;
-	} Defaults[] = {
-		{
-			HorrorFoundFootageTags::BodycamAcquiredEvent(),
-			HorrorObjectiveMilestoneSources::Bodycam,
-			TEXT("Trailer.Beat.BodycamAcquired"),
-			TEXT("Bodycam online — keep it raised."),
-			TEXT("Bodycam Acquired")
-		},
-		{
-			HorrorFoundFootageTags::FirstNoteCollectedEvent(),
-			HorrorObjectiveMilestoneSources::FirstNote,
-			TEXT("Trailer.Beat.FirstNote"),
-			TEXT("Note logged — find the first anomaly."),
-			TEXT("First Note Collected")
-		},
-		{
-			HorrorFoundFootageTags::FirstAnomalyRecordedEvent(),
-			HorrorObjectiveMilestoneSources::FirstAnomaly,
-			TEXT("Trailer.Beat.FirstAnomaly"),
-			TEXT("Anomaly captured — head to the archive terminal."),
-			TEXT("First Anomaly Recorded")
-		},
-		{
-			HorrorFoundFootageTags::ArchiveReviewedEvent(),
-			HorrorObjectiveMilestoneSources::Archive,
-			TEXT("Trailer.Beat.ArchiveReviewed"),
-			TEXT("Archive review complete — exit unlocking."),
-			TEXT("Archive Reviewed")
-		},
-		{
-			HorrorFoundFootageTags::ExitUnlockedEvent(),
-			HorrorObjectiveMilestoneSources::Exit,
-			TEXT("Trailer.Beat.ExitUnlocked"),
-			TEXT("Exit unlocked — get out."),
-			TEXT("Exit Unlocked")
-		}
+	const FHorrorGameModeDefaultMilestoneMetadata Defaults[] = {
+		{ HorrorFoundFootageTags::BodycamAcquiredEvent(), HorrorObjectiveMilestoneSources::Bodycam, TEXT("Trailer.Beat.BodycamAcquired"), TEXT("Bodycam online — keep it raised."), TEXT("Bodycam Acquired") },
+		{ HorrorFoundFootageTags::FirstNoteCollectedEvent(), HorrorObjectiveMilestoneSources::FirstNote, TEXT("Trailer.Beat.FirstNote"), TEXT("Note logged — find the first anomaly."), TEXT("First Note Collected") },
+		{ HorrorFoundFootageTags::FirstAnomalyRecordedEvent(), HorrorObjectiveMilestoneSources::FirstAnomaly, TEXT("Trailer.Beat.FirstAnomaly"), TEXT("Anomaly captured — head to the archive terminal."), TEXT("First Anomaly Recorded") },
+		{ HorrorFoundFootageTags::ArchiveReviewedEvent(), HorrorObjectiveMilestoneSources::Archive, TEXT("Trailer.Beat.ArchiveReviewed"), TEXT("Archive review complete — exit unlocking."), TEXT("Archive Reviewed") },
+		{ HorrorFoundFootageTags::ExitUnlockedEvent(), HorrorObjectiveMilestoneSources::Exit, TEXT("Trailer.Beat.ExitUnlocked"), TEXT("Exit unlocked — get out."), TEXT("Exit Unlocked") }
 	};
 
-	for (const FDefaultMilestoneMetadata& Default : Defaults)
+	for (const FHorrorGameModeDefaultMilestoneMetadata& Default : Defaults)
 	{
-		FHorrorObjectiveMessageMetadata Metadata;
-		Metadata.TrailerBeatId = Default.TrailerBeatId;
-		Metadata.ObjectiveHint = FText::AsCultureInvariant(Default.HintFallback);
-		Metadata.DebugLabel = FText::AsCultureInvariant(Default.DebugLabel);
-		EventBus->RegisterObjectiveMetadata(Default.EventTag, Default.SourceId, Metadata);
+		RegisterHorrorGameModeMilestoneMetadata(*EventBus, Default);
 	}
 }
 
@@ -489,6 +494,12 @@ void AHorrorGameModeBase::HandleObjectiveStateChange(FGameplayTag StateTag)
 		return;
 	}
 
+	HandleEncounterObjectiveStateChange(StateTag);
+	HandleAutosaveObjectiveStateChange(StateTag);
+}
+
+void AHorrorGameModeBase::HandleEncounterObjectiveStateChange(FGameplayTag StateTag)
+{
 	if (AHorrorEncounterDirector* EncounterDirector = EnsureEncounterDirector())
 	{
 		if (StateTag == HorrorFoundFootageTags::FirstNoteCollectedState())
@@ -507,22 +518,14 @@ void AHorrorGameModeBase::HandleObjectiveStateChange(FGameplayTag StateTag)
 			EncounterDirector->ResolveEncounter();
 		}
 	}
+}
 
-	if (StateTag == HorrorFoundFootageTags::FirstNoteCollectedState())
+void AHorrorGameModeBase::HandleAutosaveObjectiveStateChange(FGameplayTag StateTag)
+{
+	const FName CheckpointId = GetHorrorGameModeMilestoneCheckpoint(StateTag);
+	if (!CheckpointId.IsNone())
 	{
-		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::FirstNoteCollected);
-	}
-	else if (StateTag == HorrorFoundFootageTags::FirstAnomalyRecordedState())
-	{
-		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::FirstAnomalyRecorded);
-	}
-	else if (StateTag == HorrorFoundFootageTags::ArchiveReviewedState())
-	{
-		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::ArchiveReviewed);
-	}
-	else if (StateTag == HorrorFoundFootageTags::ExitUnlockedState())
-	{
-		TryAutosaveOnMilestone(HorrorObjectiveMilestoneCheckpoints::ExitUnlocked);
+		TryAutosaveOnMilestone(CheckpointId);
 	}
 }
 

@@ -3,9 +3,15 @@
 
 param(
     [string]$InputFile,
-    [string]$LocalizationPath = "D:\gptzuo\HorrorProject\HorrorProject\Content\Localization",
+    [string]$LocalizationPath = "",
     [switch]$Merge = $false
 )
+
+$ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($LocalizationPath)) { $LocalizationPath = Join-Path $ProjectRoot "Content\Localization" }
 
 if (-not $InputFile) {
     Write-Host "Usage: .\ImportTranslations.ps1 -InputFile <path> [-Merge]"

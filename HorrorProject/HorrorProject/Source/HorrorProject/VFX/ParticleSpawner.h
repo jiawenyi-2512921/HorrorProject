@@ -45,12 +45,17 @@ struct FParticleSpawnSettings
 	bool bAttachToParent = false;
 };
 
+/**
+ * Defines Particle Spawner behavior for the VFX module.
+ */
 UCLASS(ClassGroup=(VFX), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UParticleSpawner : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultParticleLODDistance = 2000.0f;
+
 	UParticleSpawner();
 
 protected:
@@ -109,7 +114,7 @@ protected:
 	int32 MaxActiveParticles = 1000;
 
 	UPROPERTY(EditAnywhere, Category = "VFX|Performance")
-	float ParticleLODDistance = 2000.0f;
+	float ParticleLODDistance = DefaultParticleLODDistance;
 
 	UPROPERTY(EditAnywhere, Category = "VFX|Performance")
 	bool bEnableParticleLOD = true;
@@ -118,6 +123,10 @@ protected:
 	bool bEnableParticleCulling = true;
 
 private:
+	UNiagaraSystem* ResolveParticleSystem(EParticleEffectType EffectType) const;
+	UNiagaraComponent* SpawnAttachedToOwner(UNiagaraSystem* ParticleSystem, const FParticleSpawnSettings& Settings);
+	UNiagaraComponent* SpawnAtWorldLocation(UNiagaraSystem* ParticleSystem, const FParticleSpawnSettings& Settings);
+	void TrackSpawnedEffect(UNiagaraComponent* Effect);
 	void CleanupFinishedEffects();
 	void ApplyLODSettings(UNiagaraComponent* Effect);
 	bool CanSpawnNewEffect() const;

@@ -33,6 +33,9 @@ struct HORRORPROJECT_API FUnderwaterAudioConfig
 	float TransitionTime = 1.5f;
 };
 
+/**
+ * Adds Underwater Audio Component behavior to its owning actor in the Audio module.
+ */
 UCLASS(ClassGroup=(Audio), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UUnderwaterAudioComponent : public UAudioComponent
 {

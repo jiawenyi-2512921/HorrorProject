@@ -10,6 +10,9 @@
 class UEvidenceCollectionComponent;
 class UArchiveSubsystem;
 
+/**
+ * Exposes Blueprint helper functions for Evidence Blueprint Library workflows.
+ */
 UCLASS()
 class HORRORPROJECT_API UEvidenceBlueprintLibrary : public UBlueprintFunctionLibrary
 {

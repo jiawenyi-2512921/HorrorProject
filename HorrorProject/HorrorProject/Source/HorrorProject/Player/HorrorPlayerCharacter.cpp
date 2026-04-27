@@ -9,6 +9,7 @@
 #include "Player/Components/FlashlightComponent.h"
 #include "Player/Components/FearComponent.h"
 #include "Player/Components/NoiseGeneratorComponent.h"
+#include "Evidence/EvidenceCollectionComponent.h"
 
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
@@ -70,6 +71,7 @@ AHorrorPlayerCharacter::AHorrorPlayerCharacter()
 	Flashlight = CreateDefaultSubobject<UFlashlightComponent>(TEXT("Flashlight"));
 	Fear = CreateDefaultSubobject<UFearComponent>(TEXT("Fear"));
 	NoiseGenerator = CreateDefaultSubobject<UNoiseGeneratorComponent>(TEXT("NoiseGenerator"));
+	EvidenceCollection = CreateDefaultSubobject<UEvidenceCollectionComponent>(TEXT("EvidenceCollection"));
 	BindQuantumCameraDelegates();
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> InteractActionAsset(HorrorPlayerCharacterDefaults::InteractActionAssetPath);

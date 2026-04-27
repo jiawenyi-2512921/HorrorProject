@@ -70,43 +70,34 @@ FLinearColor AColorBlindMode::GetAccessibleAlternative(const FLinearColor& Color
 
 FMatrix AColorBlindMode::GetProtanopiaMatrix()
 {
-    // Protanopia (Red-blind) transformation matrix
-    FMatrix Matrix;
-    Matrix.M[0][0] = 0.567f; Matrix.M[0][1] = 0.433f; Matrix.M[0][2] = 0.0f;   Matrix.M[0][3] = 0.0f;
-    Matrix.M[1][0] = 0.558f; Matrix.M[1][1] = 0.442f; Matrix.M[1][2] = 0.0f;   Matrix.M[1][3] = 0.0f;
-    Matrix.M[2][0] = 0.0f;   Matrix.M[2][1] = 0.242f; Matrix.M[2][2] = 0.758f; Matrix.M[2][3] = 0.0f;
-    Matrix.M[3][0] = 0.0f;   Matrix.M[3][1] = 0.0f;   Matrix.M[3][2] = 0.0f;   Matrix.M[3][3] = 1.0f;
-    return Matrix;
+    return FMatrix(
+        FPlane(0.567f, 0.433f, 0.0f, 0.0f),
+        FPlane(0.558f, 0.442f, 0.0f, 0.0f),
+        FPlane(0.0f, 0.242f, 0.758f, 0.0f),
+        FPlane(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 FMatrix AColorBlindMode::GetDeuteranopiaMatrix()
 {
-    // Deuteranopia (Green-blind) transformation matrix
-    FMatrix Matrix;
-    Matrix.M[0][0] = 0.625f; Matrix.M[0][1] = 0.375f; Matrix.M[0][2] = 0.0f;   Matrix.M[0][3] = 0.0f;
-    Matrix.M[1][0] = 0.7f;   Matrix.M[1][1] = 0.3f;   Matrix.M[1][2] = 0.0f;   Matrix.M[1][3] = 0.0f;
-    Matrix.M[2][0] = 0.0f;   Matrix.M[2][1] = 0.3f;   Matrix.M[2][2] = 0.7f;   Matrix.M[2][3] = 0.0f;
-    Matrix.M[3][0] = 0.0f;   Matrix.M[3][1] = 0.0f;   Matrix.M[3][2] = 0.0f;   Matrix.M[3][3] = 1.0f;
-    return Matrix;
+    return FMatrix(
+        FPlane(0.625f, 0.375f, 0.0f, 0.0f),
+        FPlane(0.7f, 0.3f, 0.0f, 0.0f),
+        FPlane(0.0f, 0.3f, 0.7f, 0.0f),
+        FPlane(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 FMatrix AColorBlindMode::GetTritanopiaMatrix()
 {
-    // Tritanopia (Blue-blind) transformation matrix
-    FMatrix Matrix;
-    Matrix.M[0][0] = 0.95f;  Matrix.M[0][1] = 0.05f;  Matrix.M[0][2] = 0.0f;   Matrix.M[0][3] = 0.0f;
-    Matrix.M[1][0] = 0.0f;   Matrix.M[1][1] = 0.433f; Matrix.M[1][2] = 0.567f; Matrix.M[1][3] = 0.0f;
-    Matrix.M[2][0] = 0.0f;   Matrix.M[2][1] = 0.475f; Matrix.M[2][2] = 0.525f; Matrix.M[2][3] = 0.0f;
-    Matrix.M[3][0] = 0.0f;   Matrix.M[3][1] = 0.0f;   Matrix.M[3][2] = 0.0f;   Matrix.M[3][3] = 1.0f;
-    return Matrix;
+    return FMatrix(
+        FPlane(0.95f, 0.05f, 0.0f, 0.0f),
+        FPlane(0.0f, 0.433f, 0.567f, 0.0f),
+        FPlane(0.0f, 0.475f, 0.525f, 0.0f),
+        FPlane(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 FLinearColor AColorBlindMode::ApplyColorMatrix(const FLinearColor& Color, const FMatrix& Matrix)
 {
-    FLinearColor Result;
-    Result.R = Color.R * Matrix.M[0][0] + Color.G * Matrix.M[0][1] + Color.B * Matrix.M[0][2];
-    Result.G = Color.R * Matrix.M[1][0] + Color.G * Matrix.M[1][1] + Color.B * Matrix.M[1][2];
-    Result.B = Color.R * Matrix.M[2][0] + Color.G * Matrix.M[2][1] + Color.B * Matrix.M[2][2];
-    Result.A = Color.A;
-    return Result;
+    const FVector4 Source(Color.R, Color.G, Color.B, Color.A);
+    const FVector4 Transformed = Matrix.TransformFVector4(Source);
+    return FLinearColor(Transformed.X, Transformed.Y, Transformed.Z, Color.A);
 }

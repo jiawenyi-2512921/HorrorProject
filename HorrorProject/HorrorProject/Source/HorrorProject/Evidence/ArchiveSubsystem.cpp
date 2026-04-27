@@ -169,19 +169,56 @@ TArray<FName> UArchiveSubsystem::ExportArchiveState() const
 
 void UArchiveSubsystem::ImportArchiveState(const TArray<FName>& EntryIds)
 {
-	// This is a simplified import - in a real system you'd restore full metadata
-	// For now, just mark entries as existing
 	for (const FName& EntryId : EntryIds)
 	{
-		if (!ArchiveEntries.Contains(EntryId))
+		if (EntryId.IsNone() || ArchiveEntries.Contains(EntryId))
 		{
-			FArchiveEntry Entry;
-			Entry.EntryId = EntryId;
-			Entry.UnlockedTimestamp = FDateTime::Now();
-			Entry.bIsNew = false;
-			Entry.bIsViewed = true;
-			ArchiveEntries.Add(EntryId, Entry);
+			continue;
 		}
+
+		FArchiveEntry Entry;
+		Entry.EntryId = EntryId;
+		Entry.Metadata.EvidenceId = EntryId;
+		Entry.Metadata.DisplayName = FText::FromName(EntryId);
+		Entry.UnlockedTimestamp = FDateTime::Now();
+		Entry.bIsNew = false;
+		Entry.bIsViewed = true;
+		ArchiveEntries.Add(EntryId, Entry);
+	}
+}
+
+TArray<FArchiveEntry> UArchiveSubsystem::ExportArchiveEntries() const
+{
+	return GetAllArchiveEntries();
+}
+
+void UArchiveSubsystem::ImportArchiveEntries(const TArray<FArchiveEntry>& Entries)
+{
+	ArchiveEntries.Empty();
+
+	for (FArchiveEntry Entry : Entries)
+	{
+		if (Entry.EntryId.IsNone())
+		{
+			Entry.EntryId = Entry.Metadata.EvidenceId;
+		}
+
+		if (Entry.EntryId.IsNone())
+		{
+			continue;
+		}
+
+		if (Entry.Metadata.EvidenceId.IsNone())
+		{
+			Entry.Metadata.EvidenceId = Entry.EntryId;
+		}
+
+		if (Entry.UnlockedTimestamp == FDateTime())
+		{
+			Entry.UnlockedTimestamp = FDateTime::Now();
+		}
+
+		ArchiveEntries.Add(Entry.EntryId, Entry);
 	}
 }
 

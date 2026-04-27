@@ -15,22 +15,22 @@ struct FHorrorPerformanceDiagnosticsSnapshot
 	FDateTime Timestamp;
 
 	UPROPERTY(BlueprintReadOnly)
-	float DeltaTime;
+	float DeltaTime = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float FPS;
+	float FPS = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float GameThreadTime;
+	float GameThreadTime = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float RenderThreadTime;
+	float RenderThreadTime = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float GPUTime;
+	float GPUTime = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 ActorCount;
+	int32 ActorCount = 0;
 };
 
 USTRUCT(BlueprintType)

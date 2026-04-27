@@ -140,13 +140,14 @@ void UBreathingAudioComponent::UpdateBreathingState()
 void UBreathingAudioComponent::PlayBreathSound()
 {
 	const FBreathingStateConfig* Config = StateConfigs.Find(CurrentState);
-	if (!Config || !Config->BreathingSound || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!Config || !Config->BreathingSound || !World)
 	{
 		return;
 	}
 
 	UGameplayStatics::PlaySound2D(
-		GetWorld(),
+		World,
 		Config->BreathingSound,
 		Config->Volume,
 		Config->PitchMultiplier
@@ -169,16 +170,30 @@ void UBreathingAudioComponent::TransitionToState(EBreathingState NewState)
 
 	if (bIsBreathing && NewConfig->BreathingSound)
 	{
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			return;
+		}
+
 		FadeOut(TransitionTime * 0.5f, 0.0f);
 
 		FTimerHandle TransitionTimer;
-		GetWorld()->GetTimerManager().SetTimer(TransitionTimer, [this, NewConfig]()
+		const FBreathingStateConfig TargetConfig = *NewConfig;
+		TWeakObjectPtr<UBreathingAudioComponent> WeakThis(this);
+		World->GetTimerManager().SetTimer(TransitionTimer, [WeakThis, TargetConfig]()
 		{
-			SetSound(NewConfig->BreathingSound);
-			SetVolumeMultiplier(NewConfig->Volume);
-			SetPitchMultiplier(NewConfig->PitchMultiplier);
-			FadeIn(NewConfig->TransitionTime * 0.5f, NewConfig->Volume);
-			Play();
+			UBreathingAudioComponent* Component = WeakThis.Get();
+			if (!Component || !TargetConfig.BreathingSound)
+			{
+				return;
+			}
+
+			Component->SetSound(TargetConfig.BreathingSound);
+			Component->SetVolumeMultiplier(TargetConfig.Volume);
+			Component->SetPitchMultiplier(TargetConfig.PitchMultiplier);
+			Component->FadeIn(TargetConfig.TransitionTime * 0.5f, TargetConfig.Volume);
+			Component->Play();
 		}, TransitionTime * 0.5f, false);
 	}
 }

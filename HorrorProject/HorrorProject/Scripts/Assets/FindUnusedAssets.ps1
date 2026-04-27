@@ -2,11 +2,21 @@
 # Identifies assets that are not referenced by any other assets
 
 param(
-    [string]$ContentPath = "D:\gptzuo\HorrorProject\HorrorProject\Content",
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject\HorrorProject.uproject",
+    [string]$ContentPath = "",
+    [string]$ProjectPath = "",
     [switch]$ExcludeMaps = $false,
     [switch]$Verbose = $false
 )
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ContentPath)) {
+    $ContentPath = Join-Path $ProjectRoot "Content"
+}
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+}
 
 Write-Host "Finding unused assets in: $ContentPath" -ForegroundColor Cyan
 Write-Host "This script provides estimates - verify in UE5 Reference Viewer" -ForegroundColor Yellow

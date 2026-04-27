@@ -1,101 +1,167 @@
 # HorrorProject Asset Validator
-# Validates all asset references before packaging
+# Performs static asset checks that are safe to run in CI and daily automation.
 
 param(
-    [switch]$Fix = $false
+    [switch]$Fix = $false,
+    [int]$LargeAssetWarningMB = 100
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+
+. (Join-Path $PSScriptRoot "Validation\Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
 $ContentDir = Join-Path $ProjectRoot "Content"
+$ConfigDir = Join-Path $ProjectRoot "Config"
 
 Write-Host "=== HorrorProject Asset Validator ===" -ForegroundColor Cyan
+Write-Host "Project: $ProjectRoot" -ForegroundColor Yellow
 Write-Host ""
 
-$Issues = @()
+$Errors = New-Object System.Collections.Generic.List[string]
+$Warnings = New-Object System.Collections.Generic.List[string]
 
-# Check 1: Missing asset references
-Write-Host "[1/5] Checking for missing asset references..." -ForegroundColor Yellow
-$MissingRefs = @(
-    "/Game/FirstPerson/Anims/ABP_FP_Copy",
-    "/Game/FirstPerson/MI_FirstPersonColorway"
-)
+function Convert-GamePathToAssetFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$GamePath
+    )
 
-foreach ($Ref in $MissingRefs) {
-    $Path = $Ref -replace "/Game/", "$ContentDir\" -replace "/", "\"
-    $Path += ".uasset"
-    if (-not (Test-Path $Path)) {
-        $Issues += "Missing reference: $Ref"
+    if ($GamePath -notmatch '^/Game/') {
+        return $null
+    }
+
+    $relativePath = $GamePath.Substring('/Game/'.Length).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+    $assetPath = Join-Path $ContentDir $relativePath
+
+    return @(
+        "$assetPath.umap",
+        "$assetPath.uasset"
+    )
+}
+
+function Add-MapsToCookIssues {
+    $gameIni = Join-Path $ConfigDir "DefaultGame.ini"
+    if (-not (Test-Path -LiteralPath $gameIni)) {
+        $Errors.Add("Missing config file: $gameIni")
+        return
+    }
+
+    $mapsToCook = Select-String -LiteralPath $gameIni -Pattern '^\+MapsToCook=\(FilePath="([^"]+)"\)' |
+        ForEach-Object { $_.Matches[0].Groups[1].Value } |
+        Sort-Object -Unique
+
+    if (-not $mapsToCook) {
+        $Warnings.Add("No MapsToCook entries found in DefaultGame.ini")
+        return
+    }
+
+    foreach ($mapPath in $mapsToCook) {
+        $candidateFiles = Convert-GamePathToAssetFile -GamePath $mapPath
+        if (-not $candidateFiles) {
+            $Warnings.Add("MapsToCook entry is outside /Game and was not statically checked: $mapPath")
+            continue
+        }
+
+        if (-not ($candidateFiles | Where-Object { Test-Path -LiteralPath $_ })) {
+            $Errors.Add("MapsToCook entry does not exist on disk: $mapPath")
+        }
     }
 }
 
-# Check 2: Large texture files (>100MB)
-Write-Host "[2/5] Checking for oversized textures..." -ForegroundColor Yellow
-$LargeTextures = Get-ChildItem -Path $ContentDir -Recurse -Include "*.uasset" |
-    Where-Object { $_.Length -gt 100MB } |
-    Select-Object -First 10
+function Add-RequiredDirectoryIssues {
+    $requiredDirs = @(
+        (Join-Path $ContentDir "_SM13\Maps"),
+        (Join-Path $ContentDir "_SM13\Audio"),
+        (Join-Path $ContentDir "_SM13\UI"),
+        (Join-Path $ContentDir "_SM13\Blueprints")
+    )
 
-if ($LargeTextures) {
-    foreach ($Tex in $LargeTextures) {
-        $SizeMB = [math]::Round($Tex.Length / 1MB, 2)
-        $Issues += "Large texture: $($Tex.Name) ($SizeMB MB)"
+    foreach ($dir in $requiredDirs) {
+        if (-not (Test-Path -LiteralPath $dir)) {
+            $Errors.Add("Missing required directory: $dir")
+        }
     }
 }
 
-# Check 3: Unused demo content
-Write-Host "[3/5] Checking for unused demo content..." -ForegroundColor Yellow
-$DemoFolders = @(
-    "$ContentDir\Bodycam_VHS_Effect\DEMO",
-    "$ContentDir\FirstPerson"
-)
+function Add-ZeroByteAssetIssues {
+    $zeroByteAssets = Get-ChildItem -LiteralPath $ContentDir -Recurse -File -Include *.uasset, *.umap -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -eq 0 }
 
-foreach ($Folder in $DemoFolders) {
-    if (Test-Path $Folder) {
-        $Issues += "Demo content present: $Folder"
+    foreach ($asset in $zeroByteAssets) {
+        $Errors.Add("Zero-byte asset: $($asset.FullName)")
     }
 }
 
-# Check 4: MapsToCook configuration
-Write-Host "[4/5] Checking MapsToCook configuration..." -ForegroundColor Yellow
-$GameIni = Join-Path $ProjectRoot "Config\DefaultGame.ini"
-$GameIniContent = Get-Content $GameIni -Raw
+function Add-LargeAssetWarnings {
+    $thresholdBytes = $LargeAssetWarningMB * 1MB
+    $largeAssets = Get-ChildItem -LiteralPath $ContentDir -Recurse -File -Include *.uasset, *.umap -ErrorAction SilentlyContinue |
+        Where-Object { $_.Length -gt $thresholdBytes } |
+        Sort-Object Length -Descending |
+        Select-Object -First 20
 
-if ($GameIniContent -notmatch "SM13_Main") {
-    $Issues += "SM13_Main not in MapsToCook list"
-}
-
-# Check 5: Required directories
-Write-Host "[5/5] Checking required directories..." -ForegroundColor Yellow
-$RequiredDirs = @(
-    "$ContentDir\_SM13\Maps",
-    "$ContentDir\_SM13\Audio",
-    "$ContentDir\_SM13\UI",
-    "$ContentDir\_SM13\Blueprints"
-)
-
-foreach ($Dir in $RequiredDirs) {
-    if (-not (Test-Path $Dir)) {
-        $Issues += "Missing directory: $Dir"
+    foreach ($asset in $largeAssets) {
+        $sizeMB = [math]::Round($asset.Length / 1MB, 2)
+        $Warnings.Add("Large asset: $($asset.FullName) ($sizeMB MB)")
     }
 }
 
-# Report
-Write-Host ""
-if ($Issues.Count -eq 0) {
-    Write-Host "✓ All checks passed!" -ForegroundColor Green
-    exit 0
-} else {
-    Write-Host "✗ Found $($Issues.Count) issues:" -ForegroundColor Red
-    foreach ($Issue in $Issues) {
-        Write-Host "  - $Issue" -ForegroundColor Yellow
+function Invoke-AssetCleanup {
+    if (-not $Fix) {
+        return
     }
 
-    if ($Fix) {
+    Write-Host "Running safe cleanup..." -ForegroundColor Yellow
+    $emptyDirs = Get-ChildItem -LiteralPath $ContentDir -Recurse -Directory -ErrorAction SilentlyContinue |
+        Where-Object { -not (Get-ChildItem -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue) }
+
+    foreach ($dir in $emptyDirs) {
+        Write-Host "Removing empty directory: $($dir.FullName)" -ForegroundColor Gray
+        Remove-Item -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue
+    }
+}
+
+try {
+    Write-Host "[1/5] Checking content directory..." -ForegroundColor Yellow
+    if (-not (Test-Path -LiteralPath $ContentDir)) {
+        $Errors.Add("Missing content directory: $ContentDir")
+    }
+
+    Write-Host "[2/5] Checking MapsToCook entries..." -ForegroundColor Yellow
+    Add-MapsToCookIssues
+
+    Write-Host "[3/5] Checking required directories..." -ForegroundColor Yellow
+    Add-RequiredDirectoryIssues
+
+    Write-Host "[4/5] Checking zero-byte assets..." -ForegroundColor Yellow
+    Add-ZeroByteAssetIssues
+
+    Write-Host "[5/5] Checking large assets..." -ForegroundColor Yellow
+    Add-LargeAssetWarnings
+
+    Invoke-AssetCleanup
+
+    Write-Host ""
+    if ($Warnings.Count -gt 0) {
+        Write-Host "Warnings: $($Warnings.Count)" -ForegroundColor Yellow
+        foreach ($warning in $Warnings) {
+            Write-Host "  - $warning" -ForegroundColor Yellow
+        }
         Write-Host ""
-        Write-Host "Attempting automatic fixes..." -ForegroundColor Yellow
-        # Add fix logic here
-        Write-Host "Some issues require manual fixing in UE Editor" -ForegroundColor Yellow
     }
 
+    if ($Errors.Count -gt 0) {
+        Write-Host "Errors: $($Errors.Count)" -ForegroundColor Red
+        foreach ($errorItem in $Errors) {
+            Write-Host "  - $errorItem" -ForegroundColor Red
+        }
+        exit 1
+    }
+
+    Write-Host "Asset validation passed" -ForegroundColor Green
+    exit 0
+}
+catch {
+    Write-Host "Asset validation failed: $_" -ForegroundColor Red
     exit 1
 }

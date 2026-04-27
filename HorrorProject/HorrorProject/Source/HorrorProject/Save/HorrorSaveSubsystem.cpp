@@ -27,10 +27,10 @@ namespace
 		return Values.Contains(Query);
 	}
 
-	void RemoveObjectivePair(FHorrorFoundFootageSaveState& SaveState, FGameplayTag EventTag, FGameplayTag StateTag)
+	void RemoveObjectivePair(FHorrorFoundFootageSaveState& OutSaveState, FGameplayTag EventTag, FGameplayTag StateTag)
 	{
-		SaveState.RecordedObjectiveEvents.Remove(EventTag);
-		SaveState.CompletedObjectiveStates.Remove(StateTag);
+		OutSaveState.RecordedObjectiveEvents.Remove(EventTag);
+		OutSaveState.CompletedObjectiveStates.Remove(StateTag);
 	}
 
 	void SanitizeFoundFootageSaveStateForDay1Restore(

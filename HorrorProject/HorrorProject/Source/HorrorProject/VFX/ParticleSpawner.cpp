@@ -52,53 +52,17 @@ UNiagaraComponent* UParticleSpawner::SpawnEffect(EParticleEffectType EffectType,
 		return nullptr;
 	}
 
-	if (!ParticleSystems.Contains(EffectType) || !ParticleSystems[EffectType])
+	UNiagaraSystem* ParticleSystem = ResolveParticleSystem(EffectType);
+	if (!ParticleSystem)
 	{
 		return nullptr;
 	}
 
-	UNiagaraComponent* NewEffect = nullptr;
+	UNiagaraComponent* NewEffect = Settings.bAttachToParent
+		? SpawnAttachedToOwner(ParticleSystem, Settings)
+		: SpawnAtWorldLocation(ParticleSystem, Settings);
 
-	if (Settings.bAttachToParent && GetOwner())
-	{
-		NewEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
-			ParticleSystems[EffectType],
-			GetOwner()->GetRootComponent(),
-			NAME_None,
-			Settings.Location,
-			Settings.Rotation,
-			EAttachLocation::KeepRelativeOffset,
-			Settings.bAutoDestroy
-		);
-		if (NewEffect)
-		{
-			NewEffect->SetRelativeScale3D(Settings.Scale);
-		}
-	}
-	else
-	{
-		UWorld* World = GetWorld();
-		if (!World)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ParticleSpawner: World is null in SpawnEffect"));
-			return nullptr;
-		}
-
-		NewEffect = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			World,
-			ParticleSystems[EffectType],
-			Settings.Location,
-			Settings.Rotation,
-			Settings.Scale,
-			Settings.bAutoDestroy
-		);
-	}
-
-	if (NewEffect)
-	{
-		ActiveEffects.Add(NewEffect);
-		ApplyLODSettings(NewEffect);
-	}
+	TrackSpawnedEffect(NewEffect);
 
 	return NewEffect;
 }
@@ -120,13 +84,14 @@ UNiagaraComponent* UParticleSpawner::SpawnAttachedEffect(EParticleEffectType Eff
 		return nullptr;
 	}
 
-	if (!ParticleSystems.Contains(EffectType) || !ParticleSystems[EffectType])
+	TObjectPtr<UNiagaraSystem>* ParticleSystemPtr = ParticleSystems.Find(EffectType);
+	if (!ParticleSystemPtr || !*ParticleSystemPtr)
 	{
 		return nullptr;
 	}
 
 	UNiagaraComponent* NewEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
-		ParticleSystems[EffectType],
+		ParticleSystemPtr->Get(),
 		AttachToComponent,
 		SocketName,
 		FVector::ZeroVector,
@@ -198,7 +163,8 @@ void UParticleSpawner::UpdateParticleBudget(int32 MaxParticles)
 	// Stop excess effects if over budget
 	while (GetActiveParticleCount() > MaxActiveParticles && ActiveEffects.Num() > 0)
 	{
-		if (UNiagaraComponent* OldestEffect = ActiveEffects[0])
+		UNiagaraComponent* OldestEffect = ActiveEffects.IsEmpty() ? nullptr : ActiveEffects.GetData()[0];
+		if (OldestEffect)
 		{
 			StopEffect(OldestEffect, true);
 		}
@@ -246,4 +212,67 @@ void UParticleSpawner::ApplyLODSettings(UNiagaraComponent* Effect)
 bool UParticleSpawner::CanSpawnNewEffect() const
 {
 	return GetActiveParticleCount() < MaxActiveParticles;
+}
+
+UNiagaraSystem* UParticleSpawner::ResolveParticleSystem(EParticleEffectType EffectType) const
+{
+	const TObjectPtr<UNiagaraSystem>* ParticleSystemPtr = ParticleSystems.Find(EffectType);
+	return ParticleSystemPtr && *ParticleSystemPtr ? ParticleSystemPtr->Get() : nullptr;
+}
+
+UNiagaraComponent* UParticleSpawner::SpawnAttachedToOwner(UNiagaraSystem* ParticleSystem, const FParticleSpawnSettings& Settings)
+{
+	AActor* Owner = GetOwner();
+	USceneComponent* RootComponent = Owner ? Owner->GetRootComponent() : nullptr;
+	if (!RootComponent)
+	{
+		return nullptr;
+	}
+
+	UNiagaraComponent* NewEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		ParticleSystem,
+		RootComponent,
+		NAME_None,
+		Settings.Location,
+		Settings.Rotation,
+		EAttachLocation::KeepRelativeOffset,
+		Settings.bAutoDestroy
+	);
+
+	if (NewEffect)
+	{
+		NewEffect->SetRelativeScale3D(Settings.Scale);
+	}
+
+	return NewEffect;
+}
+
+UNiagaraComponent* UParticleSpawner::SpawnAtWorldLocation(UNiagaraSystem* ParticleSystem, const FParticleSpawnSettings& Settings)
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ParticleSpawner: World is null in SpawnEffect"));
+		return nullptr;
+	}
+
+	return UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		World,
+		ParticleSystem,
+		Settings.Location,
+		Settings.Rotation,
+		Settings.Scale,
+		Settings.bAutoDestroy
+	);
+}
+
+void UParticleSpawner::TrackSpawnedEffect(UNiagaraComponent* Effect)
+{
+	if (!Effect)
+	{
+		return;
+	}
+
+	ActiveEffects.Add(Effect);
+	ApplyLODSettings(Effect);
 }

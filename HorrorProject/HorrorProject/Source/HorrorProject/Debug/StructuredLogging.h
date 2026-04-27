@@ -26,7 +26,7 @@ struct FStructuredLogEntry
 	FDateTime Timestamp;
 
 	UPROPERTY(BlueprintReadOnly)
-	ELogLevel Level;
+	ELogLevel Level = ELogLevel::Info;
 
 	UPROPERTY(BlueprintReadOnly)
 	FString Category;
@@ -38,7 +38,7 @@ struct FStructuredLogEntry
 	FString SourceFile;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 LineNumber;
+	int32 LineNumber = 0;
 
 	UPROPERTY(BlueprintReadOnly)
 	TMap<FString, FString> Metadata;

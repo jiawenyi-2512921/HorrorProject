@@ -12,12 +12,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFlashlightToggledSignature, bool, b
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlashlightBatteryChangedSignature, float, BatteryPercent, float, BatterySeconds);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFlashlightBatteryDepletedSignature);
 
+/**
+ * Adds Flashlight Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UFlashlightComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultMaxBatterySeconds = 300.0f;
+
 	UFlashlightComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -65,10 +70,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Battery", meta=(ClampMin="0.0", Units="s"))
-	float MaxBatterySeconds = 300.0f;
+	float MaxBatterySeconds = DefaultMaxBatterySeconds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Battery", meta=(ClampMin="0.0", Units="s"))
-	float StartingBatterySeconds = 300.0f;
+	float StartingBatterySeconds = DefaultMaxBatterySeconds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Battery", meta=(ClampMin="0.0", ClampMax="100.0", Units="s"))
 	float BatteryDrainRate = 1.0f;
@@ -101,7 +106,7 @@ private:
 	bool bFlashlightOn = false;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, SaveGame, Category="Flashlight|Battery", meta=(AllowPrivateAccess="true"))
-	float BatterySeconds = 300.0f;
+	float BatterySeconds = DefaultMaxBatterySeconds;
 
 	float FlickerTime = 0.0f;
 	float BaseIntensity = 0.0f;

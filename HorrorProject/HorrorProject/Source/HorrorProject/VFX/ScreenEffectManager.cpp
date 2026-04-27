@@ -5,6 +5,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 
+namespace
+{
+	constexpr float BlurRecoveryOxygenThreshold = 50.0f;
+}
+
 UScreenEffectManager::UScreenEffectManager()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -49,10 +54,10 @@ void UScreenEffectManager::ApplyCameraShake(ECameraShakeType ShakeType, float In
 		return;
 	}
 
-	if (CameraShakeClasses.Contains(ShakeType) && CameraShakeClasses[ShakeType])
+	if (TSubclassOf<UCameraShakeBase>* ShakeClass = CameraShakeClasses.Find(ShakeType); ShakeClass && *ShakeClass)
 	{
 		float ClampedIntensity = FMath::Clamp(Intensity, 0.0f, MaxShakeIntensity);
-		ApplyShakeInternal(CameraShakeClasses[ShakeType], ClampedIntensity);
+		ApplyShakeInternal(*ShakeClass, ClampedIntensity);
 	}
 }
 
@@ -185,7 +190,7 @@ void UScreenEffectManager::UpdateScreenEffects(float DeltaTime)
 		DistortionAmount = FMath::Max(0.0f, DistortionAmount - DeltaTime * 0.5f);
 	}
 
-	if (BlurAmount > 0.0f && CurrentOxygen >= 50.0f)
+	if (BlurAmount > 0.0f && CurrentOxygen >= BlurRecoveryOxygenThreshold)
 	{
 		BlurAmount = FMath::Max(0.0f, BlurAmount - DeltaTime * 0.3f);
 	}

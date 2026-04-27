@@ -1,6 +1,14 @@
 #include "AchievementTracker.h"
 #include "AchievementSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace HorrorAchievementTracker
+{
+	constexpr float PerfectionistCompletionPercent = 99.0f;
+	constexpr float NervesOfSteelMinimumSanityPercent = 50.0f;
+	constexpr float SecondsPerHour = 3600.0f;
+}
 
 UAchievementTracker::UAchievementTracker()
 {
@@ -16,8 +24,17 @@ void UAchievementTracker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AchievementSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
-	GameStartTime = UGameplayStatics::GetTimeSeconds(GetWorld());
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	if (UGameInstance* GameInstance = World->GetGameInstance())
+	{
+		AchievementSubsystem = GameInstance->GetSubsystem<UAchievementSubsystem>();
+	}
+	GameStartTime = UGameplayStatics::GetTimeSeconds(World);
 }
 
 void UAchievementTracker::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -178,7 +195,7 @@ void UAchievementTracker::TrackGameComplete(float CompletionTime)
 	CheckChallengeAchievements();
 
 	// Check perfectionist
-	if (AchievementSubsystem->GetCompletionPercentage() >= 99.0f)
+	if (AchievementSubsystem->GetCompletionPercentage() >= HorrorAchievementTracker::PerfectionistCompletionPercent)
 	{
 		AchievementSubsystem->UnlockAchievement(FName("ACH_Perfectionist"));
 	}
@@ -253,7 +270,8 @@ void UAchievementTracker::CheckSurvivalAchievements()
 	}
 
 	// Nerves of Steel - sanity above 50%
-	if (MinSanityLevel >= 50.0f && AchievementSubsystem->IsAchievementUnlocked(FName("ACH_Escape")))
+	if (MinSanityLevel >= HorrorAchievementTracker::NervesOfSteelMinimumSanityPercent
+		&& AchievementSubsystem->IsAchievementUnlocked(FName("ACH_Escape")))
 	{
 		AchievementSubsystem->UnlockAchievement(FName("ACH_NervesOfSteel"));
 	}
@@ -266,7 +284,7 @@ void UAchievementTracker::CheckSpeedrunAchievements(float CompletionTime)
 		return;
 	}
 
-	float CompletionHours = CompletionTime / 3600.0f;
+	const float CompletionHours = CompletionTime / HorrorAchievementTracker::SecondsPerHour;
 
 	// Speed Runner - under 2 hours
 	if (CompletionHours < 2.0f)

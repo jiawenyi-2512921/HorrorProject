@@ -8,12 +8,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-$ProjectFile = Join-Path $ProjectRoot "HorrorProject.uproject"
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UE5Path = $UE5Root
-$UAT = Join-Path $UE5Path "Engine\Build\BatchFiles\RunUAT.bat"
-$UBT = Join-Path $UE5Path "Engine\Build\BatchFiles\Build.bat"
+
+$ValidationCommon = Join-Path $PSScriptRoot "Validation\Common.ps1"
+. $ValidationCommon
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$UE5Root = Get-HorrorUERoot
+$UAT = Get-HorrorBuildScript -UERoot $UE5Root -ScriptName "RunUAT.bat"
+$UBT = Get-HorrorBuildScript -UERoot $UE5Root -ScriptName "Build.bat"
 
 Write-Host "=== HorrorProject Build Script ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"

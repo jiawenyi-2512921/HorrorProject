@@ -3,11 +3,16 @@
 # Creates comprehensive optimization status report
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Reports"
+    [string]$ProjectPath = "",
+    [string]$OutputDir = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Reports" }
 
 Write-Host "=== Optimization Report Generator ===" -ForegroundColor Cyan
 Write-Host ""

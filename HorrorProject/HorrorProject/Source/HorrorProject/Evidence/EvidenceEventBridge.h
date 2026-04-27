@@ -11,6 +11,9 @@ class UEvidenceCollectionComponent;
 class UArchiveSubsystem;
 class UHorrorEventBusSubsystem;
 
+/**
+ * Defines Evidence Event Bridge behavior for the Evidence module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UEvidenceEventBridge : public UActorComponent
 {

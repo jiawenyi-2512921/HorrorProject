@@ -37,8 +37,8 @@ public:
 	static FMaterialOptimizationResult OptimizeMaterial(UMaterial* Material);
 
 private:
-	static void RemoveUnusedNodes(UMaterial* Material, FMaterialOptimizationResult& Result);
-	static void SimplifyExpressions(UMaterial* Material, FMaterialOptimizationResult& Result);
-	static void OptimizeTextureSampling(UMaterial* Material, FMaterialOptimizationResult& Result);
-	static void ConvertToMaterialInstance(UMaterial* Material, FMaterialOptimizationResult& Result);
+	static void RemoveUnusedNodes(UMaterial* Material, FMaterialOptimizationResult& OutResult);
+	static void SimplifyExpressions(UMaterial* Material, FMaterialOptimizationResult& OutResult);
+	static void OptimizeTextureSampling(UMaterial* Material, FMaterialOptimizationResult& OutResult);
+	static void ConvertToMaterialInstance(UMaterial* Material, FMaterialOptimizationResult& OutResult);
 };

@@ -7,6 +7,39 @@
 #include "Components/CapsuleComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
+namespace
+{
+	struct FFootstepSurfaceNameMatch
+	{
+		const TCHAR* Token;
+		EFootstepSurfaceType SurfaceType;
+	};
+
+	const FFootstepSurfaceNameMatch SurfaceNameMatches[] =
+	{
+		{ TEXT("Wood"), EFootstepSurfaceType::Wood },
+		{ TEXT("Metal"), EFootstepSurfaceType::Metal },
+		{ TEXT("Water"), EFootstepSurfaceType::Water },
+		{ TEXT("Grass"), EFootstepSurfaceType::Grass },
+		{ TEXT("Gravel"), EFootstepSurfaceType::Gravel },
+		{ TEXT("Carpet"), EFootstepSurfaceType::Carpet },
+		{ TEXT("Mud"), EFootstepSurfaceType::Mud },
+	};
+
+	EFootstepSurfaceType ResolveSurfaceTypeFromMaterialName(const FString& MaterialName)
+	{
+		for (const FFootstepSurfaceNameMatch& Match : SurfaceNameMatches)
+		{
+			if (MaterialName.Contains(Match.Token))
+			{
+				return Match.SurfaceType;
+			}
+		}
+
+		return EFootstepSurfaceType::Concrete;
+	}
+}
+
 UFootstepAudioComponent::UFootstepAudioComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -110,7 +143,8 @@ void UFootstepAudioComponent::SetCurrentSurface(EFootstepSurfaceType SurfaceType
 EFootstepSurfaceType UFootstepAudioComponent::DetectSurfaceType()
 {
 	AActor* Owner = GetOwner();
-	if (!Owner || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!Owner || !World)
 	{
 		return CurrentSurface;
 	}
@@ -122,7 +156,7 @@ EFootstepSurfaceType UFootstepAudioComponent::DetectSurfaceType()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(Owner);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
+	bool bHit = World->LineTraceSingleByChannel(
 		HitResult,
 		StartLocation,
 		EndLocation,
@@ -133,39 +167,7 @@ EFootstepSurfaceType UFootstepAudioComponent::DetectSurfaceType()
 	if (bHit && HitResult.PhysMaterial.IsValid())
 	{
 		UPhysicalMaterial* PhysMat = HitResult.PhysMaterial.Get();
-
-		if (PhysMat->GetName().Contains(TEXT("Wood")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Wood;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Metal")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Metal;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Water")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Water;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Grass")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Grass;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Gravel")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Gravel;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Carpet")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Carpet;
-		}
-		else if (PhysMat->GetName().Contains(TEXT("Mud")))
-		{
-			CurrentSurface = EFootstepSurfaceType::Mud;
-		}
-		else
-		{
-			CurrentSurface = EFootstepSurfaceType::Concrete;
-		}
+		CurrentSurface = ResolveSurfaceTypeFromMaterialName(PhysMat->GetName());
 	}
 
 	return CurrentSurface;
@@ -173,13 +175,15 @@ EFootstepSurfaceType UFootstepAudioComponent::DetectSurfaceType()
 
 void UFootstepAudioComponent::PlaySound(const TArray<TObjectPtr<USoundBase>>& Sounds, float VolumeMultiplier)
 {
-	if (Sounds.Num() == 0 || !GetWorld())
+	UWorld* World = GetWorld();
+	AActor* Owner = GetOwner();
+	if (Sounds.Num() == 0 || !World || !Owner)
 	{
 		return;
 	}
 
 	int32 RandomIndex = FMath::RandRange(0, Sounds.Num() - 1);
-	USoundBase* Sound = Sounds[RandomIndex];
+	USoundBase* Sound = (Sounds.GetData() + RandomIndex)->Get();
 
 	if (!Sound)
 	{
@@ -194,9 +198,9 @@ void UFootstepAudioComponent::PlaySound(const TArray<TObjectPtr<USoundBase>>& So
 	float FinalPitch = 1.0f + FMath::RandRange(-PitchVar, PitchVar);
 
 	UGameplayStatics::PlaySoundAtLocation(
-		GetWorld(),
+		World,
 		Sound,
-		GetOwner()->GetActorLocation(),
+		Owner->GetActorLocation(),
 		FinalVolume,
 		FinalPitch
 	);

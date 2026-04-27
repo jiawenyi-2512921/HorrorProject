@@ -39,6 +39,9 @@ struct FCameraShakeSettings
 	bool bOrientToCamera = true;
 };
 
+/**
+ * Defines Screen Effect Manager behavior for the VFX module.
+ */
 UCLASS(ClassGroup=(VFX), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UScreenEffectManager : public UActorComponent
 {

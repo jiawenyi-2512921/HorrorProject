@@ -12,12 +12,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBatteryDepletedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBatteryLowWarningSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBatteryChargingChangedSignature);
 
+/**
+ * Adds Camera Battery Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UCameraBatteryComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultChargeRate = 15.0f;
+	static constexpr float DefaultLowBatteryThreshold = 20.0f;
+
 	UCameraBatteryComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -86,10 +92,10 @@ protected:
 	float FlashlightDrainRate = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CameraBattery|Config", meta=(ClampMin="0.0"))
-	float ChargeRate = 15.0f;
+	float ChargeRate = DefaultChargeRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CameraBattery|Config", meta=(ClampMin="0.0", ClampMax="100.0"))
-	float LowBatteryThreshold = 20.0f;
+	float LowBatteryThreshold = DefaultLowBatteryThreshold;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CameraBattery|Events")
 	FGameplayTag BatteryDepletedEventTag;
@@ -102,6 +108,10 @@ protected:
 
 private:
 	void UpdateBattery(float DeltaTime);
+	float GetActiveDrainRate() const;
+	void ApplyChargingDelta(float DeltaTime);
+	void ApplyDrainDelta(float DeltaTime);
+	void HandleBatteryThresholdEvents();
 	void BroadcastBatteryChange();
 	void PublishEventBusEvent(FGameplayTag EventTag);
 

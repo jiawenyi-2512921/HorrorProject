@@ -43,6 +43,9 @@ struct HORRORPROJECT_API FAudioAssetReport
 	TArray<FString> OptimizationSuggestions;
 };
 
+/**
+ * Defines Horror Audio Asset Auditor behavior for the Audio module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorAudioAssetAuditor : public UObject
 {
@@ -58,15 +61,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Audio Audit")
 	static void GenerateAuditReport(const TArray<FAudioAssetReport>& Reports, const FString& OutputPath);
 
-	UFUNCTION(BlueprintCallable, Category="Audio Audit")
-	static bool OptimizeAudioAsset(USoundWave* SoundWave, bool bForceMonoForShortSounds = true, int32 TargetSampleRate = 44100);
+	UFUNCTION(BlueprintCallable, Category="Audio Audit", meta=(CPP_Default_bForceMonoForShortSounds="true", CPP_Default_TargetSampleRate="44100"))
+	static bool OptimizeAudioAsset(USoundWave* SoundWave, bool bForceMonoForShortSounds, int32 TargetSampleRate);
 
 	UFUNCTION(BlueprintCallable, Category="Audio Audit")
 	static void NormalizeVolumes(const TArray<USoundWave*>& SoundWaves, float TargetPeakDB = -3.0f);
 
 private:
+	static void AppendAuditSummary(FString& ReportContent, const TArray<FAudioAssetReport>& Reports);
+	static void AppendAssetReport(FString& ReportContent, const FAudioAssetReport& Report);
 	static bool ShouldBeMonoSound(USoundWave* SoundWave);
 	static bool ShouldReduceSampleRate(USoundWave* SoundWave);
 	static FString GetCompressionQualityString(USoundWave* SoundWave);
-	static void AddOptimizationSuggestions(FAudioAssetReport& Report, USoundWave* SoundWave);
+	static void AddOptimizationSuggestions(FAudioAssetReport& OutReport, USoundWave* SoundWave);
 };

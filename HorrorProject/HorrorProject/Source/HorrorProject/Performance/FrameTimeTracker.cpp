@@ -7,6 +7,12 @@
 #include "HAL/PlatformTime.h"
 #include "DynamicRHI.h"
 
+namespace HorrorFrameTimeTracker
+{
+	constexpr float MillisecondsPerSecond = 1000.0f;
+	constexpr float PercentMultiplier = 100.0f;
+}
+
 void UFrameTimeTracker::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -62,13 +68,13 @@ FFrameTimeStats UFrameTimeTracker::GetFrameTimeStats() const
 	}
 
 	const float AverageFrameTime = TotalFrameTime / FrameCount;
-	Stats.AverageFrameTimeMs = AverageFrameTime * 1000.0f;
+	Stats.AverageFrameTimeMs = AverageFrameTime * HorrorFrameTimeTracker::MillisecondsPerSecond;
 	Stats.AverageFPS = AverageFrameTime > 0.0f ? 1.0f / AverageFrameTime : 0.0f;
 
 	if (FrameTimeHistory.Num() > 0)
 	{
 		const float CurrentFrameTime = FrameTimeHistory.Last();
-		Stats.CurrentFrameTimeMs = CurrentFrameTime * 1000.0f;
+		Stats.CurrentFrameTimeMs = CurrentFrameTime * HorrorFrameTimeTracker::MillisecondsPerSecond;
 		Stats.CurrentFPS = CurrentFrameTime > 0.0f ? 1.0f / CurrentFrameTime : 0.0f;
 	}
 
@@ -76,7 +82,9 @@ FFrameTimeStats UFrameTimeTracker::GetFrameTimeStats() const
 	Stats.MaxFPS = MinFrameTime > 0.0f ? 1.0f / MinFrameTime : 0.0f;
 
 	Stats.FramesBelowTarget = FramesBelowTarget;
-	Stats.PercentBelowTarget = FrameCount > 0 ? (float)FramesBelowTarget / FrameCount * 100.0f : 0.0f;
+	Stats.PercentBelowTarget = FrameCount > 0
+		? (float)FramesBelowTarget / FrameCount * HorrorFrameTimeTracker::PercentMultiplier
+		: 0.0f;
 
 	// Get engine stats if available
 	if (GEngine)
@@ -132,15 +140,15 @@ bool UFrameTimeTracker::ExportToCSV(const FString& FilePath)
 
 	const float TargetFrameTime = 1.0f / TargetFPS;
 
-	for (int32 i = 0; i < FrameTimeHistory.Num(); ++i)
+	int32 FrameNumber = 0;
+	for (const float FrameTime : FrameTimeHistory)
 	{
-		const float FrameTime = FrameTimeHistory[i];
 		const float FPS = FrameTime > 0.0f ? 1.0f / FrameTime : 0.0f;
 		const bool bWithinBudget = FrameTime <= TargetFrameTime;
 
 		CSVContent += FString::Printf(TEXT("%d,%.4f,%.2f,%s\n"),
-			i,
-			FrameTime * 1000.0f,
+			FrameNumber++,
+			FrameTime * HorrorFrameTimeTracker::MillisecondsPerSecond,
 			FPS,
 			bWithinBudget ? TEXT("Yes") : TEXT("No"));
 	}

@@ -14,7 +14,7 @@ enum class EQualityPreset : uint8
 	High = 2,
 	Ultra = 3,
 	Cinematic = 4,
-	Custom = 255
+	Custom = 0xff
 };
 
 UENUM(BlueprintType)

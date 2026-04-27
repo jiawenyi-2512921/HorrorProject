@@ -2,19 +2,37 @@
 
 #include "TextLocalization.h"
 #include "LocalizationSubsystem.h"
+#include "HAL/CriticalSection.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/ScopeLock.h"
 
-static TMap<FString, FText> DynamicTexts;
+namespace
+{
+	FCriticalSection DynamicTextsCriticalSection;
+	TMap<FString, FText> DynamicTexts;
+}
 
 FText UTextLocalizationLibrary::GetLocalizedText(const FString& Namespace, const FString& Key)
 {
 	FString FullKey = Namespace.IsEmpty() ? Key : FString::Printf(TEXT("%s.%s"), *Namespace, *Key);
 
-	if (UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GEngine->GetWorld()))
 	{
-		if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
+		FScopeLock Lock(&DynamicTextsCriticalSection);
+		if (const FText* DynamicText = DynamicTexts.Find(FullKey))
 		{
-			return LocalizationSubsystem->GetLocalizedText(FullKey);
+			return *DynamicText;
+		}
+	}
+
+	UWorld* World = GEngine ? GEngine->GetWorld() : nullptr;
+	if (World)
+	{
+		if (UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(World))
+		{
+			if (ULocalizationSubsystem* LocalizationSubsystem = GameInstance->GetSubsystem<ULocalizationSubsystem>())
+			{
+				return LocalizationSubsystem->GetLocalizedText(FullKey);
+			}
 		}
 	}
 
@@ -24,15 +42,14 @@ FText UTextLocalizationLibrary::GetLocalizedText(const FString& Namespace, const
 FText UTextLocalizationLibrary::FormatLocalizedText(const FString& Key, const TArray<FString>& Arguments)
 {
 	FText BaseText = GetLocalizedText(TEXT(""), Key);
-	FString FormattedString = BaseText.ToString();
 
-	for (int32 i = 0; i < Arguments.Num(); ++i)
+	FFormatOrderedArguments OrderedArguments;
+	for (const FString& Argument : Arguments)
 	{
-		FString Placeholder = FString::Printf(TEXT("{%d}"), i);
-		FormattedString = FormattedString.Replace(*Placeholder, *Arguments[i]);
+		OrderedArguments.Add(FText::FromString(Argument));
 	}
 
-	return FText::FromString(FormattedString);
+	return FText::Format(BaseText, OrderedArguments);
 }
 
 FText UTextLocalizationLibrary::GetPluralText(const FString& Key, int32 Count)
@@ -45,6 +62,7 @@ FText UTextLocalizationLibrary::GetPluralText(const FString& Key, int32 Count)
 
 void UTextLocalizationLibrary::RegisterDynamicText(const FString& Key, const FText& Text)
 {
+	FScopeLock Lock(&DynamicTextsCriticalSection);
 	DynamicTexts.Add(Key, Text);
 }
 

@@ -8,12 +8,17 @@
 
 class UHorrorSaveSubsystem;
 
+/**
+ * Adds Auto Save Component behavior to its owning actor in the SaveGame module.
+ */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UAutoSaveComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultAutoSaveIntervalSeconds = 300.0f;
+
 	UAutoSaveComponent();
 
 	virtual void BeginPlay() override;
@@ -32,7 +37,7 @@ public:
 	bool bAutoSaveEnabled = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AutoSave", meta=(ClampMin="30.0", ClampMax="600.0"))
-	float AutoSaveIntervalSeconds = 300.0f;
+	float AutoSaveIntervalSeconds = DefaultAutoSaveIntervalSeconds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AutoSave")
 	int32 AutoSaveSlotIndex = 0;

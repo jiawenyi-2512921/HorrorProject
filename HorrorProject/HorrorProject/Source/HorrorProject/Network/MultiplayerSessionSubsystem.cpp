@@ -4,6 +4,40 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "Online/OnlineSessionNames.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
+
+namespace
+{
+constexpr int32 MaxPublicSessionConnections = 64;
+constexpr int32 MaxSessionNameLength = 64;
+
+const ULocalPlayer* GetSessionLocalPlayer(const UObject* WorldContext)
+{
+	if (!WorldContext)
+	{
+		return nullptr;
+	}
+
+	const UWorld* World = WorldContext->GetWorld();
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	return World->GetFirstLocalPlayerFromController();
+}
+
+const FOnlineSessionSearchResult* GetSessionSearchResult(const TSharedPtr<FOnlineSessionSearch>& SessionSearch, int32 Index)
+{
+	if (!SessionSearch.IsValid() || !SessionSearch->SearchResults.IsValidIndex(Index))
+	{
+		return nullptr;
+	}
+
+	return SessionSearch->SearchResults.GetData() + Index;
+}
+}
 
 UMultiplayerSessionSubsystem::UMultiplayerSessionSubsystem()
 {
@@ -53,45 +87,23 @@ void UMultiplayerSessionSubsystem::CreateSession(int32 NumPublicConnections, boo
 		return;
 	}
 
-	// Security: Validate input parameters
-	if (NumPublicConnections < 1 || NumPublicConnections > 64)
+	if (!ValidateCreateSessionRequest(NumPublicConnections, SessionName))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid NumPublicConnections: %d (must be 1-64)"), NumPublicConnections);
 		OnCreateSessionComplete.Broadcast(false);
 		return;
 	}
 
-	if (SessionName.IsEmpty() || SessionName.Len() > 64)
+	ResetExistingGameSession();
+	ConfigureSessionSettings(NumPublicConnections, bIsLAN, SanitizeSessionName(SessionName));
+
+	FUniqueNetIdRepl UserId;
+	if (!TryGetPreferredUserId(TEXT("create session"), UserId))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid SessionName length: %d"), SessionName.Len());
 		OnCreateSessionComplete.Broadcast(false);
 		return;
 	}
 
-	// Security: Sanitize session name
-	FString SanitizedName = SessionName;
-	SanitizedName.ReplaceInline(TEXT("<"), TEXT(""));
-	SanitizedName.ReplaceInline(TEXT(">"), TEXT(""));
-	SanitizedName.ReplaceInline(TEXT("&"), TEXT(""));
-
-	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
-	if (ExistingSession)
-	{
-		SessionInterface->DestroySession(NAME_GameSession);
-	}
-
-	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
-	LastSessionSettings->bIsLANMatch = bIsLAN;
-	LastSessionSettings->NumPublicConnections = NumPublicConnections;
-	LastSessionSettings->bAllowJoinInProgress = true;
-	LastSessionSettings->bAllowJoinViaPresence = true;
-	LastSessionSettings->bShouldAdvertise = true;
-	LastSessionSettings->bUsesPresence = true;
-	LastSessionSettings->bUseLobbiesIfAvailable = true;
-	LastSessionSettings->Set(FName("SessionName"), SanitizedName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-
-	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
+	if (!SessionInterface->CreateSession(*UserId, NAME_GameSession, *LastSessionSettings))
 	{
 		OnCreateSessionComplete.Broadcast(false);
 	}
@@ -118,8 +130,14 @@ void UMultiplayerSessionSubsystem::FindSessions(int32 MaxSearchResults, bool bIs
 	LastSessionSearch->bIsLanQuery = bIsLAN;
 	LastSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 
-	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
+	FUniqueNetIdRepl UserId;
+	if (!TryGetPreferredUserId(TEXT("find sessions"), UserId))
+	{
+		OnFindSessionsComplete.Broadcast(false);
+		return;
+	}
+
+	if (!SessionInterface->FindSessions(*UserId, LastSessionSearch.ToSharedRef()))
 	{
 		OnFindSessionsComplete.Broadcast(false);
 	}
@@ -133,8 +151,21 @@ void UMultiplayerSessionSubsystem::JoinSession(int32 SessionIndex)
 		return;
 	}
 
-	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, LastSessionSearch->SearchResults[SessionIndex]))
+	FUniqueNetIdRepl UserId;
+	if (!TryGetPreferredUserId(TEXT("join session"), UserId))
+	{
+		OnJoinSessionComplete.Broadcast(false);
+		return;
+	}
+
+	const FOnlineSessionSearchResult* SearchResult = GetSessionSearchResult(LastSessionSearch, SessionIndex);
+	if (!SearchResult)
+	{
+		OnJoinSessionComplete.Broadcast(false);
+		return;
+	}
+
+	if (!SessionInterface->JoinSession(*UserId, NAME_GameSession, *SearchResult))
 	{
 		OnJoinSessionComplete.Broadcast(false);
 	}
@@ -172,10 +203,10 @@ int32 UMultiplayerSessionSubsystem::GetFoundSessionsCount() const
 
 FString UMultiplayerSessionSubsystem::GetSessionName(int32 SessionIndex) const
 {
-	if (IsValidSessionIndex(SessionIndex))
+	if (const FOnlineSessionSearchResult* SearchResult = GetSessionSearchResult(LastSessionSearch, SessionIndex))
 	{
 		FString SessionName;
-		LastSessionSearch->SearchResults[SessionIndex].Session.SessionSettings.Get(FName("SessionName"), SessionName);
+		SearchResult->Session.SessionSettings.Get(FName("SessionName"), SessionName);
 		return SessionName;
 	}
 	return FString();
@@ -183,17 +214,22 @@ FString UMultiplayerSessionSubsystem::GetSessionName(int32 SessionIndex) const
 
 int32 UMultiplayerSessionSubsystem::GetSessionPing(int32 SessionIndex) const
 {
-	return IsValidSessionIndex(SessionIndex) ? LastSessionSearch->SearchResults[SessionIndex].PingInMs : 0;
+	const FOnlineSessionSearchResult* SearchResult = GetSessionSearchResult(LastSessionSearch, SessionIndex);
+	return SearchResult ? SearchResult->PingInMs : 0;
 }
 
 int32 UMultiplayerSessionSubsystem::GetSessionCurrentPlayers(int32 SessionIndex) const
 {
-	return IsValidSessionIndex(SessionIndex) ? LastSessionSearch->SearchResults[SessionIndex].Session.SessionSettings.NumPublicConnections - LastSessionSearch->SearchResults[SessionIndex].Session.NumOpenPublicConnections : 0;
+	const FOnlineSessionSearchResult* SearchResult = GetSessionSearchResult(LastSessionSearch, SessionIndex);
+	return SearchResult
+		? SearchResult->Session.SessionSettings.NumPublicConnections - SearchResult->Session.NumOpenPublicConnections
+		: 0;
 }
 
 int32 UMultiplayerSessionSubsystem::GetSessionMaxPlayers(int32 SessionIndex) const
 {
-	return IsValidSessionIndex(SessionIndex) ? LastSessionSearch->SearchResults[SessionIndex].Session.SessionSettings.NumPublicConnections : 0;
+	const FOnlineSessionSearchResult* SearchResult = GetSessionSearchResult(LastSessionSearch, SessionIndex);
+	return SearchResult ? SearchResult->Session.SessionSettings.NumPublicConnections : 0;
 }
 
 void UMultiplayerSessionSubsystem::OnCreateSessionCompleted(FName SessionName, bool bWasSuccessful)
@@ -219,7 +255,14 @@ void UMultiplayerSessionSubsystem::OnJoinSessionCompleted(FName SessionName, EOn
 		FString ConnectInfo;
 		if (SessionInterface->GetResolvedConnectString(NAME_GameSession, ConnectInfo))
 		{
-			if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+			UWorld* World = GetWorld();
+			if (!World)
+			{
+				OnJoinSessionComplete.Broadcast(false);
+				return;
+			}
+
+			if (APlayerController* PC = World->GetFirstPlayerController())
 			{
 				PC->ClientTravel(ConnectInfo, TRAVEL_Absolute);
 			}
@@ -244,4 +287,70 @@ void UMultiplayerSessionSubsystem::OnStartSessionCompleted(FName SessionName, bo
 bool UMultiplayerSessionSubsystem::IsValidSessionIndex(int32 Index) const
 {
 	return LastSessionSearch.IsValid() && LastSessionSearch->SearchResults.IsValidIndex(Index);
+}
+
+bool UMultiplayerSessionSubsystem::ValidateCreateSessionRequest(int32 NumPublicConnections, const FString& SessionName) const
+{
+	if (NumPublicConnections < 1 || NumPublicConnections > MaxPublicSessionConnections)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid NumPublicConnections: %d (must be 1-64)"), NumPublicConnections);
+		return false;
+	}
+
+	if (SessionName.IsEmpty() || SessionName.Len() > MaxSessionNameLength)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid SessionName length: %d"), SessionName.Len());
+		return false;
+	}
+
+	return true;
+}
+
+FString UMultiplayerSessionSubsystem::SanitizeSessionName(const FString& SessionName) const
+{
+	FString SanitizedName = SessionName;
+	SanitizedName.ReplaceInline(TEXT("<"), TEXT(""));
+	SanitizedName.ReplaceInline(TEXT(">"), TEXT(""));
+	SanitizedName.ReplaceInline(TEXT("&"), TEXT(""));
+	return SanitizedName;
+}
+
+void UMultiplayerSessionSubsystem::ResetExistingGameSession()
+{
+	if (SessionInterface->GetNamedSession(NAME_GameSession))
+	{
+		SessionInterface->DestroySession(NAME_GameSession);
+	}
+}
+
+void UMultiplayerSessionSubsystem::ConfigureSessionSettings(int32 NumPublicConnections, bool bIsLAN, const FString& SessionName)
+{
+	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
+	LastSessionSettings->bIsLANMatch = bIsLAN;
+	LastSessionSettings->NumPublicConnections = NumPublicConnections;
+	LastSessionSettings->bAllowJoinInProgress = true;
+	LastSessionSettings->bAllowJoinViaPresence = true;
+	LastSessionSettings->bShouldAdvertise = true;
+	LastSessionSettings->bUsesPresence = true;
+	LastSessionSettings->bUseLobbiesIfAvailable = true;
+	LastSessionSettings->Set(FName("SessionName"), SessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+}
+
+bool UMultiplayerSessionSubsystem::TryGetPreferredUserId(const TCHAR* OperationName, FUniqueNetIdRepl& OutUserId) const
+{
+	const ULocalPlayer* LocalPlayer = GetSessionLocalPlayer(this);
+	if (!LocalPlayer)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cannot %s: local player unavailable"), OperationName);
+		return false;
+	}
+
+	OutUserId = LocalPlayer->GetPreferredUniqueNetId();
+	if (!OutUserId.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cannot %s: local player has no valid online id"), OperationName);
+		return false;
+	}
+
+	return true;
 }

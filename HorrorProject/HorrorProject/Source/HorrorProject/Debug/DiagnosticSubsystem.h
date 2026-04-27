@@ -6,6 +6,15 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DiagnosticSubsystem.generated.h"
 
+namespace HorrorDiagnosticsDefaults
+{
+	inline constexpr float AutoDiagnosticsIntervalSeconds = 60.0f;
+	inline constexpr float MinAcceptableFPS = 30.0f;
+	inline constexpr float MaxMemoryUsageMB = 4096.0f;
+	inline constexpr int32 MaxActorCount = 10000;
+	inline constexpr int32 MaxDrawCalls = 5000;
+}
+
 UENUM(BlueprintType)
 enum class EDiagnosticSeverity : uint8
 {
@@ -27,7 +36,7 @@ struct FDiagnosticReport
 	FString Message;
 
 	UPROPERTY(BlueprintReadOnly)
-	EDiagnosticSeverity Severity;
+	EDiagnosticSeverity Severity = EDiagnosticSeverity::Info;
 
 	UPROPERTY(BlueprintReadOnly)
 	FDateTime Timestamp;
@@ -72,8 +81,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Diagnostics")
 	void ExportDiagnosticsToFile(const FString& FilePath);
 
-	UFUNCTION(BlueprintCallable, Category = "Diagnostics")
-	void SetAutoDiagnostics(bool bEnabled, float Interval = 60.0f);
+	UFUNCTION(BlueprintCallable, Category = "Diagnostics", meta=(CPP_Default_Interval="60.0"))
+	void SetAutoDiagnostics(bool bEnabled, float Interval);
 
 	void AddDiagnosticReport(const FString& Category, const FString& Message, EDiagnosticSeverity Severity);
 
@@ -97,14 +106,14 @@ protected:
 
 	// Thresholds
 	UPROPERTY(EditDefaultsOnly, Category = "Diagnostics")
-	float MinAcceptableFPS = 30.0f;
+	float MinAcceptableFPS = HorrorDiagnosticsDefaults::MinAcceptableFPS;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Diagnostics")
-	float MaxMemoryUsageMB = 4096.0f;
+	float MaxMemoryUsageMB = HorrorDiagnosticsDefaults::MaxMemoryUsageMB;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Diagnostics")
-	int32 MaxActorCount = 10000;
+	int32 MaxActorCount = HorrorDiagnosticsDefaults::MaxActorCount;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Diagnostics")
-	int32 MaxDrawCalls = 5000;
+	int32 MaxDrawCalls = HorrorDiagnosticsDefaults::MaxDrawCalls;
 };

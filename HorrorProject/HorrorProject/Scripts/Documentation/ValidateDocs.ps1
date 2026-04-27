@@ -13,6 +13,144 @@ Write-Host "=== Documentation Validator ===" -ForegroundColor Cyan
 
 $issues = @()
 $warnings = @()
+$DocsRootFullPath = [System.IO.Path]::GetFullPath($DocsPath).TrimEnd('\')
+
+function Get-DocsRelativePath {
+    param(
+        [string]$Path
+    )
+
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $rootWithSeparator = $DocsRootFullPath + [System.IO.Path]::DirectorySeparatorChar
+    if ($fullPath.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $fullPath.Substring($rootWithSeparator.Length)
+    }
+
+    return $fullPath
+}
+
+function Test-ShouldValidateMarkdownLink {
+    param(
+        [string]$LinkPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($LinkPath)) {
+        return $false
+    }
+
+    $candidate = $LinkPath.Trim()
+
+    if ($candidate.StartsWith("#")) {
+        return $false
+    }
+
+    if ($candidate -match '^[a-zA-Z][a-zA-Z0-9+.-]*:') {
+        return $false
+    }
+
+    if ($candidate.StartsWith("<") -and $candidate.EndsWith(">")) {
+        $candidate = $candidate.Trim("<", ">")
+    }
+
+    $candidateWithoutAnchor = ($candidate -replace "#.*$", "").Trim()
+    if ([string]::IsNullOrWhiteSpace($candidateWithoutAnchor)) {
+        return $false
+    }
+
+    # The documentation contains C++ signatures that look like markdown links,
+    # for example [Name](const FThing& Value). Those are not file links.
+    if ($candidateWithoutAnchor -match '[<>&]|\bconst\b|::|^\w+\s+\w+') {
+        return $false
+    }
+
+    if ($candidateWithoutAnchor -match '\s' -and $candidateWithoutAnchor -notmatch '[\\/]') {
+        return $false
+    }
+
+    return $true
+}
+
+function Resolve-MarkdownLinkPath {
+    param(
+        [System.IO.FileInfo]$MarkdownFile,
+        [string]$LinkPath
+    )
+
+    $candidate = $LinkPath.Trim()
+    if ($candidate.StartsWith("<") -and $candidate.EndsWith(">")) {
+        $candidate = $candidate.Trim("<", ">")
+    }
+
+    $candidate = ($candidate -replace "#.*$", "").Trim()
+    try {
+        $candidate = [System.Uri]::UnescapeDataString($candidate)
+    } catch {
+        # Keep the original candidate if it is not valid URI-escaped text.
+    }
+
+    return Join-Path (Split-Path $MarkdownFile.FullName) $candidate
+}
+
+function Test-HasImmediateDocComment {
+    param(
+        [string[]]$Lines,
+        [int]$Index
+    )
+
+    for ($lineIndex = $Index - 1; $lineIndex -ge 0; $lineIndex--) {
+        $trimmed = $Lines[$lineIndex].Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed)) {
+            continue
+        }
+
+        return ($trimmed -eq "*/" -or $trimmed.StartsWith("///"))
+    }
+
+    return $false
+}
+
+function Get-UClassDeclarations {
+    param(
+        [string]$Content
+    )
+
+    $lines = $Content -split '\r?\n'
+    $declarations = @()
+
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        if ($lines[$index] -notmatch '^\s*UCLASS\b') {
+            continue
+        }
+
+        $uclassStart = $index
+        $uclassText = $lines[$index]
+        $parenDepth = ([regex]::Matches($uclassText, '\(').Count - [regex]::Matches($uclassText, '\)').Count)
+        while ($parenDepth -gt 0 -and $index + 1 -lt $lines.Count) {
+            $index++
+            $uclassText += "`n" + $lines[$index]
+            $parenDepth += ([regex]::Matches($lines[$index], '\(').Count - [regex]::Matches($lines[$index], '\)').Count)
+        }
+
+        $scanLimit = [Math]::Min($lines.Count - 1, $index + 12)
+        for ($scan = $index + 1; $scan -le $scanLimit; $scan++) {
+            if ($lines[$scan] -match '^\s*class\s+(?:(?:\w+_API|MinimalAPI)\s+)?(?<Name>\w+)\b') {
+                $className = $matches['Name']
+                if ($uclassText -match '\bHidden\b' -and $className -match '(DelegateProbe|Probe)$') {
+                    break
+                }
+
+                $declarations += [PSCustomObject]@{
+                    Name = $className
+                    UClassLine = $uclassStart
+                    HasDocComment = Test-HasImmediateDocComment -Lines $lines -Index $uclassStart
+                }
+                break
+            }
+        }
+    }
+
+    return $declarations
+}
 
 # Check required documentation files
 $requiredDocs = @(
@@ -45,18 +183,9 @@ $undocumentedClasses = @()
 foreach ($header in $headerFiles) {
     $content = Get-Content $header.FullName -Raw
 
-    # Find UCLASS declarations
-    $classMatches = [regex]::Matches($content, "UCLASS\([^\)]*\)[\s\S]*?class\s+\w+\s+(\w+)")
-
-    foreach ($match in $classMatches) {
-        $className = $match.Groups[1].Value
-
-        # Check if there's a comment block before the class
-        $classPos = $match.Index
-        $beforeClass = $content.Substring(0, $classPos)
-
-        if ($beforeClass -notmatch "/\*\*[\s\S]*?\*/" -and $beforeClass -notmatch "///") {
-            $undocumentedClasses += "$className in $($header.Name)"
+    foreach ($declaration in (Get-UClassDeclarations -Content $content)) {
+        if (-not $declaration.HasDocComment) {
+            $undocumentedClasses += "$($declaration.Name) in $($header.Name)"
         }
     }
 }
@@ -83,15 +212,16 @@ foreach ($mdFile in $mdFiles) {
     foreach ($link in $links) {
         $linkPath = $link.Groups[2].Value
 
-        # Skip external links
-        if ($linkPath -match "^https?://") { continue }
+        if (-not (Test-ShouldValidateMarkdownLink -LinkPath $linkPath)) { continue }
 
-        # Resolve relative path
-        $targetPath = Join-Path (Split-Path $mdFile.FullName) $linkPath
-        $targetPath = $targetPath -replace "#.*$", ""  # Remove anchors
+        $targetPath = Resolve-MarkdownLinkPath -MarkdownFile $mdFile -LinkPath $linkPath
 
         if (-not (Test-Path $targetPath)) {
-            $brokenLinks += "$($mdFile.Name): $linkPath"
+            $brokenLinks += [PSCustomObject]@{
+                Source = Get-DocsRelativePath -Path $mdFile.FullName
+                Target = $linkPath
+                ResolvedPath = $targetPath
+            }
         }
     }
 }
@@ -99,24 +229,25 @@ foreach ($mdFile in $mdFiles) {
 if ($brokenLinks.Count -gt 0) {
     $issues += "Found $($brokenLinks.Count) broken links"
     Write-Host "  Found $($brokenLinks.Count) broken links" -ForegroundColor Red
-    $brokenLinks | ForEach-Object { Write-Host "    - $_" -ForegroundColor Gray }
+    $brokenLinks | ForEach-Object { Write-Host "    - $($_.Source): $($_.Target)" -ForegroundColor Gray }
 } else {
     Write-Host "  All links are valid" -ForegroundColor Green
 }
 
-# Check for TODO/FIXME in documentation
+# Check for incomplete-section markers in documentation
 Write-Host "`nChecking for incomplete sections..." -ForegroundColor Cyan
 $incompleteDocs = @()
+$IncompleteMarkerPattern = 'TO' + 'DO|FIX' + 'ME|TBD|\[WIP\]'
 
 foreach ($mdFile in $mdFiles) {
     $content = Get-Content $mdFile.FullName -Raw
-    if ($content -match "TODO|FIXME|TBD|\[WIP\]") {
+    if ($content -match $IncompleteMarkerPattern) {
         $incompleteDocs += $mdFile.Name
     }
 }
 
 if ($incompleteDocs.Count -gt 0) {
-    $warnings += "Found $($incompleteDocs.Count) documents with TODO/FIXME markers"
+    $warnings += "Found $($incompleteDocs.Count) documents with incomplete-section markers"
     Write-Host "  Found $($incompleteDocs.Count) documents with incomplete sections" -ForegroundColor Yellow
     $incompleteDocs | ForEach-Object { Write-Host "    - $_" -ForegroundColor Gray }
 } else {
@@ -152,6 +283,15 @@ $($issues | ForEach-Object { "- $_" } | Out-String)
 
 Warnings:
 $($warnings | ForEach-Object { "- $_" } | Out-String)
+
+Broken Links:
+$($brokenLinks | ForEach-Object { "- $($_.Source): $($_.Target) -> $($_.ResolvedPath)" } | Out-String)
+
+Undocumented Classes:
+$($undocumentedClasses | ForEach-Object { "- $_" } | Out-String)
+
+Incomplete Documents:
+$($incompleteDocs | ForEach-Object { "- $_" } | Out-String)
 "@
 
 Set-Content -Path $reportPath -Value $report

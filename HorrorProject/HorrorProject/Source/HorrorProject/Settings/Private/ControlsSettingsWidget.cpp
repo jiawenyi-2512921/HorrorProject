@@ -11,7 +11,15 @@ void UControlsSettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Get control settings
+	ResolveControlSettings();
+	BindMouseControls();
+	BindGamepadControls();
+	BindAccessibilityControls();
+	RefreshSettings();
+}
+
+void UControlsSettingsWidget::ResolveControlSettings()
+{
 	if (UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this))
 	{
 		if (UGameSettingsSubsystem* SettingsSubsystem = GameInstance->GetSubsystem<UGameSettingsSubsystem>())
@@ -19,8 +27,10 @@ void UControlsSettingsWidget::NativeConstruct()
 			ControlSettings = SettingsSubsystem->GetControlSettings();
 		}
 	}
+}
 
-	// Bind events
+void UControlsSettingsWidget::BindMouseControls()
+{
 	if (MouseSensitivitySlider)
 	{
 		MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &UControlsSettingsWidget::OnMouseSensitivityChanged);
@@ -35,7 +45,10 @@ void UControlsSettingsWidget::NativeConstruct()
 	{
 		MouseAccelerationCheckBox->OnCheckStateChanged.AddDynamic(this, &UControlsSettingsWidget::OnMouseAccelerationChanged);
 	}
+}
 
+void UControlsSettingsWidget::BindGamepadControls()
+{
 	if (GamepadSensitivitySlider)
 	{
 		GamepadSensitivitySlider->OnValueChanged.AddDynamic(this, &UControlsSettingsWidget::OnGamepadSensitivityChanged);
@@ -55,7 +68,10 @@ void UControlsSettingsWidget::NativeConstruct()
 	{
 		GamepadVibrationCheckBox->OnCheckStateChanged.AddDynamic(this, &UControlsSettingsWidget::OnGamepadVibrationChanged);
 	}
+}
 
+void UControlsSettingsWidget::BindAccessibilityControls()
+{
 	if (ToggleCrouchCheckBox)
 	{
 		ToggleCrouchCheckBox->OnCheckStateChanged.AddDynamic(this, &UControlsSettingsWidget::OnToggleCrouchChanged);
@@ -65,8 +81,6 @@ void UControlsSettingsWidget::NativeConstruct()
 	{
 		ToggleSprintCheckBox->OnCheckStateChanged.AddDynamic(this, &UControlsSettingsWidget::OnToggleSprintChanged);
 	}
-
-	RefreshSettings();
 }
 
 void UControlsSettingsWidget::RefreshSettings()
@@ -76,7 +90,13 @@ void UControlsSettingsWidget::RefreshSettings()
 		return;
 	}
 
-	// Update mouse settings
+	RefreshMouseControls();
+	RefreshGamepadControls();
+	RefreshAccessibilityControls();
+}
+
+void UControlsSettingsWidget::RefreshMouseControls()
+{
 	if (MouseSensitivitySlider)
 	{
 		MouseSensitivitySlider->SetValue(ControlSettings->MouseSensitivity);
@@ -91,8 +111,10 @@ void UControlsSettingsWidget::RefreshSettings()
 	{
 		MouseAccelerationCheckBox->SetIsChecked(ControlSettings->bEnableMouseAcceleration);
 	}
+}
 
-	// Update gamepad settings
+void UControlsSettingsWidget::RefreshGamepadControls()
+{
 	if (GamepadSensitivitySlider)
 	{
 		GamepadSensitivitySlider->SetValue(ControlSettings->GamepadSensitivity);
@@ -112,8 +134,10 @@ void UControlsSettingsWidget::RefreshSettings()
 	{
 		GamepadVibrationCheckBox->SetIsChecked(ControlSettings->bEnableGamepadVibration);
 	}
+}
 
-	// Update accessibility settings
+void UControlsSettingsWidget::RefreshAccessibilityControls()
+{
 	if (ToggleCrouchCheckBox)
 	{
 		ToggleCrouchCheckBox->SetIsChecked(ControlSettings->bEnableToggleCrouch);

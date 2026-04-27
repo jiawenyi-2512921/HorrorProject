@@ -6,6 +6,12 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "MemoryTracker.generated.h"
 
+namespace HorrorMemoryTrackerDefaults
+{
+	inline constexpr float MemoryBudgetMB = 4096.0f;
+	inline constexpr int32 MaxHistorySize = 1000;
+}
+
 /**
  * Memory usage statistics
  */
@@ -129,7 +135,7 @@ private:
 	bool bTrackingEnabled = false;
 
 	UPROPERTY()
-	float MemoryBudgetMB = 4096.0f; // 4GB default
+	float MemoryBudgetMB = HorrorMemoryTrackerDefaults::MemoryBudgetMB;
 
 	// Checkpoint tracking
 	float CheckpointMemoryMB = 0.0f;
@@ -137,11 +143,12 @@ private:
 
 	// Memory history
 	TArray<FMemoryAllocationEvent> MemoryHistory;
-	int32 MaxHistorySize = 1000;
+	int32 MaxHistorySize = HorrorMemoryTrackerDefaults::MaxHistorySize;
 
 	// Peak tracking
 	float PeakPhysicalMB = 0.0f;
 	float PeakVirtualMB = 0.0f;
+	float LastRecordedMemoryMB = 0.0f;
 
 	// Timer handle
 	FTimerHandle UpdateTimerHandle;

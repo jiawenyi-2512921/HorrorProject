@@ -2,13 +2,25 @@
 # Analyzes polygon counts, texture resolutions, material complexity
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Assets\AssetReport.json"
+    [string]$ProjectPath = "",
+    [string]$OutputPath = ""
 )
 
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UEEditorCmd = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-$ProjectFile = "$ProjectPath\HorrorProject.uproject"
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $PSScriptRoot "AssetReport.json"
+}
+
+$UE5Root = Get-HorrorUERoot
+$UEEditorCmd = Get-HorrorEditorCmd -UERoot $UE5Root
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectPath
 
 Write-Host "=== Asset Analysis Tool ===" -ForegroundColor Cyan
 Write-Host "Project: $ProjectPath"

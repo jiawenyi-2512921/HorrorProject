@@ -8,6 +8,15 @@
 #include "GameFramework/GameUserSettings.h"
 #include "Engine/Engine.h"
 
+namespace
+{
+	const FIntPoint DefaultConfigDisplayResolution(1920, 1080);
+	constexpr float DefaultConfigShadowDistance = 5000.0f;
+	constexpr int32 DefaultConfigMaxAudioChannels = 32;
+	constexpr float DefaultConfigAutoSaveIntervalSeconds = 300.0f;
+	constexpr float DefaultConfigFieldOfView = 90.0f;
+}
+
 void UDefaultConfigs::ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings)
 {
 	if (!Settings)
@@ -15,7 +24,7 @@ void UDefaultConfigs::ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings)
 		return;
 	}
 
-	Settings->Resolution = FIntPoint(1920, 1080);
+	Settings->Resolution = DefaultConfigDisplayResolution;
 	Settings->bFullscreen = true;
 	Settings->bVSync = false;
 	Settings->FrameRateLimit = 0;
@@ -30,7 +39,7 @@ void UDefaultConfigs::ApplyDefaultGraphicsSettings(UGraphicsSettings* Settings)
 
 	Settings->ShadowQuality = EShadowQuality::High;
 	Settings->bDynamicShadows = true;
-	Settings->ShadowDistance = 5000.0f;
+	Settings->ShadowDistance = DefaultConfigShadowDistance;
 
 	Settings->AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 	Settings->AntiAliasingQuality = 3;
@@ -66,7 +75,7 @@ void UDefaultConfigs::ApplyDefaultAudioSettings(UHorrorAudioSettings* Settings)
 	Settings->AudioQuality = 3;
 	Settings->bEnableReverb = true;
 	Settings->bEnableOcclusion = true;
-	Settings->MaxChannels = 32;
+	Settings->MaxChannels = DefaultConfigMaxAudioChannels;
 
 	Settings->bEnableSpatialAudio = true;
 	Settings->bEnableHRTF = false;
@@ -128,12 +137,12 @@ void UDefaultConfigs::ApplyDefaultGameplaySettings(UGameplaySettings* Settings)
 	Settings->HUDOpacity = 1.0f;
 
 	Settings->bEnableAutoSave = true;
-	Settings->AutoSaveInterval = 300.0f;
+	Settings->AutoSaveInterval = DefaultConfigAutoSaveIntervalSeconds;
 	Settings->bEnableQuickTimeEvents = true;
 	Settings->bEnableTutorialHints = true;
 	Settings->bEnableObjectiveHints = true;
 
-	Settings->FieldOfView = 90.0f;
+	Settings->FieldOfView = DefaultConfigFieldOfView;
 	Settings->bEnableCameraShake = true;
 	Settings->CameraShakeIntensity = 1.0f;
 	Settings->bEnableHeadBob = true;

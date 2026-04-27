@@ -39,6 +39,9 @@ struct HORRORPROJECT_API FHorrorEvidenceMetadata
 	FText Description;
 };
 
+/**
+ * Adds Inventory Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UInventoryComponent : public UActorComponent
 {

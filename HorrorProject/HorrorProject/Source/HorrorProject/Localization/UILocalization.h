@@ -16,7 +16,7 @@ struct FLocalizedTextWidget
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTextBlock* TextBlock;
+	UTextBlock* TextBlock = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString LocalizationKey;
@@ -28,12 +28,15 @@ struct FLocalizedImageWidget
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UImage* Image;
+	UImage* Image = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString LocalizationKey;
 };
 
+/**
+ * Adds UILocalization Component behavior to its owning actor in the Localization module.
+ */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class HORRORPROJECT_API UUILocalizationComponent : public UActorComponent
 {
@@ -59,6 +62,9 @@ private:
 	UTexture2D* GetLocalizedTexture(const FString& Key, const FString& LanguageCode) const;
 };
 
+/**
+ * Exposes Blueprint helper functions for UILocalization Library workflows.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API UUILocalizationLibrary : public UBlueprintFunctionLibrary
 {

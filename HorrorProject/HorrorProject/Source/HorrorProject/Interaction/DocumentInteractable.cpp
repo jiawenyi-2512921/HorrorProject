@@ -10,6 +10,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 
+namespace
+{
+	const FVector DocumentInteractionExtent(50.0f, 50.0f, 10.0f);
+}
+
 ADocumentInteractable::ADocumentInteractable()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -23,7 +28,7 @@ ADocumentInteractable::ADocumentInteractable()
 
 	InteractionVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionVolume"));
 	InteractionVolume->SetupAttachment(DocumentMesh);
-	InteractionVolume->SetBoxExtent(FVector(50.0f, 50.0f, 10.0f));
+	InteractionVolume->SetBoxExtent(DocumentInteractionExtent);
 	InteractionVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractionVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);

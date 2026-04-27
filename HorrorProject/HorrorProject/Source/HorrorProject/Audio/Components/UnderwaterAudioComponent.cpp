@@ -40,10 +40,11 @@ void UUnderwaterAudioComponent::EnterWater(float Depth)
 	bIsUnderwater = true;
 	CurrentDepth = Depth;
 
-	if (AudioConfig.UnderwaterAmbient && GetWorld())
+	UWorld* World = GetWorld();
+	if (AudioConfig.UnderwaterAmbient && World)
 	{
 		AmbientComponent = UGameplayStatics::SpawnSound2D(
-			GetWorld(),
+			World,
 			AudioConfig.UnderwaterAmbient,
 			AudioConfig.UnderwaterVolume,
 			1.0f,
@@ -59,9 +60,9 @@ void UUnderwaterAudioComponent::EnterWater(float Depth)
 		}
 	}
 
-	if (AudioConfig.SurfaceBreachSound)
+	if (AudioConfig.SurfaceBreachSound && World)
 	{
-		UGameplayStatics::PlaySound2D(GetWorld(), AudioConfig.SurfaceBreachSound, 0.8f);
+		UGameplayStatics::PlaySound2D(World, AudioConfig.SurfaceBreachSound, 0.8f);
 	}
 }
 
@@ -87,7 +88,10 @@ void UUnderwaterAudioComponent::ExitWater()
 
 	if (AudioConfig.SurfaceBreachSound)
 	{
-		UGameplayStatics::PlaySound2D(GetWorld(), AudioConfig.SurfaceBreachSound, 0.8f);
+		if (UWorld* World = GetWorld())
+		{
+			UGameplayStatics::PlaySound2D(World, AudioConfig.SurfaceBreachSound, 0.8f);
+		}
 	}
 }
 
@@ -99,7 +103,8 @@ void UUnderwaterAudioComponent::UpdateDepth(float Depth)
 
 void UUnderwaterAudioComponent::PlayBubbleSound()
 {
-	if (!AudioConfig.BubbleSound || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!AudioConfig.BubbleSound || !World)
 	{
 		return;
 	}
@@ -108,7 +113,7 @@ void UUnderwaterAudioComponent::PlayBubbleSound()
 	float VolumeVariation = FMath::RandRange(0.6f, 1.0f);
 
 	UGameplayStatics::PlaySound2D(
-		GetWorld(),
+		World,
 		AudioConfig.BubbleSound,
 		VolumeVariation,
 		PitchVariation

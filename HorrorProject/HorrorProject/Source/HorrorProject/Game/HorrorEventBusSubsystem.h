@@ -55,6 +55,9 @@ struct HORRORPROJECT_API FHorrorEventMessage
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorEventPublishedDynamicDelegate, const FHorrorEventMessage&, Message);
 DECLARE_MULTICAST_DELEGATE_OneParam(FHorrorEventPublishedNativeDelegate, const FHorrorEventMessage&);
 
+/**
+ * Coordinates Horror Event Bus Subsystem services for the Game module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorEventBusSubsystem : public UWorldSubsystem
 {
@@ -81,8 +84,10 @@ public:
 #endif
 
 private:
+	static constexpr int32 DefaultHistoryCapacity = 128;
+
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Events", meta=(ClampMin="1"))
-	int32 HistoryCapacity = 128;
+	int32 HistoryCapacity = DefaultHistoryCapacity;
 
 	UPROPERTY(Transient)
 	TArray<FHorrorEventMessage> History;
@@ -95,6 +100,4 @@ private:
 
 	FHorrorEventPublishedNativeDelegate OnEventPublishedNative;
 
-	// Performance optimization: Cache metadata keys to avoid string concatenation
-	mutable TMap<TPair<FGameplayTag, FName>, FName> CachedMetadataKeys;
 };

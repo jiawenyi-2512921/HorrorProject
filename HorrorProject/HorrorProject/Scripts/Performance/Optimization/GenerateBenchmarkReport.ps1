@@ -3,11 +3,16 @@
 # Consolidates all benchmark results into comprehensive report
 
 param(
-    [string]$BenchmarkDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Benchmarks",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Reports"
+    [string]$BenchmarkDir = "",
+    [string]$OutputDir = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($BenchmarkDir)) { $BenchmarkDir = Join-Path $ProjectRoot "Saved\Benchmarks" }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Reports" }
 
 Write-Host "=== Benchmark Report Generator ===" -ForegroundColor Cyan
 Write-Host ""
@@ -138,7 +143,7 @@ $html = @"
             border-left: 4px solid #ffd43b;
             border-radius: 4px;
         }
-        .chart-placeholder {
+        .chart-empty-state {
             background: #3a3a3a;
             padding: 40px;
             text-align: center;

@@ -9,11 +9,22 @@
 
 class UQuantumCameraComponent;
 class UInventoryComponent;
+class FViewport;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEvidenceCapturedSignature, FName, EvidenceId, const FEvidenceCaptureData&, CaptureData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPhotoTakenSignature, FName, PhotoId, UTexture2D*, Photo, FVector, Location);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FVideoRecordedSignature, FName, VideoId, float, Duration, FVector, Location);
 
+namespace HorrorEvidenceCollectionDefaults
+{
+	inline constexpr int32 MaxPhotos = 50;
+	inline constexpr int32 MaxVideos = 10;
+	inline constexpr float MaxVideoDurationSeconds = 30.0f;
+}
+
+/**
+ * Adds Evidence Collection Component behavior to its owning actor in the Evidence module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UEvidenceCollectionComponent : public UActorComponent
 {
@@ -70,18 +81,29 @@ public:
 	FVideoRecordedSignature OnVideoRecorded;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Evidence|Settings")
-	int32 MaxPhotos = 50;
+	int32 MaxPhotos = HorrorEvidenceCollectionDefaults::MaxPhotos;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Evidence|Settings")
 	int32 MaxVideos = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Evidence|Settings")
-	float MaxVideoDuration = 30.0f;
+	float MaxVideoDuration = HorrorEvidenceCollectionDefaults::MaxVideoDurationSeconds;
 
 private:
 	FEvidenceCaptureData CreateCaptureData(FName EvidenceId, EEvidenceType Type) const;
 	void BroadcastEvidenceCapture(FName EvidenceId, const FEvidenceCaptureData& CaptureData);
 	UTexture2D* CaptureScreenshot() const;
+	FViewport* ResolveGameViewport() const;
+	bool ReadViewportPixels(FViewport* Viewport, TArray<FColor>* OutSurfaceData, FIntPoint* OutViewportSize) const;
+	float CalculateThumbnailResizeScale(const FIntPoint& ViewportSize) const;
+	FIntPoint CalculateThumbnailSize(const FIntPoint& ViewportSize, float ResizeScale) const;
+	void BuildThumbnailPixels(
+		const TArray<FColor>& SurfaceData,
+		const FIntPoint& ViewportSize,
+		const FIntPoint& TextureSize,
+		float ResizeScale,
+		TArray<FColor>* OutThumbnailPixels) const;
+	UTexture2D* CreateThumbnailTexture(const FIntPoint& TextureSize, const TArray<FColor>& ThumbnailPixels) const;
 
 	UPROPERTY()
 	TMap<FName, FExtendedEvidenceMetadata> EvidenceMetadataMap;

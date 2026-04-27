@@ -36,12 +36,17 @@ public:
 	TArray<FName> EncounterIds;
 };
 
+/**
+ * Defines Horror Encounter Director behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorEncounterDirector : public AActor
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultRevealRadius = 1200.0f;
+
 	AHorrorEncounterDirector();
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
@@ -96,7 +101,7 @@ public:
 	TObjectPtr<AHorrorThreatCharacter> ThreatActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter", meta=(ClampMin="0.0", Units="cm"))
-	float RevealRadius = 1200.0f;
+	float RevealRadius = DefaultRevealRadius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter")
 	bool bGateRouteDuringReveal = true;

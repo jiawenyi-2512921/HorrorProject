@@ -2,16 +2,21 @@
 # Automates execution of HorrorProject integration tests
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject\HorrorProject.uproject",
+    [string]$ProjectPath = "",
     [string]$EngineDir = "",
     [string]$TestFilter = "HorrorProject.Integration",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Automation\Reports",
+    [string]$OutputDir = "",
     [switch]$GenerateReport,
     [switch]$Verbose,
     [int]$Timeout = 3600
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = Get-HorrorProjectFile -ProjectRoot $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Automation\Reports" }
 
 $UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
 if (-not $EngineDir) {

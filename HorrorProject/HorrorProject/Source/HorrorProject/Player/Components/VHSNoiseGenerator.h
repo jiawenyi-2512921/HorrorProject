@@ -13,6 +13,8 @@ struct FVHSNoiseParams
 {
 	GENERATED_BODY()
 
+	static constexpr float DefaultScanlineCount = 480.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Noise", meta=(ClampMin="0.0", ClampMax="1.0"))
 	float BaseNoiseIntensity = 0.15f;
 
@@ -26,7 +28,7 @@ struct FVHSNoiseParams
 	float ScanlineIntensity = 0.3f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Scanlines", meta=(ClampMin="100.0", ClampMax="1000.0"))
-	float ScanlineCount = 480.0f;
+	float ScanlineCount = DefaultScanlineCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Scanlines", meta=(ClampMin="0.0", ClampMax="10.0"))
 	float ScanlineSpeed = 1.0f;
@@ -44,6 +46,9 @@ struct FVHSNoiseParams
 	float NoiseSpeed = 0.5f;
 };
 
+/**
+ * Defines VHSNoise Generator behavior for the Player module.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API UVHSNoiseGenerator : public UObject
 {

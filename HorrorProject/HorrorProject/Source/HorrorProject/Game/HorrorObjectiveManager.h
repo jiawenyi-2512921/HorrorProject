@@ -9,6 +9,9 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnObjectiveNodeStateChanged, AHorrorObjectiveNode*, Node, EHorrorObjectiveNodeState, NewState);
 
+/**
+ * Defines Horror Objective Manager behavior for the Game module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorObjectiveManager : public UWorldSubsystem
 {

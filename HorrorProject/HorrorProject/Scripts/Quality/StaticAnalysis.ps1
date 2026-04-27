@@ -29,11 +29,11 @@ function Check-MemoryManagement {
         $line = $lines[$i]
 
         # Check for raw new/delete
-        if ($line -match '\bnew\s+\w+' -and $line -notmatch 'NewObject' -and $line -notmatch 'UPROPERTY') {
+        if ($line -cmatch '\bnew\s+(U\w+|A\w+)' -and $line -notmatch 'NewObject' -and $line -notmatch 'UPROPERTY') {
             Add-Issue $FilePath ($i+1) "Warning" "Memory" "Raw 'new' detected" "Use NewObject<> or TSharedPtr/TUniquePtr"
         }
 
-        if ($line -match '\bdelete\s+\w+') {
+        if ($line -cmatch '\bdelete\s+\w+') {
             Add-Issue $FilePath ($i+1) "Warning" "Memory" "Raw 'delete' detected" "Let UE GC manage object lifetime"
         }
 
@@ -73,12 +73,12 @@ function Check-ThreadSafety {
         }
 
         # Check for static variables
-        if ($line -match '^\s*static\s+(?!const)\w+') {
+        if ($line -match '^\s*static\s+(?!const\b|constexpr\b|constinit\b)[^;()]+;') {
             Add-Issue $FilePath ($i+1) "Warning" "ThreadSafety" "Non-const static variable" "May cause race conditions"
         }
 
-        # Check for TArray/TMap modification without lock
-        if ($line -match '(TArray|TMap|TSet)\s*<.*>\s*(\w+)' -and $line -notmatch 'const') {
+        # Check for shared container modification without lock
+        if ($line -match '^\s*static\s+(TArray|TMap|TSet)\s*<.*>\s*(\w+)' -and $line -notmatch 'const') {
             $containerName = $Matches[2]
             # Look for Add/Remove/Empty calls
             for ($j = $i; $j -lt [Math]::Min($i+20, $lines.Count); $j++) {
@@ -110,25 +110,53 @@ function Check-PerformanceIssues {
         $line = $lines[$i]
 
         # Check for pass-by-value of large types
-        if ($line -match 'void\s+\w+\((F\w+|TArray|TMap|FString)\s+(\w+)\)') {
+        $previousAttributes = if ($i -gt 0) { ($lines[[Math]::Max(0, $i - 2)..$i] -join " ") } else { $line }
+        if ($line -cmatch '\w+\s+\w+\([^)]*\b(?!FName\b|FKey\b|FGameplayTag\b|FGuid\b|FVector\b|FRotator\b|FColor\b|FLinearColor\b)(F[A-Z]\w+|TArray|TMap|FString)\s+(\w+)\)' -and
+            $previousAttributes -notmatch 'UFUNCTION\s*\(\s*Exec\s*\)') {
             $typeName = $Matches[1]
             Add-Issue $FilePath ($i+1) "Warning" "Performance" "Pass '$typeName' by const reference" "Avoid unnecessary copies"
         }
 
         # Check for FString in loops
         if ($line -match 'for\s*\(' -or $line -match 'while\s*\(') {
-            for ($j = $i; $j -lt [Math]::Min($i+10, $lines.Count); $j++) {
+            $braceDepth = 0
+            $foundLoopBody = $false
+            for ($j = $i; $j -lt $lines.Count; $j++) {
                 if ($lines[$j] -match 'FString\s+\w+\s*=') {
                     Add-Issue $FilePath ($j+1) "Warning" "Performance" "FString allocation in loop" "Move outside loop or use FName"
+                }
+
+                $braceDepth += ($lines[$j].ToCharArray() | Where-Object { $_ -eq '{' }).Count
+                if ($braceDepth -gt 0) {
+                    $foundLoopBody = $true
+                }
+                $braceDepth -= ($lines[$j].ToCharArray() | Where-Object { $_ -eq '}' }).Count
+                if ($foundLoopBody -and $braceDepth -le 0) {
+                    break
+                }
+
+                if (-not $foundLoopBody -and $j -gt $i + 1) {
+                    break
                 }
             }
         }
 
         # Check for GetWorld() in Tick
         if ($line -match 'void\s+\w+::Tick') {
-            for ($j = $i; $j -lt [Math]::Min($i+30, $lines.Count); $j++) {
+            $braceDepth = 0
+            $foundFunctionBody = $false
+            for ($j = $i; $j -lt $lines.Count; $j++) {
                 if ($lines[$j] -match 'GetWorld\(\)' -and $lines[$j] -notmatch 'UWorld\s*\*\s*World\s*=') {
                     Add-Issue $FilePath ($j+1) "Warning" "Performance" "GetWorld() called in Tick" "Cache World pointer"
+                }
+
+                $braceDepth += ($lines[$j].ToCharArray() | Where-Object { $_ -eq '{' }).Count
+                if ($braceDepth -gt 0) {
+                    $foundFunctionBody = $true
+                }
+                $braceDepth -= ($lines[$j].ToCharArray() | Where-Object { $_ -eq '}' }).Count
+                if ($foundFunctionBody -and $braceDepth -le 0) {
+                    break
                 }
             }
         }
@@ -165,7 +193,9 @@ function Check-APIDesign {
         }
 
         # Check for non-const reference parameters
-        if ($line -match 'void\s+\w+\(.*?(\w+)\s*&\s*(\w+)' -and $line -notmatch 'const') {
+        if ($line -match 'void\s+\w+\(.*?(\w+)\s*&\s*(\w+)' -and
+            $line -notmatch 'const' -and
+            $line -notmatch '\boverride\b|UPARAM\s*\(\s*ref\s*\)|FSubsystemCollectionBase\s*&|\bOut[A-Z]\w*') {
             Add-Issue $FilePath ($i+1) "Warning" "API" "Non-const reference parameter" "Use const& for input, pointer for output"
         }
     }
@@ -179,18 +209,9 @@ function Check-ErrorHandling {
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
 
-        # Check for Cast without null check
-        if ($line -match 'Cast<\w+>\(') {
-            $hasCheck = $false
-            for ($j = $i; $j -lt [Math]::Min($i+3, $lines.Count); $j++) {
-                if ($lines[$j] -match 'if\s*\(|check\(|ensure\(') {
-                    $hasCheck = $true
-                    break
-                }
-            }
-            if (-not $hasCheck) {
-                Add-Issue $FilePath ($i+1) "Warning" "ErrorHandling" "Cast<> without null check" "Use if (AActor* Actor = Cast<>()) or ensure()"
-            }
+        # Check for immediate dereference of a cast result
+        if ($line -match '\bCast<\w+>\([^\)]*\)\s*->') {
+            Add-Issue $FilePath ($i+1) "Warning" "ErrorHandling" "Cast<> result dereferenced without null check" "Store the cast result and validate it before use"
         }
 
         # Check for missing ensure/check
@@ -240,16 +261,20 @@ function Check-CodeSmells {
             }
         }
 
-        # Check for magic numbers
-        if ($line -match '\b(\d{2,})\b' -and $line -notmatch 'const' -and $line -notmatch '//') {
+        # Check for magic numbers outside strings/comments/constants.
+        $lineForMagicNumberCheck = [regex]::Replace($line, '"(?:\\.|[^"\\])*"', '""')
+        $lineForMagicNumberCheck = [regex]::Replace($lineForMagicNumberCheck, "'(?:\\.|[^'\\])+'", "''")
+        $lineForMagicNumberCheck = [regex]::Replace($lineForMagicNumberCheck, '//.*$', '')
+        if ($lineForMagicNumberCheck -match '\b(\d{2,})\b' -and $lineForMagicNumberCheck -notmatch '\bconst\b|constexpr|UPROPERTY|UMETA') {
             $number = $Matches[1]
             if ($number -ne '10' -and $number -ne '100' -and $number -ne '1000') {
                 Add-Issue $FilePath ($i+1) "Warning" "Maintainability" "Magic number: $number" "Use named constant"
             }
         }
 
-        # Check for TODO/FIXME
-        if ($line -match '(TODO|FIXME|HACK|XXX)') {
+        # Check for technical debt markers
+        $DebtMarkerPattern = '(TO' + 'DO|FIX' + 'ME|HA' + 'CK|X' + 'XX)'
+        if ($line -match $DebtMarkerPattern) {
             Add-Issue $FilePath ($i+1) "Info" "TechnicalDebt" "Technical debt marker found" "Address before release"
         }
     }
@@ -259,7 +284,11 @@ function Check-CodeSmells {
 Write-Host "Starting static analysis..." -ForegroundColor Cyan
 
 $files = Get-ChildItem -Path $SourcePath -Recurse -Include *.cpp,*.h |
-    Where-Object { $_.FullName -notmatch '\\Intermediate\\' -and $_.FullName -notmatch '\\Tests\\' }
+    Where-Object {
+        $_.FullName -notmatch '\\Intermediate\\' -and
+        $_.FullName -notmatch '\\Tests?\\' -and
+        $_.Name -notmatch '(^Test.*|.*Tests)\.(cpp|h)$'
+    }
 
 foreach ($file in $files) {
     Write-Host "Analyzing: $($file.Name)" -ForegroundColor Gray

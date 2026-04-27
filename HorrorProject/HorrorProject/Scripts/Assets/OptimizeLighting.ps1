@@ -2,13 +2,21 @@
 # Optimizes Lumen, lightmaps, shadows, and reflections
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [string]$MapPath = "/Game/Horror/Maps/MainLevel"
 )
 
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UEEditorCmd = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-$ProjectFile = "$ProjectPath\HorrorProject.uproject"
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+
+$UE5Root = Get-HorrorUERoot
+$UEEditorCmd = Get-HorrorEditorCmd -UERoot $UE5Root
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectPath
 
 Write-Host "=== Lighting Optimization Tool ===" -ForegroundColor Cyan
 

@@ -9,6 +9,9 @@
 class UHorrorSaveGame;
 class UWorld;
 
+/**
+ * Coordinates Horror Save Subsystem services for the Save module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorSaveSubsystem : public UGameInstanceSubsystem
 {

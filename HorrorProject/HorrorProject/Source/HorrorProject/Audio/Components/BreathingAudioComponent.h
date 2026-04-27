@@ -38,6 +38,9 @@ struct HORRORPROJECT_API FBreathingStateConfig
 	float TransitionTime = 1.0f;
 };
 
+/**
+ * Adds Breathing Audio Component behavior to its owning actor in the Audio module.
+ */
 UCLASS(ClassGroup=(Audio), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UBreathingAudioComponent : public UAudioComponent
 {

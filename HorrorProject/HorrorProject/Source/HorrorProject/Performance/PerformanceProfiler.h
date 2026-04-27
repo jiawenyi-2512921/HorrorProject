@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "PerformanceProfiler.generated.h"
 
 /**
@@ -37,13 +37,13 @@ struct HORRORPROJECT_API FPerformanceSample
 	FName ScopeName;
 
 	UPROPERTY(BlueprintReadOnly)
-	double DurationMs;
+	double DurationMs = 0.0;
 
 	UPROPERTY(BlueprintReadOnly)
 	FDateTime Timestamp;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 FrameNumber;
+	int32 FrameNumber = 0;
 };
 
 /**
@@ -81,7 +81,7 @@ struct HORRORPROJECT_API FHorrorPerformanceScopeStats
  * Provides lightweight profiling with CSV export
  */
 UCLASS(BlueprintType)
-class HORRORPROJECT_API UPerformanceProfiler : public UObject
+class HORRORPROJECT_API UPerformanceProfiler : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
@@ -100,7 +100,7 @@ public:
 
 	// Get statistics for a scope
 	UFUNCTION(BlueprintCallable, Category = "Performance")
-	FHorrorPerformanceScopeStats GetStats(FName ScopeName) const;
+	FHorrorPerformanceScopeStats GetStats(const FName& ScopeName) const;
 
 	// Get all statistics
 	UFUNCTION(BlueprintCallable, Category = "Performance")
@@ -118,6 +118,8 @@ public:
 	static UPerformanceProfiler* Get(UWorld* World);
 
 private:
+	static constexpr int32 DefaultMaxSamples = 10000;
+
 	UPROPERTY()
 	bool bProfilingEnabled = false;
 
@@ -128,7 +130,7 @@ private:
 	TArray<FPerformanceSample> RecentSamples;
 
 	// Maximum samples to keep
-	int32 MaxSamples = 10000;
+	int32 MaxSamples = DefaultMaxSamples;
 
 	// Mutex for thread safety
 	FCriticalSection DataMutex;

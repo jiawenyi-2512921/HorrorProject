@@ -16,9 +16,13 @@ void UHorrorAudioSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	InitializeDefaultVolumes();
 
-	if (UHorrorEventBusSubsystem* EventBus = GetWorld()->GetSubsystem<UHorrorEventBusSubsystem>())
+	UWorld* World = GetWorld();
+	if (World)
 	{
-		EventBus->GetOnEventPublishedNative().AddUObject(this, &UHorrorAudioSubsystem::OnEventPublished);
+		if (UHorrorEventBusSubsystem* EventBus = World->GetSubsystem<UHorrorEventBusSubsystem>())
+		{
+			EventBus->GetOnEventPublishedNative().AddUObject(this, &UHorrorAudioSubsystem::OnEventPublished);
+		}
 	}
 }
 
@@ -26,9 +30,23 @@ void UHorrorAudioSubsystem::Deinitialize()
 {
 	StopAllAmbient(0.0f);
 
-	if (UHorrorEventBusSubsystem* EventBus = GetWorld()->GetSubsystem<UHorrorEventBusSubsystem>())
+	for (USoundBase* Sound : PreloadedSounds)
 	{
-		EventBus->GetOnEventPublishedNative().RemoveAll(this);
+		if (Sound && Sound->IsRooted())
+		{
+			Sound->RemoveFromRoot();
+		}
+	}
+	PreloadedSounds.Empty();
+	ComponentBaseVolumes.Empty();
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		if (UHorrorEventBusSubsystem* EventBus = World->GetSubsystem<UHorrorEventBusSubsystem>())
+		{
+			EventBus->GetOnEventPublishedNative().RemoveAll(this);
+		}
 	}
 
 	Super::Deinitialize();
@@ -66,13 +84,14 @@ void UHorrorAudioSubsystem::InitializeDefaultVolumes()
  */
 UAudioComponent* UHorrorAudioSubsystem::PlaySoundAtLocation(USoundBase* Sound, FVector Location, float VolumeMultiplier, float PitchMultiplier)
 {
-	if (!Sound || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!Sound || !World)
 	{
 		return nullptr;
 	}
 
 	return UGameplayStatics::SpawnSoundAtLocation(
-		GetWorld(),
+		World,
 		Sound,
 		Location,
 		FRotator::ZeroRotator,
@@ -109,13 +128,14 @@ UAudioComponent* UHorrorAudioSubsystem::PlaySoundAttached(USoundBase* Sound, USc
 
 UAudioComponent* UHorrorAudioSubsystem::PlaySound2D(USoundBase* Sound, float VolumeMultiplier)
 {
-	if (!Sound || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!Sound || !World)
 	{
 		return nullptr;
 	}
 
 	return UGameplayStatics::SpawnSound2D(
-		GetWorld(),
+		World,
 		Sound,
 		VolumeMultiplier,
 		1.0f,
@@ -187,6 +207,12 @@ bool UHorrorAudioSubsystem::EnterAudioZone(FName ZoneId)
 		return false;
 	}
 
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+
 	if (CurrentAmbientComponent && CurrentAmbientComponent->IsPlaying())
 	{
 		CurrentAmbientComponent->FadeOut(Config->FadeOutDuration, 0.0f);
@@ -195,7 +221,7 @@ bool UHorrorAudioSubsystem::EnterAudioZone(FName ZoneId)
 	CurrentZoneId = ZoneId;
 
 	CurrentAmbientComponent = UGameplayStatics::SpawnSound2D(
-		GetWorld(),
+		World,
 		Config->AmbientSound,
 		Config->AmbientVolume,
 		1.0f,
@@ -295,7 +321,8 @@ void UHorrorAudioSubsystem::OnEventPublished(const FHorrorEventMessage& Message)
 
 UAudioComponent* UHorrorAudioSubsystem::PlaySoundWithPriority(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier)
 {
-	if (!Sound || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!Sound || !World)
 	{
 		return nullptr;
 	}
@@ -309,7 +336,7 @@ UAudioComponent* UHorrorAudioSubsystem::PlaySoundWithPriority(USoundBase* Sound,
 	UAudioComponent* Component = GetPooledComponent(Sound);
 	if (!Component)
 	{
-		Component = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location, FRotator::ZeroRotator, VolumeMultiplier);
+		Component = UGameplayStatics::SpawnSoundAtLocation(World, Sound, Location, FRotator::ZeroRotator, VolumeMultiplier);
 	}
 	else
 	{
@@ -321,6 +348,7 @@ UAudioComponent* UHorrorAudioSubsystem::PlaySoundWithPriority(USoundBase* Sound,
 	if (Component)
 	{
 		ActiveComponents.Add(Component);
+		ComponentBaseVolumes.Add(Component, VolumeMultiplier);
 	}
 
 	return Component;
@@ -338,7 +366,8 @@ void UHorrorAudioSubsystem::QueueSound(USoundBase* Sound, FVector Location, int3
 	Entry.Location = Location;
 	Entry.VolumeMultiplier = VolumeMultiplier;
 	Entry.Priority = Priority;
-	Entry.QueueTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	Entry.QueueTime = World ? World->GetTimeSeconds() : 0.0f;
 	Entry.bIs3D = true;
 
 	AudioQueue.Add(Entry);
@@ -355,7 +384,8 @@ void UHorrorAudioSubsystem::SetOcclusionEnabled(bool bEnabled)
 
 void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 {
-	if (!bEnableOcclusion || !GetWorld())
+	UWorld* World = GetWorld();
+	if (!bEnableOcclusion || !World)
 	{
 		return;
 	}
@@ -366,9 +396,10 @@ void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 		return;
 	}
 
+	const float OcclusionDeltaTime = LastOcclusionUpdateTime;
 	LastOcclusionUpdateTime = 0.0f;
 
-	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	APlayerController* PC = World->GetFirstPlayerController();
 	if (!PC || !PC->GetPawn())
 	{
 		return;
@@ -388,7 +419,7 @@ void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(PC->GetPawn());
 
-		bool bHit = GetWorld()->LineTraceSingleByChannel(
+		bool bHit = World->LineTraceSingleByChannel(
 			HitResult,
 			ListenerLocation,
 			SoundLocation,
@@ -396,10 +427,15 @@ void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 			QueryParams
 		);
 
-		if (bHit)
+		float* BaseVolume = ComponentBaseVolumes.Find(Component);
+		if (!BaseVolume)
 		{
-			Component->SetVolumeMultiplier(Component->VolumeMultiplier * OcclusionVolumeMultiplier);
+			BaseVolume = &ComponentBaseVolumes.Add(Component, Component->VolumeMultiplier);
 		}
+
+		const float TargetVolume = *BaseVolume * (bHit ? OcclusionVolumeMultiplier : 1.0f);
+		const float SmoothedVolume = FMath::FInterpTo(Component->VolumeMultiplier, TargetVolume, OcclusionDeltaTime, OcclusionInterpSpeed);
+		Component->SetVolumeMultiplier(SmoothedVolume);
 	}
 }
 
@@ -410,7 +446,7 @@ int32 UHorrorAudioSubsystem::GetActiveAudioComponentCount() const
 
 void UHorrorAudioSubsystem::PreloadSound(USoundBase* Sound)
 {
-	if (Sound && !PreloadedSounds.Contains(Sound))
+	if (Sound && !PreloadedSounds.Contains(Sound) && !Sound->IsRooted())
 	{
 		Sound->AddToRoot();
 		PreloadedSounds.Add(Sound);
@@ -421,7 +457,10 @@ void UHorrorAudioSubsystem::UnloadSound(USoundBase* Sound)
 {
 	if (Sound && PreloadedSounds.Contains(Sound))
 	{
-		Sound->RemoveFromRoot();
+		if (Sound->IsRooted())
+		{
+			Sound->RemoveFromRoot();
+		}
 		PreloadedSounds.Remove(Sound);
 	}
 }
@@ -433,7 +472,7 @@ void UHorrorAudioSubsystem::ProcessAudioQueue()
 		return;
 	}
 
-	FHorrorAudioQueueEntry Entry = AudioQueue[0];
+	FHorrorAudioQueueEntry Entry = *AudioQueue.GetData();
 	AudioQueue.RemoveAt(0);
 
 	PlaySoundWithPriority(Entry.Sound, Entry.Location, Entry.Priority, Entry.VolumeMultiplier);
@@ -441,16 +480,27 @@ void UHorrorAudioSubsystem::ProcessAudioQueue()
 
 void UHorrorAudioSubsystem::CleanupAudioPool()
 {
-	float CurrentTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		ActiveComponents.RemoveAll([](UAudioComponent* Component)
+		{
+			return !Component || !Component->IsPlaying();
+		});
+		return;
+	}
+
+	float CurrentTime = World->GetTimeSeconds();
 
 	for (int32 i = AudioPool.Num() - 1; i >= 0; --i)
 	{
-		FHorrorAudioPoolEntry& Entry = AudioPool[i];
+		FHorrorAudioPoolEntry& Entry = *(AudioPool.GetData() + i);
 
-		if (!Entry.bInUse && (CurrentTime - Entry.LastUsedTime) > 30.0f)
+		if (!Entry.bInUse && (CurrentTime - Entry.LastUsedTime) > HorrorAudioDefaults::PoolCleanupIdleSeconds)
 		{
 			if (Entry.Component)
 			{
+				ComponentBaseVolumes.Remove(Entry.Component);
 				Entry.Component->DestroyComponent();
 			}
 			AudioPool.RemoveAt(i);
@@ -461,29 +511,45 @@ void UHorrorAudioSubsystem::CleanupAudioPool()
 	{
 		return !Component || !Component->IsPlaying();
 	});
+
+	for (auto It = ComponentBaseVolumes.CreateIterator(); It; ++It)
+	{
+		UAudioComponent* Component = It.Key();
+		if (!Component || !ActiveComponents.Contains(Component))
+		{
+			It.RemoveCurrent();
+		}
+	}
 }
 
 UAudioComponent* UHorrorAudioSubsystem::GetPooledComponent(USoundBase* Sound)
 {
+	UWorld* World = GetWorld();
+
 	for (FHorrorAudioPoolEntry& Entry : AudioPool)
 	{
 		if (!Entry.bInUse && Entry.Sound == Sound)
 		{
 			Entry.bInUse = true;
-			Entry.LastUsedTime = GetWorld()->GetTimeSeconds();
+			Entry.LastUsedTime = World ? World->GetTimeSeconds() : 0.0f;
 			return Entry.Component;
 		}
 	}
 
 	if (AudioPool.Num() < MaxPooledComponents)
 	{
+		if (!World)
+		{
+			return nullptr;
+		}
+
 		FHorrorAudioPoolEntry NewEntry;
 		NewEntry.Sound = Sound;
 		NewEntry.Component = NewObject<UAudioComponent>(this);
 		NewEntry.Component->SetSound(Sound);
 		NewEntry.Component->RegisterComponent();
 		NewEntry.bInUse = true;
-		NewEntry.LastUsedTime = GetWorld()->GetTimeSeconds();
+		NewEntry.LastUsedTime = World->GetTimeSeconds();
 
 		AudioPool.Add(NewEntry);
 		return NewEntry.Component;
@@ -494,13 +560,16 @@ UAudioComponent* UHorrorAudioSubsystem::GetPooledComponent(USoundBase* Sound)
 
 void UHorrorAudioSubsystem::ReturnComponentToPool(UAudioComponent* Component)
 {
+	UWorld* World = GetWorld();
+
 	for (FHorrorAudioPoolEntry& Entry : AudioPool)
 	{
 		if (Entry.Component == Component)
 		{
 			Entry.bInUse = false;
-			Entry.LastUsedTime = GetWorld()->GetTimeSeconds();
+			Entry.LastUsedTime = World ? World->GetTimeSeconds() : 0.0f;
 			Component->Stop();
+			ComponentBaseVolumes.Remove(Component);
 			break;
 		}
 	}

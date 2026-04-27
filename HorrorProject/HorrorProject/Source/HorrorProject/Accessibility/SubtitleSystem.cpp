@@ -36,20 +36,17 @@ void USubtitleSystem::ClearAllSubtitles()
 
 void USubtitleSystem::UpdateSubtitles(float DeltaTime)
 {
-    bool bChanged = false;
-
-    for (int32 i = ActiveSubtitles.Num() - 1; i >= 0; --i)
+    for (FSubtitleEntry& Subtitle : ActiveSubtitles)
     {
-        ActiveSubtitles[i].TimeRemaining -= DeltaTime;
-
-        if (ActiveSubtitles[i].TimeRemaining <= 0.0f)
-        {
-            ActiveSubtitles.RemoveAt(i);
-            bChanged = true;
-        }
+        Subtitle.TimeRemaining -= DeltaTime;
     }
 
-    if (bChanged)
+    const int32 RemovedCount = ActiveSubtitles.RemoveAll([](const FSubtitleEntry& Subtitle)
+    {
+        return Subtitle.TimeRemaining <= 0.0f;
+    });
+
+    if (RemovedCount > 0)
     {
         OnSubtitleQueueChanged.Broadcast(ActiveSubtitles);
     }

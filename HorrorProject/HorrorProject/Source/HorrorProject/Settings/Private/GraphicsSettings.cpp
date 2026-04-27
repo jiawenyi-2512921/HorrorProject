@@ -6,9 +6,39 @@
 #include "HAL/IConsoleManager.h"
 #include "RHI.h"
 
+namespace
+{
+	const FIntPoint GraphicsDefaultDisplayResolution(1920, 1080);
+	const FIntPoint GraphicsDefaultQHDResolution(2560, 1440);
+	const FIntPoint GraphicsDefaultUHDResolution(3840, 2160);
+	constexpr float GraphicsDefaultShadowDistance = 5000.0f;
+
+	void ApplyScalabilityPreset(
+		UGraphicsSettings& Settings,
+		int32 QualityLevel,
+		EShadowQuality ShadowQuality,
+		EHorrorAntiAliasingMethod AntiAliasingMethod,
+		bool bEnableMotionBlur,
+		bool bEnableAmbientOcclusion,
+		bool bEnableRayTracing)
+	{
+		Settings.ViewDistanceQuality = QualityLevel;
+		Settings.TextureQuality = QualityLevel;
+		Settings.EffectsQuality = QualityLevel;
+		Settings.PostProcessQuality = QualityLevel;
+		Settings.FoliageQuality = QualityLevel;
+		Settings.ShadingQuality = QualityLevel;
+		Settings.ShadowQuality = ShadowQuality;
+		Settings.AntiAliasingMethod = AntiAliasingMethod;
+		Settings.bMotionBlur = bEnableMotionBlur;
+		Settings.bAmbientOcclusion = bEnableAmbientOcclusion;
+		Settings.bRayTracingEnabled = bEnableRayTracing;
+	}
+}
+
 UGraphicsSettings::UGraphicsSettings()
 {
-	Resolution = FIntPoint(1920, 1080);
+	Resolution = GraphicsDefaultDisplayResolution;
 	bFullscreen = true;
 	bVSync = false;
 	FrameRateLimit = 0;
@@ -23,7 +53,7 @@ UGraphicsSettings::UGraphicsSettings()
 
 	ShadowQuality = EShadowQuality::High;
 	bDynamicShadows = true;
-	ShadowDistance = 5000.0f;
+	ShadowDistance = GraphicsDefaultShadowDistance;
 
 	AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
 	AntiAliasingQuality = 3;
@@ -57,79 +87,30 @@ void UGraphicsSettings::Apply()
 void UGraphicsSettings::ApplyQualityPreset(int32 PresetLevel)
 {
 	QualityPreset = static_cast<EQualityPreset>(FMath::Clamp(PresetLevel, 0, 4));
+	const bool bRayTracingSupported = IsRayTracingSupported();
 
 	switch (QualityPreset)
 	{
 	case EQualityPreset::Low:
-		ViewDistanceQuality = 0;
-		TextureQuality = 0;
-		EffectsQuality = 0;
-		PostProcessQuality = 0;
-		FoliageQuality = 0;
-		ShadingQuality = 0;
-		ShadowQuality = EShadowQuality::Low;
-		AntiAliasingMethod = EHorrorAntiAliasingMethod::FXAA;
-		bMotionBlur = false;
-		bAmbientOcclusion = false;
-		bRayTracingEnabled = false;
+		ApplyScalabilityPreset(*this, 0, EShadowQuality::Low, EHorrorAntiAliasingMethod::FXAA, false, false, false);
 		break;
 
 	case EQualityPreset::Medium:
-		ViewDistanceQuality = 1;
-		TextureQuality = 1;
-		EffectsQuality = 1;
-		PostProcessQuality = 1;
-		FoliageQuality = 1;
-		ShadingQuality = 1;
-		ShadowQuality = EShadowQuality::Medium;
-		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
-		bMotionBlur = true;
-		bAmbientOcclusion = true;
-		bRayTracingEnabled = false;
+		ApplyScalabilityPreset(*this, 1, EShadowQuality::Medium, EHorrorAntiAliasingMethod::TAA, true, true, false);
 		break;
 
 	case EQualityPreset::High:
-		ViewDistanceQuality = 2;
-		TextureQuality = 2;
-		EffectsQuality = 2;
-		PostProcessQuality = 2;
-		FoliageQuality = 2;
-		ShadingQuality = 2;
-		ShadowQuality = EShadowQuality::High;
-		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
-		bMotionBlur = true;
-		bAmbientOcclusion = true;
-		bRayTracingEnabled = false;
+		ApplyScalabilityPreset(*this, 2, EShadowQuality::High, EHorrorAntiAliasingMethod::TAA, true, true, false);
 		break;
 
 	case EQualityPreset::Ultra:
-		ViewDistanceQuality = 3;
-		TextureQuality = 3;
-		EffectsQuality = 3;
-		PostProcessQuality = 3;
-		FoliageQuality = 3;
-		ShadingQuality = 3;
-		ShadowQuality = EShadowQuality::Ultra;
-		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
-		bMotionBlur = true;
-		bAmbientOcclusion = true;
-		bRayTracingEnabled = IsRayTracingSupported();
+		ApplyScalabilityPreset(*this, 3, EShadowQuality::Ultra, EHorrorAntiAliasingMethod::TAA, true, true, bRayTracingSupported);
 		break;
 
 	case EQualityPreset::Cinematic:
-		ViewDistanceQuality = 4;
-		TextureQuality = 4;
-		EffectsQuality = 4;
-		PostProcessQuality = 4;
-		FoliageQuality = 4;
-		ShadingQuality = 4;
-		ShadowQuality = EShadowQuality::Ultra;
-		AntiAliasingMethod = EHorrorAntiAliasingMethod::TAA;
-		bMotionBlur = true;
-		bAmbientOcclusion = true;
-		bRayTracingEnabled = IsRayTracingSupported();
-		bRayTracedShadows = IsRayTracingSupported();
-		bRayTracedReflections = IsRayTracingSupported();
+		ApplyScalabilityPreset(*this, 4, EShadowQuality::Ultra, EHorrorAntiAliasingMethod::TAA, true, true, bRayTracingSupported);
+		bRayTracedShadows = bRayTracingSupported;
+		bRayTracedReflections = bRayTracingSupported;
 		break;
 
 	default:
@@ -173,9 +154,9 @@ TArray<FIntPoint> UGraphicsSettings::GetSupportedResolutions() const
 
 	if (Resolutions.Num() == 0)
 	{
-		Resolutions.Add(FIntPoint(1920, 1080));
-		Resolutions.Add(FIntPoint(2560, 1440));
-		Resolutions.Add(FIntPoint(3840, 2160));
+		Resolutions.Add(GraphicsDefaultDisplayResolution);
+		Resolutions.Add(GraphicsDefaultQHDResolution);
+		Resolutions.Add(GraphicsDefaultUHDResolution);
 	}
 
 	return Resolutions;

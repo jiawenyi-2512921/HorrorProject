@@ -12,7 +12,15 @@ void UHorrorAudioSettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Get audio settings
+	ResolveAudioSettings();
+	PopulateOutputDevices();
+	BindVolumeControls();
+	BindOptionControls();
+	RefreshSettings();
+}
+
+void UHorrorAudioSettingsWidget::ResolveAudioSettings()
+{
 	if (UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this))
 	{
 		if (UGameSettingsSubsystem* SettingsSubsystem = GameInstance->GetSubsystem<UGameSettingsSubsystem>())
@@ -20,11 +28,10 @@ void UHorrorAudioSettingsWidget::NativeConstruct()
 			AudioSettings = SettingsSubsystem->GetAudioSettings();
 		}
 	}
+}
 
-	// Populate combo boxes
-	PopulateOutputDevices();
-
-	// Bind events
+void UHorrorAudioSettingsWidget::BindVolumeControls()
+{
 	if (MasterVolumeSlider)
 	{
 		MasterVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnMasterVolumeChanged);
@@ -49,7 +56,10 @@ void UHorrorAudioSettingsWidget::NativeConstruct()
 	{
 		AmbienceVolumeSlider->OnValueChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnAmbienceVolumeChanged);
 	}
+}
 
+void UHorrorAudioSettingsWidget::BindOptionControls()
+{
 	if (ReverbCheckBox)
 	{
 		ReverbCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnReverbChanged);
@@ -74,8 +84,6 @@ void UHorrorAudioSettingsWidget::NativeConstruct()
 	{
 		SubtitlesCheckBox->OnCheckStateChanged.AddDynamic(this, &UHorrorAudioSettingsWidget::OnSubtitlesChanged);
 	}
-
-	RefreshSettings();
 }
 
 void UHorrorAudioSettingsWidget::RefreshSettings()
@@ -85,7 +93,12 @@ void UHorrorAudioSettingsWidget::RefreshSettings()
 		return;
 	}
 
-	// Update volume sliders
+	RefreshVolumeControls();
+	RefreshOptionControls();
+}
+
+void UHorrorAudioSettingsWidget::RefreshVolumeControls()
+{
 	if (MasterVolumeSlider)
 	{
 		MasterVolumeSlider->SetValue(AudioSettings->MasterVolume);
@@ -110,8 +123,10 @@ void UHorrorAudioSettingsWidget::RefreshSettings()
 	{
 		AmbienceVolumeSlider->SetValue(AudioSettings->AmbienceVolume);
 	}
+}
 
-	// Update quality settings
+void UHorrorAudioSettingsWidget::RefreshOptionControls()
+{
 	if (ReverbCheckBox)
 	{
 		ReverbCheckBox->SetIsChecked(AudioSettings->bEnableReverb);

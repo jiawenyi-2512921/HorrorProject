@@ -2,10 +2,18 @@
 # Analyzes profiling data and generates comprehensive reports
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [string]$ProfilingDataPath = "",
     [switch]$GenerateCharts = $false
 )
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
 
 Write-Host "=== HorrorProject Performance Report Generator ===" -ForegroundColor Cyan
 Write-Host ""

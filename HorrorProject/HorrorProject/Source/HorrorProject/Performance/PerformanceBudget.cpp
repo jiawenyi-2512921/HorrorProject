@@ -7,6 +7,20 @@
 #include "Engine/World.h"
 #include "DynamicRHI.h"
 
+namespace HorrorPerformanceBudget
+{
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float UpdateIntervalSeconds = 1.0f;
+	constexpr float GameThreadBudgetMs = 10.0f;
+	constexpr float RenderThreadBudgetMs = 12.0f;
+	constexpr float GpuBudgetMs = 14.0f;
+	constexpr float MemoryBudgetMB = 4096.0f;
+	constexpr float DrawCallBudget = 3000.0f;
+	constexpr float TriangleBudget = 5000000.0f;
+	constexpr float LumenBudgetMs = 8.0f;
+	constexpr float VsmBudgetMs = 3.0f;
+}
+
 void UPerformanceBudget::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -51,7 +65,7 @@ void UPerformanceBudget::UpdateBudgetValue(FName BudgetName, float CurrentValue)
 
 	if (Entry->BudgetValue > 0.0f)
 	{
-		Entry->PercentUsed = (CurrentValue / Entry->BudgetValue) * 100.0f;
+		Entry->PercentUsed = (CurrentValue / Entry->BudgetValue) * HorrorPerformanceBudget::PercentMultiplier;
 		Entry->bExceeded = CurrentValue > Entry->BudgetValue;
 
 		if (Entry->bExceeded && !WarningTriggered.Contains(BudgetName))
@@ -130,7 +144,12 @@ void UPerformanceBudget::SetBudgetTrackingEnabled(bool bEnabled)
 		// Update automatic budgets every second
 		if (UWorld* World = GetWorld())
 		{
-			World->GetTimerManager().SetTimer(UpdateTimerHandle, this, &UPerformanceBudget::UpdateAutomaticBudgets, 1.0f, true);
+			World->GetTimerManager().SetTimer(
+				UpdateTimerHandle,
+				this,
+				&UPerformanceBudget::UpdateAutomaticBudgets,
+				HorrorPerformanceBudget::UpdateIntervalSeconds,
+				true);
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("Budget tracking enabled"));
@@ -164,28 +183,28 @@ void UPerformanceBudget::LoadDefaultBudgets()
 	// Frame budget: 16.67ms
 
 	// Game thread budget: 10ms (60% of frame)
-	SetBudget(FName("GameThread"), EPerformanceBudgetCategory::GameThread, 10.0f);
+	SetBudget(FName("GameThread"), EPerformanceBudgetCategory::GameThread, HorrorPerformanceBudget::GameThreadBudgetMs);
 
 	// Render thread budget: 12ms (72% of frame)
-	SetBudget(FName("RenderThread"), EPerformanceBudgetCategory::RenderThread, 12.0f);
+	SetBudget(FName("RenderThread"), EPerformanceBudgetCategory::RenderThread, HorrorPerformanceBudget::RenderThreadBudgetMs);
 
 	// GPU budget: 14ms (84% of frame)
-	SetBudget(FName("GPU"), EPerformanceBudgetCategory::GPU, 14.0f);
+	SetBudget(FName("GPU"), EPerformanceBudgetCategory::GPU, HorrorPerformanceBudget::GpuBudgetMs);
 
 	// Memory budget: 4GB
-	SetBudget(FName("Memory"), EPerformanceBudgetCategory::Memory, 4096.0f);
+	SetBudget(FName("Memory"), EPerformanceBudgetCategory::Memory, HorrorPerformanceBudget::MemoryBudgetMB);
 
 	// Draw calls budget: 3000
-	SetBudget(FName("DrawCalls"), EPerformanceBudgetCategory::DrawCalls, 3000.0f);
+	SetBudget(FName("DrawCalls"), EPerformanceBudgetCategory::DrawCalls, HorrorPerformanceBudget::DrawCallBudget);
 
 	// Triangle budget: 5M
-	SetBudget(FName("Triangles"), EPerformanceBudgetCategory::Triangles, 5000000.0f);
+	SetBudget(FName("Triangles"), EPerformanceBudgetCategory::Triangles, HorrorPerformanceBudget::TriangleBudget);
 
 	// Lumen budget: 8ms
-	SetBudget(FName("Lumen"), EPerformanceBudgetCategory::GPU, 8.0f);
+	SetBudget(FName("Lumen"), EPerformanceBudgetCategory::GPU, HorrorPerformanceBudget::LumenBudgetMs);
 
 	// VSM budget: 3ms
-	SetBudget(FName("VSM"), EPerformanceBudgetCategory::GPU, 3.0f);
+	SetBudget(FName("VSM"), EPerformanceBudgetCategory::GPU, HorrorPerformanceBudget::VsmBudgetMs);
 
 	UE_LOG(LogTemp, Log, TEXT("Default budgets loaded for 60 FPS @ Epic quality"));
 }

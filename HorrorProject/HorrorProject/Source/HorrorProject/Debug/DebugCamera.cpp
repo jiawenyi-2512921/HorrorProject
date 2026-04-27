@@ -5,6 +5,17 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
+namespace HorrorDebugCamera
+{
+	constexpr float DefaultMovementSpeedCmPerSecond = 1000.0f;
+	constexpr float DefaultRotationSpeedDegreesPerSecond = 45.0f;
+	constexpr float SpeedMultiplierStep = 2.0f;
+	constexpr float MinMovementSpeedCmPerSecond = 100.0f;
+	constexpr float MaxMovementSpeedCmPerSecond = 10000.0f;
+	constexpr float MinRotationSpeedDegreesPerSecond = 10.0f;
+	constexpr float MaxRotationSpeedDegreesPerSecond = 180.0f;
+}
+
 ADebugCamera::ADebugCamera()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -13,11 +24,11 @@ ADebugCamera::ADebugCamera()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	RootComponent = CameraComponent;
 
-	MovementSpeed = 1000.0f;
-	RotationSpeed = 45.0f;
-	SpeedMultiplier = 2.0f;
-	MinSpeed = 100.0f;
-	MaxSpeed = 10000.0f;
+	MovementSpeed = HorrorDebugCamera::DefaultMovementSpeedCmPerSecond;
+	RotationSpeed = HorrorDebugCamera::DefaultRotationSpeedDegreesPerSecond;
+	SpeedMultiplier = HorrorDebugCamera::SpeedMultiplierStep;
+	MinSpeed = HorrorDebugCamera::MinMovementSpeedCmPerSecond;
+	MaxSpeed = HorrorDebugCamera::MaxMovementSpeedCmPerSecond;
 	bIsActive = false;
 
 	MovementInput = FVector::ZeroVector;
@@ -68,7 +79,10 @@ void ADebugCamera::ActivateDebugCamera()
 {
 	if (bIsActive) return;
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
 	if (!PC) return;
 
 	// Store original controller and pawn
@@ -102,6 +116,9 @@ void ADebugCamera::DeactivateDebugCamera()
 
 	SetActorHiddenInGame(true);
 	bIsActive = false;
+	MovementInput = FVector::ZeroVector;
+	OriginalController = nullptr;
+	OriginalPawn = nullptr;
 
 	UE_LOG(LogTemp, Warning, TEXT("Debug Camera Deactivated"));
 }
@@ -126,44 +143,57 @@ void ADebugCamera::SetMovementSpeed(float NewSpeed)
 
 void ADebugCamera::SetRotationSpeed(float NewSpeed)
 {
-	RotationSpeed = FMath::Clamp(NewSpeed, 10.0f, 180.0f);
+	RotationSpeed = FMath::Clamp(
+		NewSpeed,
+		HorrorDebugCamera::MinRotationSpeedDegreesPerSecond,
+		HorrorDebugCamera::MaxRotationSpeedDegreesPerSecond);
 	UE_LOG(LogTemp, Log, TEXT("Debug Camera Rotation Speed: %.2f"), RotationSpeed);
 }
 
 void ADebugCamera::MoveForward(float Value)
 {
 	if (!bIsActive) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
 	MovementInput.X = Value;
 	FVector Forward = GetActorForwardVector();
-	AddActorWorldOffset(Forward * Value * MovementSpeed * GetWorld()->GetDeltaSeconds());
+	AddActorWorldOffset(Forward * Value * MovementSpeed * World->GetDeltaSeconds());
 }
 
 void ADebugCamera::MoveRight(float Value)
 {
 	if (!bIsActive) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
 	MovementInput.Y = Value;
 	FVector Right = GetActorRightVector();
-	AddActorWorldOffset(Right * Value * MovementSpeed * GetWorld()->GetDeltaSeconds());
+	AddActorWorldOffset(Right * Value * MovementSpeed * World->GetDeltaSeconds());
 }
 
 void ADebugCamera::MoveUp(float Value)
 {
 	if (!bIsActive) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
 	MovementInput.Z = Value;
 	FVector Up = FVector::UpVector;
-	AddActorWorldOffset(Up * Value * MovementSpeed * GetWorld()->GetDeltaSeconds());
+	AddActorWorldOffset(Up * Value * MovementSpeed * World->GetDeltaSeconds());
 }
 
 void ADebugCamera::LookUp(float Value)
 {
 	if (!bIsActive) return;
-	AddActorLocalRotation(FRotator(Value * RotationSpeed * GetWorld()->GetDeltaSeconds(), 0.0f, 0.0f));
+	UWorld* World = GetWorld();
+	if (!World) return;
+	AddActorLocalRotation(FRotator(Value * RotationSpeed * World->GetDeltaSeconds(), 0.0f, 0.0f));
 }
 
 void ADebugCamera::Turn(float Value)
 {
 	if (!bIsActive) return;
-	AddActorLocalRotation(FRotator(0.0f, Value * RotationSpeed * GetWorld()->GetDeltaSeconds(), 0.0f));
+	UWorld* World = GetWorld();
+	if (!World) return;
+	AddActorLocalRotation(FRotator(0.0f, Value * RotationSpeed * World->GetDeltaSeconds(), 0.0f));
 }
 
 void ADebugCamera::SpeedUp()

@@ -28,6 +28,9 @@ struct HORRORPROJECT_API FEvidenceSaveData
 	int32 VideoCount = 0;
 };
 
+/**
+ * Stores persistent Evidence Save Game data for save and restore workflows.
+ */
 UCLASS()
 class HORRORPROJECT_API UEvidenceSaveGame : public USaveGame
 {

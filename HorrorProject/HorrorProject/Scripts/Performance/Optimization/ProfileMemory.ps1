@@ -3,12 +3,17 @@
 # Analyzes memory allocation and usage patterns
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Profiling\Memory",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [string]$Map = "MainLevel"
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Profiling\Memory" }
 
 Write-Host "=== Memory Usage Profiler ===" -ForegroundColor Cyan
 Write-Host ""

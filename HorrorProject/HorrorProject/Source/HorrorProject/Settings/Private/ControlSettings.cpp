@@ -4,6 +4,33 @@
 #include "GameFramework/PlayerInput.h"
 #include "GameFramework/InputSettings.h"
 
+namespace
+{
+	struct FDefaultKeyBindingSpec
+	{
+		FName ActionName;
+		FKey PrimaryKey;
+		FKey SecondaryKey = EKeys::Invalid;
+	};
+
+	const FDefaultKeyBindingSpec DefaultKeyBindings[] =
+	{
+		{ TEXT("MoveForward"), EKeys::W, EKeys::Up },
+		{ TEXT("MoveBackward"), EKeys::S, EKeys::Down },
+		{ TEXT("MoveLeft"), EKeys::A, EKeys::Left },
+		{ TEXT("MoveRight"), EKeys::D, EKeys::Right },
+		{ TEXT("Jump"), EKeys::SpaceBar },
+		{ TEXT("Crouch"), EKeys::LeftControl, EKeys::C },
+		{ TEXT("Sprint"), EKeys::LeftShift },
+		{ TEXT("Interact"), EKeys::E },
+		{ TEXT("Fire"), EKeys::LeftMouseButton },
+		{ TEXT("Aim"), EKeys::RightMouseButton },
+		{ TEXT("Reload"), EKeys::R },
+		{ TEXT("Inventory"), EKeys::Tab, EKeys::I },
+		{ TEXT("Pause"), EKeys::Escape },
+	};
+}
+
 UControlSettings::UControlSettings()
 {
 	MouseSensitivity = 1.0f;
@@ -137,80 +164,14 @@ void UControlSettings::InitializeDefaultBindings()
 {
 	KeyBindings.Empty();
 
-	// Movement
-	FKeyBinding MoveForward;
-	MoveForward.ActionName = TEXT("MoveForward");
-	MoveForward.PrimaryKey = EKeys::W;
-	MoveForward.SecondaryKey = EKeys::Up;
-	KeyBindings.Add(MoveForward);
-
-	FKeyBinding MoveBackward;
-	MoveBackward.ActionName = TEXT("MoveBackward");
-	MoveBackward.PrimaryKey = EKeys::S;
-	MoveBackward.SecondaryKey = EKeys::Down;
-	KeyBindings.Add(MoveBackward);
-
-	FKeyBinding MoveLeft;
-	MoveLeft.ActionName = TEXT("MoveLeft");
-	MoveLeft.PrimaryKey = EKeys::A;
-	MoveLeft.SecondaryKey = EKeys::Left;
-	KeyBindings.Add(MoveLeft);
-
-	FKeyBinding MoveRight;
-	MoveRight.ActionName = TEXT("MoveRight");
-	MoveRight.PrimaryKey = EKeys::D;
-	MoveRight.SecondaryKey = EKeys::Right;
-	KeyBindings.Add(MoveRight);
-
-	// Actions
-	FKeyBinding Jump;
-	Jump.ActionName = TEXT("Jump");
-	Jump.PrimaryKey = EKeys::SpaceBar;
-	KeyBindings.Add(Jump);
-
-	FKeyBinding Crouch;
-	Crouch.ActionName = TEXT("Crouch");
-	Crouch.PrimaryKey = EKeys::LeftControl;
-	Crouch.SecondaryKey = EKeys::C;
-	KeyBindings.Add(Crouch);
-
-	FKeyBinding Sprint;
-	Sprint.ActionName = TEXT("Sprint");
-	Sprint.PrimaryKey = EKeys::LeftShift;
-	KeyBindings.Add(Sprint);
-
-	FKeyBinding Interact;
-	Interact.ActionName = TEXT("Interact");
-	Interact.PrimaryKey = EKeys::E;
-	KeyBindings.Add(Interact);
-
-	// Combat
-	FKeyBinding Fire;
-	Fire.ActionName = TEXT("Fire");
-	Fire.PrimaryKey = EKeys::LeftMouseButton;
-	KeyBindings.Add(Fire);
-
-	FKeyBinding Aim;
-	Aim.ActionName = TEXT("Aim");
-	Aim.PrimaryKey = EKeys::RightMouseButton;
-	KeyBindings.Add(Aim);
-
-	FKeyBinding Reload;
-	Reload.ActionName = TEXT("Reload");
-	Reload.PrimaryKey = EKeys::R;
-	KeyBindings.Add(Reload);
-
-	// UI
-	FKeyBinding Inventory;
-	Inventory.ActionName = TEXT("Inventory");
-	Inventory.PrimaryKey = EKeys::Tab;
-	Inventory.SecondaryKey = EKeys::I;
-	KeyBindings.Add(Inventory);
-
-	FKeyBinding Pause;
-	Pause.ActionName = TEXT("Pause");
-	Pause.PrimaryKey = EKeys::Escape;
-	KeyBindings.Add(Pause);
+	for (const FDefaultKeyBindingSpec& Spec : DefaultKeyBindings)
+	{
+		FKeyBinding Binding;
+		Binding.ActionName = Spec.ActionName;
+		Binding.PrimaryKey = Spec.PrimaryKey;
+		Binding.SecondaryKey = Spec.SecondaryKey;
+		KeyBindings.Add(Binding);
+	}
 }
 
 void UControlSettings::ApplyMouseSettings()

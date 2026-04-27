@@ -132,16 +132,29 @@ void AHorrorGameModeMultiplayer::RestartMultiplayerGame()
 {
 	EndMultiplayerGame(false);
 
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
 	FTimerHandle RestartTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(
+	TWeakObjectPtr<AHorrorGameModeMultiplayer> WeakThis(this);
+	World->GetTimerManager().SetTimer(
 		RestartTimerHandle,
-		[this]()
+		[WeakThis]()
 		{
-			if (AReplicatedGameState* GS = GetGameState<AReplicatedGameState>())
+			AHorrorGameModeMultiplayer* GameMode = WeakThis.Get();
+			if (!GameMode)
+			{
+				return;
+			}
+
+			if (AReplicatedGameState* GS = GameMode->GetGameState<AReplicatedGameState>())
 			{
 				GS->SetGamePhase(EGamePhase::Lobby);
 			}
-			LobbyTimer = 0.0f;
+			GameMode->LobbyTimer = 0.0f;
 		},
 		3.0f,
 		false
@@ -163,8 +176,11 @@ void AHorrorGameModeMultiplayer::KickPlayer(APlayerController* PlayerToKick, con
 {
 	if (PlayerToKick && HasAuthority())
 	{
+		APlayerState* TargetPlayerState = PlayerToKick->GetPlayerState<APlayerState>();
+		const FString PlayerName = TargetPlayerState ? TargetPlayerState->GetPlayerName() : TEXT("Unknown");
+
 		UE_LOG(LogTemp, Warning, TEXT("Kicking player: %s - Reason: %s"),
-			*PlayerToKick->GetPlayerState<APlayerState>()->GetPlayerName(), *Reason);
+			*PlayerName, *Reason);
 
 		PlayerToKick->ClientReturnToMainMenuWithTextReason(FText::FromString(Reason));
 	}
@@ -234,7 +250,7 @@ void AHorrorGameModeMultiplayer::SpawnPlayersAtStartPoints()
 	{
 		if (PlayerStarts.IsValidIndex(StartIndex))
 		{
-			AActor* StartPoint = PlayerStarts[StartIndex];
+			AActor* StartPoint = *(PlayerStarts.GetData() + StartIndex);
 			if (APawn* Pawn = PC->GetPawn())
 			{
 				Pawn->SetActorLocation(StartPoint->GetActorLocation());

@@ -8,13 +8,24 @@
 #include "TimerManager.h"
 #include "EngineUtils.h"
 #include "DynamicRHI.h"
+#include "Engine/NetDriver.h"
+
+namespace HorrorDiagnostics
+{
+	constexpr float FrameBudgetMs = 33.0f;
+	constexpr float BytesPerMegabyte = 1024.0f * 1024.0f;
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float MemoryWarningPercent = 80.0f;
+	constexpr float MemoryCriticalPercent = 90.0f;
+	constexpr float PacketLossWarningPercent = 5.0f;
+}
 
 void UDiagnosticSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
 	bAutoDiagnosticsEnabled = false;
-	AutoDiagnosticsInterval = 60.0f;
+	AutoDiagnosticsInterval = HorrorDiagnosticsDefaults::AutoDiagnosticsIntervalSeconds;
 
 	UE_LOG(LogTemp, Log, TEXT("Diagnostic Subsystem Initialized"));
 }
@@ -23,7 +34,10 @@ void UDiagnosticSubsystem::Deinitialize()
 {
 	if (bAutoDiagnosticsEnabled)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(AutoDiagnosticsTimer);
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(AutoDiagnosticsTimer);
+		}
 	}
 
 	Super::Deinitialize();
@@ -52,7 +66,7 @@ void UDiagnosticSubsystem::RunPerformanceDiagnostics()
 
 	// Check game thread time
 	float GameThreadTime = FPlatformTime::ToMilliseconds(GGameThreadTime);
-	if (GameThreadTime > 33.0f)
+	if (GameThreadTime > HorrorDiagnostics::FrameBudgetMs)
 	{
 		AddDiagnosticReport(TEXT("Performance"),
 			FString::Printf(TEXT("High game thread time: %.2f ms"), GameThreadTime),
@@ -61,7 +75,7 @@ void UDiagnosticSubsystem::RunPerformanceDiagnostics()
 
 	// Check render thread time
 	float RenderThreadTime = FPlatformTime::ToMilliseconds(GRenderThreadTime);
-	if (RenderThreadTime > 33.0f)
+	if (RenderThreadTime > HorrorDiagnostics::FrameBudgetMs)
 	{
 		AddDiagnosticReport(TEXT("Performance"),
 			FString::Printf(TEXT("High render thread time: %.2f ms"), RenderThreadTime),
@@ -70,7 +84,7 @@ void UDiagnosticSubsystem::RunPerformanceDiagnostics()
 
 	// Check GPU time
 	float GPUTime = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
-	if (GPUTime > 33.0f)
+	if (GPUTime > HorrorDiagnostics::FrameBudgetMs)
 	{
 		AddDiagnosticReport(TEXT("Performance"),
 			FString::Printf(TEXT("High GPU time: %.2f ms"), GPUTime),
@@ -85,16 +99,16 @@ void UDiagnosticSubsystem::RunMemoryDiagnostics()
 	CheckMemoryUsage();
 
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-	float UsedPhysicalMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
-	float AvailablePhysicalMB = MemStats.AvailablePhysical / (1024.0f * 1024.0f);
-	float UsagePercent = (UsedPhysicalMB / (UsedPhysicalMB + AvailablePhysicalMB)) * 100.0f;
+	float UsedPhysicalMB = MemStats.UsedPhysical / HorrorDiagnostics::BytesPerMegabyte;
+	float AvailablePhysicalMB = MemStats.AvailablePhysical / HorrorDiagnostics::BytesPerMegabyte;
+	float UsagePercent = (UsedPhysicalMB / (UsedPhysicalMB + AvailablePhysicalMB)) * HorrorDiagnostics::PercentMultiplier;
 
 	AddDiagnosticReport(TEXT("Memory"),
 		FString::Printf(TEXT("Physical Memory: %.2f MB used (%.1f%%)"), UsedPhysicalMB, UsagePercent),
-		UsagePercent > 80.0f ? EDiagnosticSeverity::Warning : EDiagnosticSeverity::Info);
+		UsagePercent > HorrorDiagnostics::MemoryWarningPercent ? EDiagnosticSeverity::Warning : EDiagnosticSeverity::Info);
 
 	// Check for memory leaks (simplified)
-	if (UsagePercent > 90.0f)
+	if (UsagePercent > HorrorDiagnostics::MemoryCriticalPercent)
 	{
 		AddDiagnosticReport(TEXT("Memory"),
 			TEXT("Critical memory usage - possible memory leak"),
@@ -107,14 +121,43 @@ void UDiagnosticSubsystem::RunNetworkDiagnostics()
 	AddDiagnosticReport(TEXT("Network"), TEXT("Starting network diagnostics"), EDiagnosticSeverity::Info);
 
 	// Check if networked
-	if (GetWorld()->GetNetMode() == NM_Standalone)
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		AddDiagnosticReport(TEXT("Network"), TEXT("World unavailable"), EDiagnosticSeverity::Warning);
+		return;
+	}
+
+	if (World->GetNetMode() == NM_Standalone)
 	{
 		AddDiagnosticReport(TEXT("Network"), TEXT("Running in standalone mode"), EDiagnosticSeverity::Info);
 		return;
 	}
 
-	// TODO: Add network-specific checks
-	AddDiagnosticReport(TEXT("Network"), TEXT("Network diagnostics not fully implemented"), EDiagnosticSeverity::Warning);
+	const UNetDriver* NetDriver = World->GetNetDriver();
+	if (!NetDriver)
+	{
+		AddDiagnosticReport(TEXT("Network"), TEXT("World is networked but has no active NetDriver"), EDiagnosticSeverity::Warning);
+		return;
+	}
+
+	AddDiagnosticReport(TEXT("Network"),
+		FString::Printf(TEXT("NetDriver: %s | Clients: %d | In: %u B/s | Out: %u B/s"),
+			*GetNameSafe(NetDriver),
+			NetDriver->ClientConnections.Num(),
+			NetDriver->InBytesPerSecond,
+			NetDriver->OutBytesPerSecond),
+		EDiagnosticSeverity::Info);
+
+	const uint32 LostPackets = NetDriver->InPacketsLost + NetDriver->OutPacketsLost;
+	const uint32 TotalPackets = NetDriver->InPackets + NetDriver->OutPackets + LostPackets;
+	const float PacketLossPercent = TotalPackets > 0
+		? (static_cast<float>(LostPackets) / static_cast<float>(TotalPackets)) * HorrorDiagnostics::PercentMultiplier
+		: 0.0f;
+
+	AddDiagnosticReport(TEXT("Network"),
+		FString::Printf(TEXT("Packet loss estimate: %.2f%% (lost: %u)"), PacketLossPercent, LostPackets),
+		PacketLossPercent > HorrorDiagnostics::PacketLossWarningPercent ? EDiagnosticSeverity::Warning : EDiagnosticSeverity::Info);
 }
 
 void UDiagnosticSubsystem::RunGameplayDiagnostics()
@@ -123,9 +166,16 @@ void UDiagnosticSubsystem::RunGameplayDiagnostics()
 
 	CheckActorCount();
 
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		AddDiagnosticReport(TEXT("Gameplay"), TEXT("World unavailable"), EDiagnosticSeverity::Warning);
+		return;
+	}
+
 	// Check for null references
 	int32 NullActorCount = 0;
-	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+	for (TActorIterator<AActor> It(World); It; ++It)
 	{
 		if (!It->IsValidLowLevel())
 		{
@@ -141,7 +191,7 @@ void UDiagnosticSubsystem::RunGameplayDiagnostics()
 	}
 
 	// Check world time
-	float WorldTime = GetWorld()->GetTimeSeconds();
+	float WorldTime = World->GetTimeSeconds();
 	AddDiagnosticReport(TEXT("Gameplay"),
 		FString::Printf(TEXT("World time: %.2f seconds"), WorldTime),
 		EDiagnosticSeverity::Info);
@@ -197,7 +247,15 @@ void UDiagnosticSubsystem::SetAutoDiagnostics(bool bEnabled, float Interval)
 
 	if (bEnabled)
 	{
-		GetWorld()->GetTimerManager().SetTimer(AutoDiagnosticsTimer,
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			bAutoDiagnosticsEnabled = false;
+			AddDiagnosticReport(TEXT("Diagnostics"), TEXT("Cannot enable auto-diagnostics: world unavailable"), EDiagnosticSeverity::Warning);
+			return;
+		}
+
+		World->GetTimerManager().SetTimer(AutoDiagnosticsTimer,
 			this, &UDiagnosticSubsystem::PerformAutoDiagnostics,
 			AutoDiagnosticsInterval, true);
 
@@ -205,7 +263,10 @@ void UDiagnosticSubsystem::SetAutoDiagnostics(bool bEnabled, float Interval)
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().ClearTimer(AutoDiagnosticsTimer);
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(AutoDiagnosticsTimer);
+		}
 		UE_LOG(LogTemp, Log, TEXT("Auto-diagnostics disabled"));
 	}
 }
@@ -244,7 +305,14 @@ void UDiagnosticSubsystem::PerformAutoDiagnostics()
 
 void UDiagnosticSubsystem::CheckFrameRate()
 {
-	float CurrentFPS = 1.0f / GetWorld()->GetDeltaSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		AddDiagnosticReport(TEXT("Performance"), TEXT("World unavailable for frame-rate check"), EDiagnosticSeverity::Warning);
+		return;
+	}
+
+	float CurrentFPS = 1.0f / World->GetDeltaSeconds();
 
 	if (CurrentFPS < MinAcceptableFPS)
 	{
@@ -263,7 +331,7 @@ void UDiagnosticSubsystem::CheckFrameRate()
 void UDiagnosticSubsystem::CheckMemoryUsage()
 {
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-	float UsedPhysicalMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
+	float UsedPhysicalMB = MemStats.UsedPhysical / HorrorDiagnostics::BytesPerMegabyte;
 
 	if (UsedPhysicalMB > MaxMemoryUsageMB)
 	{
@@ -275,7 +343,14 @@ void UDiagnosticSubsystem::CheckMemoryUsage()
 
 void UDiagnosticSubsystem::CheckActorCount()
 {
-	int32 ActorCount = GetWorld()->GetActorCount();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		AddDiagnosticReport(TEXT("Gameplay"), TEXT("World unavailable for actor-count check"), EDiagnosticSeverity::Warning);
+		return;
+	}
+
+	int32 ActorCount = World->GetActorCount();
 
 	if (ActorCount > MaxActorCount)
 	{

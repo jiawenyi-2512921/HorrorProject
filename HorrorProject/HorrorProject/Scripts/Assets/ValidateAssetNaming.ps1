@@ -1,34 +1,110 @@
 # Asset Naming Validation Script
-# Validates asset naming conventions for HorrorProject
+# Validates project-owned asset naming conventions for HorrorProject.
 
 param(
-    [string]$ContentPath = "D:\gptzuo\HorrorProject\HorrorProject\Content",
+    [string]$ContentPath = "",
     [switch]$FixIssues = $false,
-    [switch]$Verbose = $false
+    [switch]$Verbose = $false,
+    [switch]$Detailed = $false,
+    [switch]$IncludeExternalContent = $false,
+    [string[]]$ExternalFolderNames = @(
+        'Bodycam_VHS_Effect',
+        'Fab',
+        'Grimytheus_Vol_2',
+        'IndustrialPipesM',
+        'SD_Art',
+        'SoundsOfHorror',
+        'Stone_Golem',
+        '_SM13',
+        '__ExternalActors__',
+        '__ExternalObjects__',
+        'Collections',
+        'Developers',
+        'DeepWaterStation',
+        'Variant_Horror'
+    )
 )
 
-# Valid prefixes by asset type
-$validPrefixes = @{
-    'uasset' = @('SM_', 'SK_', 'SKP_', 'M_', 'MI_', 'MF_', 'MPC_', 'PM_', 'T_', 'RT_', 'TC_',
-                 'BP_', 'BPFL_', 'BPI_', 'BPML_', 'E_', 'F_', 'WBP_',
-                 'A_', 'ABP_', 'AM_', 'BS_', 'BS1D_', 'AO_', 'AO1D_', 'AC_', 'S_',
-                 'SW_', 'SC_', 'SA_', 'SCon_', 'SCl_', 'SM_', 'DV_', 'DW_',
-                 'PS_', 'NS_', 'NE_', 'NF_', 'NM_', 'NPC_',
-                 'PHYS_', 'DM_', 'LF_', 'LP_',
-                 'L_', 'DA_', 'DT_', 'CT_', 'CF_', 'CV_', 'CLC_',
-                 'MP_', 'MT_', 'MS_', 'Font_', 'FF_')
-    'umap' = @('L_')
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ContentPath)) {
+    $ContentPath = Join-Path $ProjectRoot "Content"
 }
 
-# Texture suffix validation
-$validTextureSuffixes = @('_D', '_N', '_R', '_M', '_AO', '_E', '_O', '_ORM', '_Mask', '_H')
+$ContentRootFullPath = [System.IO.Path]::GetFullPath($ContentPath).TrimEnd('\')
 
-# Results tracking
+# Valid prefixes by asset type. The list intentionally includes common UE5,
+# Enhanced Input, audio, animation, and marketplace-import conventions.
+$validPrefixes = @{
+    'uasset' = @(
+        'SM_', 'SK_', 'SKM_', 'SKP_',
+        'M_', 'MI_', 'MF_', 'ML_', 'MPC_', 'PM_',
+        'T_', 'RT_', 'TC_',
+        'BP_', 'BPFL_', 'BPI_', 'BPML_', 'WBP_',
+        'E_', 'F_', 'DA_', 'DT_', 'CT_', 'CF_', 'CV_', 'CLC_',
+        'A_', 'ABP_', 'AM_', 'BS_', 'BS1D_', 'AO_', 'AO1D_', 'AC_',
+        'S_', 'SW_', 'SC_', 'SA_', 'SCon_', 'SCl_', 'CUE_', 'WAV_',
+        'DV_', 'DW_', 'P_', 'PS_', 'NS_', 'NE_', 'NF_', 'NM_', 'NPC_',
+        'PHYS_', 'DM_', 'LF_', 'LP_',
+        'MP_', 'MT_', 'MS_', 'Font_', 'FF_',
+        'IA_', 'IMC_', 'GM_', 'MM_', 'CA_', 'CR_', 'PA_', 'UI_', 'LVL_'
+    )
+    'umap' = @('L_', 'LVL_')
+}
+
+$validTextureSuffixes = @(
+    '_D', '_BC', '_BaseColor',
+    '_N', '_BN', '_Normal',
+    '_R', '_Roughness',
+    '_M', '_Metallic',
+    '_AO',
+    '_E', '_Emissive',
+    '_O', '_Opacity',
+    '_A', '_Alpha',
+    '_ORM', '_MRA', '_MSK', '_Mask',
+    '_H', '_Height'
+)
+
 $results = @{
     Total = 0
     Valid = 0
     Invalid = 0
+    SkippedExternal = 0
     Issues = @()
+}
+
+function Get-ContentTopLevelFolder {
+    param(
+        [string]$FilePath
+    )
+
+    $fullPath = [System.IO.Path]::GetFullPath($FilePath)
+    if (-not $fullPath.StartsWith($ContentRootFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return ""
+    }
+
+    $relativePath = $fullPath.Substring($ContentRootFullPath.Length).TrimStart([char[]]@('\', '/'))
+    if ([string]::IsNullOrWhiteSpace($relativePath)) {
+        return ""
+    }
+
+    return ($relativePath -split '[\\/]')[0]
+}
+
+function Test-IsExternalContentAsset {
+    param(
+        [System.IO.FileInfo]$File
+    )
+
+    $topLevelFolder = Get-ContentTopLevelFolder -FilePath $File.FullName
+    foreach ($externalFolder in $ExternalFolderNames) {
+        if ($topLevelFolder.Equals($externalFolder, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+
+    return $false
 }
 
 function Test-AssetName {
@@ -40,50 +116,44 @@ function Test-AssetName {
     $issues = @()
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($FileName)
 
-    # Check for spaces
     if ($baseName -match '\s') {
         $issues += "Contains spaces"
     }
 
-    # Check for lowercase start (except after underscore)
-    if ($baseName -match '^[a-z]') {
+    # PowerShell -match is case-insensitive by default; use -cmatch here.
+    if ($baseName -cmatch '^[a-z]') {
         $issues += "Starts with lowercase"
     }
 
-    # Check for valid prefix
     $hasValidPrefix = $false
     if ($validPrefixes.ContainsKey($Extension)) {
         foreach ($prefix in $validPrefixes[$Extension]) {
-            if ($baseName.StartsWith($prefix)) {
+            if ($baseName.StartsWith($prefix, [System.StringComparison]::Ordinal)) {
                 $hasValidPrefix = $true
                 break
             }
         }
     }
 
-    # Allow TEMP_, PROTO_, DEPRECATED_, TEST_ prefixes
-    if ($baseName -match '^(TEMP_|PROTO_|DEPRECATED_|TEST_)') {
+    if ($baseName -cmatch '^(TEMP_|PROTO_|DEPRECATED_|TEST_)') {
         $hasValidPrefix = $true
     }
 
-    if (-not $hasValidPrefix -and $Extension -eq 'uasset') {
+    if (-not $hasValidPrefix -and $validPrefixes.ContainsKey($Extension)) {
         $issues += "Missing or invalid prefix"
     }
 
-    # Check texture naming
-    if ($baseName.StartsWith('T_') -and $baseName -match '_[A-Z]+$') {
+    if ($baseName.StartsWith('T_', [System.StringComparison]::Ordinal) -and $baseName -cmatch '_[A-Z]+$') {
         $suffix = $baseName -replace '.*(_[A-Z]+)$', '$1'
         if ($validTextureSuffixes -notcontains $suffix) {
             $issues += "Invalid texture suffix: $suffix"
         }
     }
 
-    # Check for single digit variations (should be 01, 02, not 1, 2)
     if ($baseName -match '_\d$') {
         $issues += "Single digit variation (should be 01, 02, etc.)"
     }
 
-    # Check length
     if ($baseName.Length -lt 3) {
         $issues += "Name too short (min 3 characters)"
     }
@@ -91,7 +161,6 @@ function Test-AssetName {
         $issues += "Name too long (max 64 characters)"
     }
 
-    # Check for invalid characters
     if ($baseName -match '[^a-zA-Z0-9_-]') {
         $issues += "Contains invalid characters"
     }
@@ -108,23 +177,16 @@ function Get-SuggestedName {
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($FileName)
     $extension = [System.IO.Path]::GetExtension($FileName)
 
-    # Remove spaces
     $suggested = $baseName -replace '\s', '_'
-
-    # Fix single digit variations
     $suggested = $suggested -replace '_(\d)$', '_0$1'
 
-    # Capitalize after underscores
     $suggested = ($suggested -split '_' | ForEach-Object {
         if ($_.Length -gt 0) {
-            $_.Substring(0,1).ToUpper() + $_.Substring(1)
+            $_.Substring(0, 1).ToUpperInvariant() + $_.Substring(1)
         }
     }) -join '_'
 
-    # Try to add prefix based on folder
-    if (-not ($suggested -match '^[A-Z]+_')) {
-        $folderName = Split-Path $FolderPath -Leaf
-
+    if (-not ($suggested -cmatch '^[A-Z][A-Z0-9]*_')) {
         $prefixMap = @{
             'Meshes' = 'SM_'
             'Materials' = 'MI_'
@@ -135,10 +197,13 @@ function Get-SuggestedName {
             'Animations' = 'A_'
             'Particles' = 'PS_'
             'Niagara' = 'NS_'
+            'Input' = 'IA_'
+            'Maps' = 'L_'
+            'Levels' = 'L_'
         }
 
         foreach ($key in $prefixMap.Keys) {
-            if ($FolderPath -match $key) {
+            if ($FolderPath -match [regex]::Escape($key)) {
                 $suggested = $prefixMap[$key] + $suggested
                 break
             }
@@ -148,69 +213,100 @@ function Get-SuggestedName {
     return $suggested + $extension
 }
 
-# Scan assets
 Write-Host "Scanning assets in: $ContentPath" -ForegroundColor Cyan
+if (-not $IncludeExternalContent) {
+    Write-Host "External/vendor content folders are skipped by default. Use -IncludeExternalContent for a full audit." -ForegroundColor DarkGray
+}
 Write-Host ""
 
-Get-ChildItem -Path $ContentPath -Recurse -Include *.uasset,*.umap | ForEach-Object {
-    $results.Total++
-    $file = $_
-    $extension = $_.Extension.TrimStart('.')
+$assets = Get-ChildItem -Path $ContentPath -Recurse -File -Include *.uasset,*.umap
+foreach ($file in $assets) {
+    if (-not $IncludeExternalContent -and (Test-IsExternalContentAsset -File $file)) {
+        $results.SkippedExternal++
+        continue
+    }
 
-    $issues = Test-AssetName -FileName $_.Name -Extension $extension
+    $results.Total++
+    $extension = $file.Extension.TrimStart('.')
+    $issues = Test-AssetName -FileName $file.Name -Extension $extension
 
     if ($issues.Count -eq 0) {
         $results.Valid++
-        if ($Verbose) {
-            Write-Host "✓ $($_.Name)" -ForegroundColor Green
+        if ($Verbose -or $Detailed) {
+            Write-Host "[OK] $($file.Name)" -ForegroundColor Green
         }
-    } else {
-        $results.Invalid++
+        continue
+    }
 
-        $issueObj = [PSCustomObject]@{
-            File = $_.FullName
-            Name = $_.Name
-            Issues = $issues -join ', '
-            Suggested = Get-SuggestedName -FileName $_.Name -FolderPath $_.DirectoryName
-        }
+    $results.Invalid++
+    $issueObj = [PSCustomObject]@{
+        File = $file.FullName
+        Name = $file.Name
+        Issues = $issues -join ', '
+        Suggested = Get-SuggestedName -FileName $file.Name -FolderPath $file.DirectoryName
+    }
 
-        $results.Issues += $issueObj
+    $results.Issues += $issueObj
 
-        Write-Host "✗ $($_.Name)" -ForegroundColor Red
+    if ($Verbose -or $Detailed) {
+        Write-Host "[ISSUE] $($file.Name)" -ForegroundColor Red
         Write-Host "  Issues: $($issues -join ', ')" -ForegroundColor Yellow
         Write-Host "  Suggested: $($issueObj.Suggested)" -ForegroundColor Cyan
         Write-Host ""
     }
 }
 
-# Summary
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Validation Summary" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Total Assets:   $($results.Total)" -ForegroundColor White
-Write-Host "Valid:          $($results.Valid) ($([math]::Round($results.Valid/$results.Total*100, 1))%)" -ForegroundColor Green
-Write-Host "Invalid:        $($results.Invalid) ($([math]::Round($results.Invalid/$results.Total*100, 1))%)" -ForegroundColor Red
+Write-Host "Skipped External/Vendor: $($results.SkippedExternal)" -ForegroundColor DarkGray
+
+$validPercent = if ($results.Total -gt 0) { [math]::Round($results.Valid / $results.Total * 100, 1) } else { 100 }
+$invalidPercent = if ($results.Total -gt 0) { [math]::Round($results.Invalid / $results.Total * 100, 1) } else { 0 }
+Write-Host "Valid:          $($results.Valid) ($validPercent%)" -ForegroundColor Green
+Write-Host "Invalid:        $($results.Invalid) ($invalidPercent%)" -ForegroundColor Red
 Write-Host ""
 
-# Export issues to CSV
+$reportPath = Join-Path $ContentPath "..\Docs\Assets\NamingIssues.csv"
 if ($results.Invalid -gt 0) {
-    $reportPath = Join-Path $ContentPath "..\Docs\Assets\NamingIssues.csv"
+    $reportDir = Split-Path -Parent $reportPath
+    if (-not (Test-Path $reportDir)) {
+        New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+    }
+
     $results.Issues | Export-Csv -Path $reportPath -NoTypeInformation
     Write-Host "Issues exported to: $reportPath" -ForegroundColor Yellow
+    if (-not ($Verbose -or $Detailed)) {
+        Write-Host "Run with -Detailed to print individual asset issues." -ForegroundColor DarkGray
+    }
     Write-Host ""
+} elseif (Test-Path $reportPath) {
+    Remove-Item -Path $reportPath -Force
 }
 
-# Fix issues if requested
+$renamePlanPath = Join-Path $ContentPath "..\Docs\Assets\NamingRenamePlan.json"
 if ($FixIssues -and $results.Invalid -gt 0) {
-    Write-Host "Fix mode not implemented - requires UE5 Editor integration" -ForegroundColor Yellow
-    Write-Host "Please use UE5 Content Browser to rename assets" -ForegroundColor Yellow
-    Write-Host "This ensures references are updated correctly" -ForegroundColor Yellow
+    $renamePlan = $results.Issues | ForEach-Object {
+        [PSCustomObject]@{
+            SourceFile = $_.File
+            CurrentName = $_.Name
+            SuggestedName = $_.Suggested
+            Issues = $_.Issues
+            RequiresEditorRename = $true
+        }
+    }
+
+    $renamePlan | ConvertTo-Json -Depth 4 | Set-Content -Path $renamePlanPath -Encoding UTF8
+    Write-Host "Rename plan generated: $renamePlanPath" -ForegroundColor Yellow
+    Write-Host "Apply the plan through UE Editor asset rename APIs so references are updated safely." -ForegroundColor Yellow
+} elseif ($FixIssues -and (Test-Path $renamePlanPath)) {
+    Remove-Item -Path $renamePlanPath -Force
 }
 
-# Exit code
 if ($results.Invalid -gt 0) {
     exit 1
-} else {
-    exit 0
 }
+
+exit 0

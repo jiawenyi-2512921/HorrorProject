@@ -2,13 +2,18 @@
 # Copyright Epic Games, Inc. All Rights Reserved.
 
 param(
-    [string]$ReportsPath = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Analytics\Reports",
-    [string]$DashboardPath = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Analytics\Dashboard",
+    [string]$ReportsPath = "",
+    [string]$DashboardPath = "",
     [string]$DashboardUrl = "http://localhost:8080/dashboard",
     [switch]$AutoRefresh
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ReportsPath)) { $ReportsPath = Join-Path $ProjectRoot "Saved\Analytics\Reports" }
+if ([string]::IsNullOrWhiteSpace($DashboardPath)) { $DashboardPath = Join-Path $ProjectRoot "Saved\Analytics\Dashboard" }
 
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
@@ -101,7 +106,7 @@ function Create-DashboardHTML {
             border-bottom: 2px solid #4ecdc4;
             padding-bottom: 10px;
         }
-        .chart-placeholder {
+        .chart-empty-state {
             background: rgba(0,0,0,0.3);
             height: 300px;
             border-radius: 8px;

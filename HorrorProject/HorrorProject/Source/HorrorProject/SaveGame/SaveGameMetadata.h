@@ -41,6 +41,9 @@ struct FSaveSlotMetadata
 	FSaveSlotMetadata() = default;
 };
 
+/**
+ * Defines Save Game Metadata data used by the SaveGame module.
+ */
 UCLASS()
 class HORRORPROJECT_API USaveGameMetadata : public USaveGame
 {

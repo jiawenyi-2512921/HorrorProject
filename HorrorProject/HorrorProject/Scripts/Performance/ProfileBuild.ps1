@@ -2,14 +2,22 @@
 # Builds the project with profiling enabled and runs performance analysis
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [string]$UEPath = "",
     [string]$Configuration = "Development",
     [string]$Platform = "Win64",
     [switch]$SkipBuild = $false
 )
 
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+
+$UE5Root = Get-HorrorUERoot
 if (-not $UEPath) {
     $UEPath = $UE5Root
 }
@@ -17,7 +25,7 @@ if (-not $UEPath) {
 Write-Host "=== HorrorProject Profile Build ===" -ForegroundColor Cyan
 Write-Host ""
 
-$ProjectFile = Join-Path $ProjectPath "HorrorProject.uproject"
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectPath
 $UATPath = Join-Path $UEPath "Engine\Build\BatchFiles\RunUAT.bat"
 
 if (-not (Test-Path $ProjectFile)) {

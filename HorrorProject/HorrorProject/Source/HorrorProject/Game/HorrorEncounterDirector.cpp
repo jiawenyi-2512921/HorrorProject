@@ -14,6 +14,7 @@
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
 #include "GameplayTagContainer.h"
+#include "HorrorProject.h"
 
 void UHorrorEncounterPhaseDelegateProbe::HandleEncounterPhaseChanged(EHorrorEncounterPhase NewPhase, FName EncounterId)
 {
@@ -239,8 +240,16 @@ void AHorrorEncounterDirector::PublishEncounterEvent(FName EventName, FName Phas
 		return;
 	}
 
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(EventName);
-	FGameplayTag StateTag = FGameplayTag::RequestGameplayTag(PhaseTag);
+	const FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(EventName, false);
+	const FGameplayTag StateTag = FGameplayTag::RequestGameplayTag(PhaseTag, false);
+	if (!EventTag.IsValid() || !StateTag.IsValid())
+	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("Skipping encounter event publish because tag registration is missing. Event=%s Phase=%s"),
+			*EventName.ToString(),
+			*PhaseTag.ToString());
+		return;
+	}
+
 	EventBus->Publish(EventTag, EventBusSourceId, StateTag, this);
 }
 

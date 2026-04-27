@@ -23,6 +23,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnObjectiveProgressChanged, int32,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllObjectivesCompleted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerListChanged, const TArray<FString>&, PlayerNames);
 
+/**
+ * Defines Replicated Game State behavior for the Network module.
+ */
 UCLASS()
 class HORRORPROJECT_API AReplicatedGameState : public AGameStateBase
 {

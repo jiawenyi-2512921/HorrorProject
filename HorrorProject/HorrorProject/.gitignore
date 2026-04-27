@@ -1,11 +1,10 @@
-# === UE 自动生成 ===
+# Unreal generated state
 Binaries/
-Build/
 DerivedDataCache/
 Intermediate/
 Saved/
 
-# === IDE / VS / Rider ===
+# Local IDE/editor state
 .vs/
 *.sln
 *.VC.db
@@ -14,25 +13,26 @@ Saved/
 *.suo
 *.user
 enc_temp_folder/
-
-# === 编辑器/工具个人配置 ===
-shadertoolsconfig.json
 Config/DefaultEditorPerProjectUserSettings.ini
+shadertoolsconfig.json
 
-# === 临时与日志 ===
+# Generated build/package output
+Build/Logs/
+Build/Packages/
+
+# Logs and temporary files
+*.log
 *.tmp
 *.bak
-*.log
 
-# === Content：默认全部排除（含约 16 GB 第三方营销/模板包），仅白名单保留项目自有资产 ===
+# Large third-party/sample content is managed outside Git by default.
+# Keep only the project-owned/lightweight runtime content in source control.
 Content/*
 !Content/Blueprints/
 !Content/Horror/
 !Content/Input/
 !Content/Variant_Horror/
 !Content/_SM13/
-# World Partition external actor/object 数据（关卡的一部分），需要跟随 Lvl_Horror.umap
 !Content/__ExternalActors__/
 !Content/__ExternalObjects__/
-# Editor Collections（轻量索引文件）
 !Content/Collections/

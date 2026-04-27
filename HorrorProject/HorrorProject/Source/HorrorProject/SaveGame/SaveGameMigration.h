@@ -18,6 +18,9 @@ struct FSaveGameMigrationStep
 	TFunction<bool(UHorrorSaveGame*)> MigrationFunction;
 };
 
+/**
+ * Defines Save Game Migration behavior for the SaveGame module.
+ */
 UCLASS()
 class HORRORPROJECT_API USaveGameMigration : public UObject
 {

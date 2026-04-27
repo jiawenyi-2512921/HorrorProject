@@ -8,6 +8,9 @@
 
 class AHorrorThreatCharacter;
 
+/**
+ * Implements actor-level Horror Threat AIController behavior for the AI module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorThreatAIController : public AAIController
 {

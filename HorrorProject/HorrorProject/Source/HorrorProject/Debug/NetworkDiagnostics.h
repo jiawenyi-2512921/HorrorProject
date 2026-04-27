@@ -6,6 +6,11 @@
 #include "UObject/NoExportTypes.h"
 #include "NetworkDiagnostics.generated.h"
 
+namespace HorrorNetworkDiagnosticsDefaults
+{
+	inline constexpr float HighPingThresholdMs = 150.0f;
+}
+
 USTRUCT(BlueprintType)
 struct FNetworkSnapshot
 {
@@ -15,19 +20,19 @@ struct FNetworkSnapshot
 	FDateTime Timestamp;
 
 	UPROPERTY(BlueprintReadOnly)
-	float PingMS;
+	float PingMS = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float PacketLossPercent;
+	float PacketLossPercent = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 BytesSent;
+	int32 BytesSent = 0;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 BytesReceived;
+	int32 BytesReceived = 0;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 ConnectedPlayers;
+	int32 ConnectedPlayers = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -112,7 +117,7 @@ protected:
 
 	// Thresholds
 	UPROPERTY(EditDefaultsOnly, Category = "Network")
-	float HighPingThreshold = 150.0f;
+	float HighPingThreshold = HorrorNetworkDiagnosticsDefaults::HighPingThresholdMs;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Network")
 	float PacketLossThreshold = 5.0f;

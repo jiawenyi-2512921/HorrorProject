@@ -15,19 +15,19 @@ struct FMemorySnapshot
 	FDateTime Timestamp;
 
 	UPROPERTY(BlueprintReadOnly)
-	float UsedPhysicalMB;
+	float UsedPhysicalMB = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float UsedVirtualMB;
+	float UsedVirtualMB = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float AvailablePhysicalMB;
+	float AvailablePhysicalMB = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	float PeakUsedPhysicalMB;
+	float PeakUsedPhysicalMB = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 TotalAllocations;
+	int32 TotalAllocations = 0;
 };
 
 USTRUCT(BlueprintType)

@@ -13,6 +13,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorJoinSessionComplete, bool, bW
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHorrorDestroySessionComplete);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHorrorStartSessionComplete);
 
+/**
+ * Coordinates Multiplayer Session Subsystem services for the Network module.
+ */
 UCLASS()
 class HORRORPROJECT_API UMultiplayerSessionSubsystem : public UGameInstanceSubsystem
 {
@@ -92,5 +95,10 @@ protected:
 	void OnStartSessionCompleted(FName SessionName, bool bWasSuccessful);
 
 	// Helper
+	bool ValidateCreateSessionRequest(int32 NumPublicConnections, const FString& SessionName) const;
+	FString SanitizeSessionName(const FString& SessionName) const;
+	void ResetExistingGameSession();
+	void ConfigureSessionSettings(int32 NumPublicConnections, bool bIsLAN, const FString& SessionName);
+	bool TryGetPreferredUserId(const TCHAR* OperationName, FUniqueNetIdRepl& OutUserId) const;
 	bool IsValidSessionIndex(int32 Index) const;
 };

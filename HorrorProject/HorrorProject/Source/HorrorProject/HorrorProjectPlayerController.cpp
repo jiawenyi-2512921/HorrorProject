@@ -14,6 +14,7 @@ AHorrorProjectPlayerController::AHorrorProjectPlayerController()
 {
 	// set the player camera manager class
 	PlayerCameraManagerClass = AHorrorProjectCameraManager::StaticClass();
+	bEnableMotionControls = false;
 }
 
 void AHorrorProjectPlayerController::BeginPlay()

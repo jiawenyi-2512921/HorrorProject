@@ -30,6 +30,9 @@ struct FLocalizedAudio
 	TSoftObjectPtr<USoundBase> Spanish;
 };
 
+/**
+ * Defines Audio Localization Data data used by the Localization module.
+ */
 UCLASS()
 class HORRORPROJECT_API UAudioLocalizationData : public UDataAsset
 {
@@ -43,6 +46,9 @@ public:
 	TSoftObjectPtr<USoundBase> GetAudio(const FString& Key, const FString& LanguageCode) const;
 };
 
+/**
+ * Exposes Blueprint helper functions for Audio Localization Library workflows.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API UAudioLocalizationLibrary : public UBlueprintFunctionLibrary
 {

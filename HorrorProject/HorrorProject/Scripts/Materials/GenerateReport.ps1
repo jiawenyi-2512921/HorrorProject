@@ -2,11 +2,18 @@
 # 整合分析和优化建议，生成HTML报告
 
 param(
-    [string]$AnalysisPath = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Materials\ShaderAnalysis.json",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Materials\MaterialReport.html"
+    [string]$AnalysisPath = "",
+    [string]$OutputPath = ""
 )
 
 $ErrorActionPreference = "Continue"
+
+if ([string]::IsNullOrWhiteSpace($AnalysisPath)) {
+    $AnalysisPath = Join-Path $PSScriptRoot "ShaderAnalysis.json"
+}
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $PSScriptRoot "MaterialReport.html"
+}
 
 Write-Host "=== 材质分析报告生成器 ===" -ForegroundColor Cyan
 

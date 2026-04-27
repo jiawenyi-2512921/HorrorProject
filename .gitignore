@@ -1,11 +1,16 @@
-.superpowers/
-brainstorm-start.err
-brainstorm-start.out
-ContextVault/03_AI_Systems/LLM_runtime.log
-*.log
-
 # Local agent/runtime state
 .claude/
+.fleet/
+.superpowers/
+ContextVault/
+docs/superpowers/
+brainstorm-start.err
+brainstorm-start.out
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
 
 # Unreal generated state
 HorrorProject/HorrorProject/.vs/
@@ -13,3 +18,5 @@ HorrorProject/HorrorProject/Binaries/
 HorrorProject/HorrorProject/DerivedDataCache/
 HorrorProject/HorrorProject/Intermediate/
 HorrorProject/HorrorProject/Saved/
+HorrorProject/HorrorProject/Build/Logs/
+HorrorProject/HorrorProject/Build/Packages/

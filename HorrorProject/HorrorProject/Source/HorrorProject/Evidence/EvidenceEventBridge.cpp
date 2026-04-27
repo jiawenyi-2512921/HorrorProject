@@ -6,6 +6,35 @@
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Engine/World.h"
 
+namespace
+{
+	FGameplayTag GetEvidenceEventTag(EEvidenceType Type)
+	{
+		switch (Type)
+		{
+		case EEvidenceType::Physical:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.PhysicalCollected"), false);
+		case EEvidenceType::Photo:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.PhotoCaptured"), false);
+		case EEvidenceType::Video:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.VideoRecorded"), false);
+		case EEvidenceType::Audio:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.AudioRecorded"), false);
+		case EEvidenceType::Note:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.NoteCollected"), false);
+		case EEvidenceType::Document:
+			return FGameplayTag::RequestGameplayTag(TEXT("Event.Evidence.DocumentCollected"), false);
+		default:
+			return FGameplayTag();
+		}
+	}
+
+	FGameplayTag GetEvidenceCapturedStateTag()
+	{
+		return FGameplayTag::RequestGameplayTag(TEXT("State.Evidence.Captured"), false);
+	}
+}
+
 UEvidenceEventBridge::UEvidenceEventBridge()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -103,10 +132,31 @@ void UEvidenceEventBridge::PublishEvidenceEvent(FName EvidenceId, EEvidenceType 
 {
 	if (!CachedEventBus.IsValid())
 	{
+		if (UWorld* World = GetWorld())
+		{
+			CachedEventBus = World->GetSubsystem<UHorrorEventBusSubsystem>();
+		}
+	}
+
+	if (!CachedEventBus.IsValid())
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("Evidence event '%s' was not published: event bus unavailable"), *EvidenceId.ToString());
 		return;
 	}
 
-	// Create event message for evidence collection
-	// This would integrate with the existing HorrorEventBusSubsystem
-	// For now, this is a placeholder for the integration point
+	const FGameplayTag EventTag = GetEvidenceEventTag(Type);
+	const FGameplayTag StateTag = GetEvidenceCapturedStateTag();
+	if (!EventTag.IsValid() || !StateTag.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Evidence event '%s' was not published: gameplay tags are not registered"), *EvidenceId.ToString());
+		return;
+	}
+
+	UObject* SourceObject = BoundCollectionComponent.IsValid()
+		? static_cast<UObject*>(BoundCollectionComponent.Get())
+		: static_cast<UObject*>(this);
+	if (!CachedEventBus->Publish(EventTag, EvidenceId, StateTag, SourceObject))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Evidence event '%s' failed to publish to the event bus"), *EvidenceId.ToString());
+	}
 }

@@ -7,13 +7,38 @@
 #include "Materials/Material.h"
 #include "Sound/SoundWave.h"
 #include "Engine/Blueprint.h"
+#include "HAL/CriticalSection.h"
 #include "Misc/MessageDialog.h"
 
-TArray<FAssetValidationResult> UAssetValidator::ValidationResults;
+namespace
+{
+	constexpr int32 MaxRecommendedTextureDimension = 4096;
+	constexpr int32 MaxRecommendedTriangleCount = 50000;
+	constexpr int32 MaxRecommendedSampleRate = 48000;
+	constexpr float MaxRecommendedSoundDurationSeconds = 60.0f;
+
+	TArray<FAssetValidationResult>& GetValidationResultsStorage()
+	{
+		static auto Results = TArray<FAssetValidationResult>();
+		return Results;
+	}
+
+	FCriticalSection& GetValidationResultsMutex()
+	{
+		static auto Mutex = FCriticalSection();
+		return Mutex;
+	}
+
+	void StoreValidationResults(TArray<FAssetValidationResult>&& NewResults)
+	{
+		FScopeLock Lock(&GetValidationResultsMutex());
+		GetValidationResultsStorage() = MoveTemp(NewResults);
+	}
+}
 
 void UAssetValidator::ValidateAllAssets()
 {
-	ValidationResults.Empty();
+	TArray<FAssetValidationResult> NewResults;
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetDataList;
@@ -33,28 +58,15 @@ void UAssetValidator::ValidateAllAssets()
 		{
 			Result.Errors.Add("Failed to load asset");
 			Result.bIsValid = false;
-			ValidationResults.Add(Result);
+			NewResults.Add(Result);
 			InvalidAssets++;
 			continue;
 		}
 
-		bool bValid = true;
+		Result.bIsValid = ValidateLoadedAsset(Asset, Result);
+		NewResults.Add(Result);
 
-		if (Asset->IsA<UTexture2D>())
-			bValid = ValidateTexture(Asset, Result);
-		else if (Asset->IsA<UStaticMesh>())
-			bValid = ValidateStaticMesh(Asset, Result);
-		else if (Asset->IsA<UMaterial>())
-			bValid = ValidateMaterial(Asset, Result);
-		else if (Asset->IsA<USoundWave>())
-			bValid = ValidateSound(Asset, Result);
-		else if (Asset->IsA<UBlueprint>())
-			bValid = ValidateBlueprint(Asset, Result);
-
-		Result.bIsValid = bValid;
-		ValidationResults.Add(Result);
-
-		if (bValid)
+		if (Result.bIsValid)
 			ValidAssets++;
 		else
 			InvalidAssets++;
@@ -67,6 +79,8 @@ void UAssetValidator::ValidateAllAssets()
 	FMessageDialog::Open(EAppMsgType::Ok, Message);
 
 	UE_LOG(LogTemp, Log, TEXT("Asset Validation: %d valid, %d invalid out of %d total"), ValidAssets, InvalidAssets, TotalAssets);
+
+	StoreValidationResults(MoveTemp(NewResults));
 }
 
 void UAssetValidator::ValidateAsset(const FString& AssetPath)
@@ -80,17 +94,28 @@ void UAssetValidator::ValidateAsset(const FString& AssetPath)
 
 	FAssetValidationResult Result;
 	Result.AssetPath = AssetPath;
+	Result.bIsValid = ValidateLoadedAsset(Asset, Result);
 
+	{
+		FScopeLock Lock(&GetValidationResultsMutex());
+		GetValidationResultsStorage().Add(Result);
+	}
+}
+
+bool UAssetValidator::ValidateLoadedAsset(UObject* Asset, FAssetValidationResult& Result)
+{
 	if (Asset->IsA<UTexture2D>())
-		ValidateTexture(Asset, Result);
+		return ValidateTexture(Asset, Result);
 	else if (Asset->IsA<UStaticMesh>())
-		ValidateStaticMesh(Asset, Result);
+		return ValidateStaticMesh(Asset, Result);
 	else if (Asset->IsA<UMaterial>())
-		ValidateMaterial(Asset, Result);
+		return ValidateMaterial(Asset, Result);
 	else if (Asset->IsA<USoundWave>())
-		ValidateSound(Asset, Result);
+		return ValidateSound(Asset, Result);
 	else if (Asset->IsA<UBlueprint>())
-		ValidateBlueprint(Asset, Result);
+		return ValidateBlueprint(Asset, Result);
+
+	return true;
 }
 
 bool UAssetValidator::ValidateTexture(UObject* Asset, FAssetValidationResult& Result)
@@ -101,7 +126,7 @@ bool UAssetValidator::ValidateTexture(UObject* Asset, FAssetValidationResult& Re
 	bool bValid = true;
 
 	// Check texture size
-	if (Texture->GetSizeX() > 4096 || Texture->GetSizeY() > 4096)
+	if (Texture->GetSizeX() > MaxRecommendedTextureDimension || Texture->GetSizeY() > MaxRecommendedTextureDimension)
 	{
 		Result.Warnings.Add(FString::Printf(TEXT("Texture size exceeds 4096: %dx%d"), Texture->GetSizeX(), Texture->GetSizeY()));
 	}
@@ -129,7 +154,7 @@ bool UAssetValidator::ValidateStaticMesh(UObject* Asset, FAssetValidationResult&
 	bool bValid = true;
 
 	// Check triangle count
-	if (Mesh->GetNumTriangles(0) > 50000)
+	if (Mesh->GetNumTriangles(0) > MaxRecommendedTriangleCount)
 	{
 		Result.Warnings.Add(FString::Printf(TEXT("High triangle count: %d"), Mesh->GetNumTriangles(0)));
 	}
@@ -174,13 +199,14 @@ bool UAssetValidator::ValidateSound(UObject* Asset, FAssetValidationResult& Resu
 	bool bValid = true;
 
 	// Check sample rate
-	if (Sound->GetSampleRateForCurrentPlatform() > 48000)
+	const float SampleRate = Sound->GetSampleRateForCurrentPlatform();
+	if (SampleRate > MaxRecommendedSampleRate)
 	{
-		Result.Warnings.Add(FString::Printf(TEXT("High sample rate: %d Hz"), Sound->GetSampleRateForCurrentPlatform()));
+		Result.Warnings.Add(FString::Printf(TEXT("High sample rate: %.0f Hz"), SampleRate));
 	}
 
 	// Check duration
-	if (Sound->Duration > 60.0f)
+	if (Sound->Duration > MaxRecommendedSoundDurationSeconds)
 	{
 		Result.Warnings.Add(FString::Printf(TEXT("Long audio duration: %.2f seconds"), Sound->Duration));
 	}
@@ -211,5 +237,6 @@ bool UAssetValidator::ValidateBlueprint(UObject* Asset, FAssetValidationResult& 
 
 TArray<FAssetValidationResult> UAssetValidator::GetValidationResults()
 {
-	return ValidationResults;
+	FScopeLock Lock(&GetValidationResultsMutex());
+	return GetValidationResultsStorage();
 }

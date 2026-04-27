@@ -12,6 +12,15 @@ class USoundBase;
 class UAudioComponent;
 class USoundConcurrency;
 
+namespace HorrorAudioDefaults
+{
+	inline constexpr float EventAttenuationRadiusCm = 2000.0f;
+	inline constexpr int32 DefaultPriority = 50;
+	inline constexpr int32 MaxPooledComponents = 32;
+	inline constexpr int32 MaxConcurrentSounds = 16;
+	inline constexpr float PoolCleanupIdleSeconds = 30.0f;
+}
+
 UENUM(BlueprintType)
 enum class EHorrorAudioCategory : uint8
 {
@@ -68,13 +77,13 @@ struct HORRORPROJECT_API FHorrorAudioEventMapping
 	bool bUse3DAttenuation = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio", meta=(ClampMin="0.0"))
-	float AttenuationRadius = 2000.0f;
+	float AttenuationRadius = HorrorAudioDefaults::EventAttenuationRadiusCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
 	TObjectPtr<USoundAttenuation> AttenuationSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
-	int32 Priority = 50;
+	int32 Priority = HorrorAudioDefaults::DefaultPriority;
 };
 
 USTRUCT(BlueprintType)
@@ -110,7 +119,7 @@ struct HORRORPROJECT_API FHorrorAudioQueueEntry
 	float VolumeMultiplier = 1.0f;
 
 	UPROPERTY()
-	int32 Priority = 50;
+	int32 Priority = HorrorAudioDefaults::DefaultPriority;
 
 	UPROPERTY()
 	float QueueTime = 0.0f;
@@ -119,6 +128,9 @@ struct HORRORPROJECT_API FHorrorAudioQueueEntry
 	bool bIs3D = true;
 };
 
+/**
+ * Coordinates Horror Audio Subsystem services for the Audio module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorAudioSubsystem : public UWorldSubsystem
 {
@@ -208,13 +220,13 @@ protected:
 	FName CurrentZoneId = NAME_None;
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Pool")
-	int32 MaxPooledComponents = 32;
+	int32 MaxPooledComponents = HorrorAudioDefaults::MaxPooledComponents;
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Pool")
 	float PoolCleanupInterval = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Queue")
-	int32 MaxConcurrentSounds = 16;
+	int32 MaxConcurrentSounds = HorrorAudioDefaults::MaxConcurrentSounds;
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion")
 	bool bEnableOcclusion = true;
@@ -224,6 +236,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion")
 	float OcclusionVolumeMultiplier = 0.3f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion", meta=(ClampMin="0.0"))
+	float OcclusionInterpSpeed = 8.0f;
 
 private:
 	UPROPERTY(Transient)
@@ -237,6 +252,9 @@ private:
 
 	UPROPERTY(Transient)
 	TSet<TObjectPtr<USoundBase>> PreloadedSounds;
+
+	UPROPERTY(Transient)
+	TMap<TObjectPtr<UAudioComponent>, float> ComponentBaseVolumes;
 
 	float LastPoolCleanupTime = 0.0f;
 	float LastOcclusionUpdateTime = 0.0f;

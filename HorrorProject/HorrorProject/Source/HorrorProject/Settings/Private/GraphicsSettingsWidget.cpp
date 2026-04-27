@@ -12,7 +12,17 @@ void UGraphicsSettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// Get graphics settings
+	ResolveGraphicsSettings();
+	PopulateResolutions();
+	PopulateQualityPresets();
+	BindDisplayControls();
+	BindQualityControls();
+	BindAdvancedControls();
+	RefreshSettings();
+}
+
+void UGraphicsSettingsWidget::ResolveGraphicsSettings()
+{
 	if (UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this))
 	{
 		if (UGameSettingsSubsystem* SettingsSubsystem = GameInstance->GetSubsystem<UGameSettingsSubsystem>())
@@ -20,12 +30,10 @@ void UGraphicsSettingsWidget::NativeConstruct()
 			GraphicsSettings = SettingsSubsystem->GetGraphicsSettings();
 		}
 	}
+}
 
-	// Populate combo boxes
-	PopulateResolutions();
-	PopulateQualityPresets();
-
-	// Bind events
+void UGraphicsSettingsWidget::BindDisplayControls()
+{
 	if (ResolutionComboBox)
 	{
 		ResolutionComboBox->OnSelectionChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnResolutionChanged);
@@ -40,7 +48,10 @@ void UGraphicsSettingsWidget::NativeConstruct()
 	{
 		VSyncCheckBox->OnCheckStateChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnVSyncChanged);
 	}
+}
 
+void UGraphicsSettingsWidget::BindQualityControls()
+{
 	if (QualityPresetComboBox)
 	{
 		QualityPresetComboBox->OnSelectionChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnQualityPresetChanged);
@@ -65,7 +76,10 @@ void UGraphicsSettingsWidget::NativeConstruct()
 	{
 		ShadowQualitySlider->OnValueChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnShadowQualityChanged);
 	}
+}
 
+void UGraphicsSettingsWidget::BindAdvancedControls()
+{
 	if (MotionBlurCheckBox)
 	{
 		MotionBlurCheckBox->OnCheckStateChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnMotionBlurChanged);
@@ -80,8 +94,6 @@ void UGraphicsSettingsWidget::NativeConstruct()
 	{
 		BrightnessSlider->OnValueChanged.AddDynamic(this, &UGraphicsSettingsWidget::OnBrightnessChanged);
 	}
-
-	RefreshSettings();
 }
 
 void UGraphicsSettingsWidget::RefreshSettings()
@@ -91,7 +103,13 @@ void UGraphicsSettingsWidget::RefreshSettings()
 		return;
 	}
 
-	// Update display settings
+	RefreshDisplayControls();
+	RefreshQualityControls();
+	RefreshAdvancedControls();
+}
+
+void UGraphicsSettingsWidget::RefreshDisplayControls()
+{
 	if (FullscreenCheckBox)
 	{
 		FullscreenCheckBox->SetIsChecked(GraphicsSettings->bFullscreen);
@@ -101,8 +119,10 @@ void UGraphicsSettingsWidget::RefreshSettings()
 	{
 		VSyncCheckBox->SetIsChecked(GraphicsSettings->bVSync);
 	}
+}
 
-	// Update quality sliders
+void UGraphicsSettingsWidget::RefreshQualityControls()
+{
 	if (ViewDistanceSlider)
 	{
 		ViewDistanceSlider->SetValue(GraphicsSettings->ViewDistanceQuality);
@@ -122,8 +142,10 @@ void UGraphicsSettingsWidget::RefreshSettings()
 	{
 		ShadowQualitySlider->SetValue(static_cast<int32>(GraphicsSettings->ShadowQuality));
 	}
+}
 
-	// Update advanced settings
+void UGraphicsSettingsWidget::RefreshAdvancedControls()
+{
 	if (MotionBlurCheckBox)
 	{
 		MotionBlurCheckBox->SetIsChecked(GraphicsSettings->bMotionBlur);
@@ -274,9 +296,11 @@ void UGraphicsSettingsWidget::PopulateResolutions()
 	ResolutionComboBox->ClearOptions();
 
 	TArray<FIntPoint> Resolutions = GraphicsSettings->GetSupportedResolutions();
+	FString ResolutionStr;
 	for (const FIntPoint& Resolution : Resolutions)
 	{
-		FString ResolutionStr = FString::Printf(TEXT("%dx%d"), Resolution.X, Resolution.Y);
+		ResolutionStr.Reset();
+		ResolutionStr.Appendf(TEXT("%dx%d"), Resolution.X, Resolution.Y);
 		ResolutionComboBox->AddOption(ResolutionStr);
 	}
 }

@@ -29,6 +29,9 @@ class HORRORPROJECT_API AExaminableInteractable : public ABaseInteractable
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultMinZoomDistance = 50.0f;
+	static constexpr float DefaultMaxZoomDistance = 200.0f;
+
 	AExaminableInteractable();
 
 	virtual void Tick(float DeltaTime) override;
@@ -67,10 +70,10 @@ private:
 	float ExamineDistance = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Examine|Camera", meta=(AllowPrivateAccess="true"))
-	float MinZoomDistance = 50.0f;
+	float MinZoomDistance = DefaultMinZoomDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Examine|Camera", meta=(AllowPrivateAccess="true"))
-	float MaxZoomDistance = 200.0f;
+	float MaxZoomDistance = DefaultMaxZoomDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Examine|Camera", meta=(AllowPrivateAccess="true"))
 	float ZoomSpeed = 10.0f;

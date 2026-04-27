@@ -32,6 +32,8 @@ class HORRORPROJECT_API APickupInteractable : public ABaseInteractable
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultRotationSpeed = 90.0f;
+
 	APickupInteractable();
 
 	virtual bool CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const override;
@@ -70,7 +72,7 @@ private:
 	bool bRotateInPlace = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pickup|Visual", meta=(AllowPrivateAccess="true", EditCondition="bRotateInPlace"))
-	float RotationSpeed = 90.0f;
+	float RotationSpeed = DefaultRotationSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pickup|Visual", meta=(AllowPrivateAccess="true"))
 	bool bFloatInPlace = true;

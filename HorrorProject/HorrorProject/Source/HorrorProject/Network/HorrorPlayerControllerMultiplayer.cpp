@@ -6,6 +6,11 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 
+namespace
+{
+	constexpr int32 MaxChatMessageLength = 256;
+}
+
 AHorrorPlayerControllerMultiplayer::AHorrorPlayerControllerMultiplayer()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -18,6 +23,7 @@ AHorrorPlayerControllerMultiplayer::AHorrorPlayerControllerMultiplayer()
 	MaxPredictionTime = 0.5f;
 	LastNetworkStatsUpdate = 0.0f;
 	NetworkStatsUpdateInterval = 1.0f;
+	bEnableMotionControls = false;
 }
 
 void AHorrorPlayerControllerMultiplayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -46,7 +52,13 @@ void AHorrorPlayerControllerMultiplayer::Tick(float DeltaTime)
 
 	if (IsLocalController())
 	{
-		float CurrentTime = GetWorld()->GetTimeSeconds();
+		UWorld* World = GetWorld();
+		if (!World)
+		{
+			return;
+		}
+
+		const float CurrentTime = World->GetTimeSeconds();
 		if (CurrentTime - LastNetworkStatsUpdate >= NetworkStatsUpdateInterval)
 		{
 			UpdateNetworkStats();
@@ -110,14 +122,15 @@ void AHorrorPlayerControllerMultiplayer::ServerSendChatMessage_Implementation(co
 {
 	if (!Message.IsEmpty())
 	{
-		FString PlayerName = GetPlayerState<APlayerState>()->GetPlayerName();
+		APlayerState* ChatPlayerState = GetPlayerState<APlayerState>();
+		const FString PlayerName = ChatPlayerState ? ChatPlayerState->GetPlayerName() : TEXT("Unknown");
 		MulticastReceiveChatMessage(PlayerName, Message);
 	}
 }
 
 bool AHorrorPlayerControllerMultiplayer::ServerSendChatMessage_Validate(const FString& Message)
 {
-	return !Message.IsEmpty() && Message.Len() <= 256;
+	return !Message.IsEmpty() && Message.Len() <= MaxChatMessageLength;
 }
 
 void AHorrorPlayerControllerMultiplayer::ClientReceiveChatMessage_Implementation(const FString& PlayerName, const FString& Message)

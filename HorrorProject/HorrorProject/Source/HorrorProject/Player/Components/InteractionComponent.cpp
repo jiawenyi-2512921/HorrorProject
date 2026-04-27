@@ -11,6 +11,36 @@
 #include "HorrorProject.h"
 #include "Interaction/InteractableInterface.h"
 
+namespace
+{
+static const FName LegacyInteractionFunctionNames[] = {
+	TEXT("Interact"),
+	TEXT("OnInteract"),
+	TEXT("Use"),
+	TEXT("ToggleDoor"),
+	TEXT("OpenDoor")
+};
+
+UFunction* FindValidatedLegacyInteractionFunction(AActor* TargetActor)
+{
+	if (!TargetActor)
+	{
+		return nullptr;
+	}
+
+	for (const FName FunctionName : LegacyInteractionFunctionNames)
+	{
+		UFunction* Function = TargetActor->FindFunction(FunctionName);
+		if (Function && Function->NumParms == 0)
+		{
+			return Function;
+		}
+	}
+
+	return nullptr;
+}
+}
+
 UInteractionComponent::UInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -249,59 +279,19 @@ bool UInteractionComponent::TryInvokeInteractableInterface(UObject* TargetObject
 
 bool UInteractionComponent::HasLegacyInteractionFunction(AActor* TargetActor) const
 {
-	if (!TargetActor)
-	{
-		return false;
-	}
-
-	static const FName FunctionNames[] = {
-		TEXT("Interact"),
-		TEXT("OnInteract"),
-		TEXT("Use"),
-		TEXT("ToggleDoor"),
-		TEXT("OpenDoor")
-	};
-
-	for (const FName FunctionName : FunctionNames)
-	{
-		if (UFunction* Function = TargetActor->FindFunction(FunctionName))
-		{
-			if (Function->NumParms == 0)
-			{
-				return true;
-			}
-		}
-	}
-
-	return false;
+	return FindValidatedLegacyInteractionFunction(TargetActor) != nullptr;
 }
 
 bool UInteractionComponent::TryInvokeLegacyInteractionFunction(AActor* TargetActor) const
 {
-	if (!HasLegacyInteractionFunction(TargetActor))
+	UFunction* Function = FindValidatedLegacyInteractionFunction(TargetActor);
+	if (!Function)
 	{
 		return false;
 	}
 
-	static const FName FunctionNames[] = {
-		TEXT("Interact"),
-		TEXT("OnInteract"),
-		TEXT("Use"),
-		TEXT("ToggleDoor"),
-		TEXT("OpenDoor")
-	};
-
-	for (const FName FunctionName : FunctionNames)
-	{
-		UFunction* Function = TargetActor->FindFunction(FunctionName);
-		if (Function && Function->NumParms == 0)
-		{
-			TargetActor->ProcessEvent(Function, nullptr);
-			return true;
-		}
-	}
-
-	return false;
+	TargetActor->ProcessEvent(Function, nullptr);
+	return true;
 }
 
 bool UInteractionComponent::HasLegacyDoorTimeline(AActor* TargetActor) const

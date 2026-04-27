@@ -26,6 +26,9 @@ struct FSaveGameBackupInfo
 	int64 FileSizeBytes = 0;
 };
 
+/**
+ * Defines Save Game Backup behavior for the SaveGame module.
+ */
 UCLASS()
 class HORRORPROJECT_API USaveGameBackup : public UObject
 {

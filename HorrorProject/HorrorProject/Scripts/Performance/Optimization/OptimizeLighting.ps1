@@ -3,12 +3,17 @@
 # Optimizes lighting setup for performance
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Optimization\Lighting",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [switch]$DryRun = $false
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Optimization\Lighting" }
 
 Write-Host "=== Lighting Optimization Tool ===" -ForegroundColor Cyan
 Write-Host "Mode: $(if ($DryRun) { 'Dry Run (Preview Only)' } else { 'Execute' })"
@@ -56,7 +61,7 @@ foreach ($mapFile in $mapFiles) {
     Write-Host "Analyzing: $mapName" -ForegroundColor Cyan
 
     # In production, this would parse the actual map data
-    # For now, we'll provide general recommendations
+# Generate lighting recommendations for review in the Unreal Editor
 
     $mapIssues = @{
         MapName = $mapName

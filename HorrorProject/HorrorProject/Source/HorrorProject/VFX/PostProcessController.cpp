@@ -6,6 +6,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 
+namespace
+{
+	constexpr float PostProcessScanlineCount = 200.0f;
+}
+
 UPostProcessController::UPostProcessController()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -29,9 +34,13 @@ void UPostProcessController::BeginPlay()
 		TArray<AActor*> FoundVolumes;
 		UGameplayStatics::GetAllActorsOfClass(World, APostProcessVolume::StaticClass(), FoundVolumes);
 
-		if (FoundVolumes.Num() > 0)
+		for (AActor* FoundVolume : FoundVolumes)
 		{
-			PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+			PostProcessVolume = Cast<APostProcessVolume>(FoundVolume);
+			if (PostProcessVolume)
+			{
+				break;
+			}
 		}
 	}
 
@@ -53,7 +62,11 @@ void UPostProcessController::ApplyEffect(EPostProcessEffectType EffectType, floa
 {
 	if (!DynamicMaterials.Contains(EffectType))
 	{
-		CreateDynamicMaterial(EffectType);
+		if (!CreateDynamicMaterial(EffectType))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PostProcessController: No material available for effect %d"), static_cast<int32>(EffectType));
+			return;
+		}
 	}
 
 	FPostProcessEffectSettings Settings;
@@ -62,7 +75,10 @@ void UPostProcessController::ApplyEffect(EPostProcessEffectType EffectType, floa
 	Settings.bAutoFade = Duration > 0.0f;
 
 	ActiveEffects.Add(EffectType, Settings);
-	UpdateMaterialParameters(EffectType, Settings.Intensity);
+	if (!UpdateMaterialParameters(EffectType, Settings.Intensity))
+	{
+		ActiveEffects.Remove(EffectType);
+	}
 }
 
 void UPostProcessController::RemoveEffect(EPostProcessEffectType EffectType, bool bFadeOut)
@@ -71,9 +87,11 @@ void UPostProcessController::RemoveEffect(EPostProcessEffectType EffectType, boo
 	{
 		if (bFadeOut)
 		{
-			FPostProcessEffectSettings& Settings = ActiveEffects[EffectType];
-			Settings.bAutoFade = true;
-			Settings.Duration = 0.5f; // Fade out over 0.5 seconds
+			if (FPostProcessEffectSettings* Settings = ActiveEffects.Find(EffectType))
+			{
+				Settings->bAutoFade = true;
+				Settings->Duration = 0.5f; // Fade out over 0.5 seconds
+			}
 		}
 		else
 		{
@@ -85,18 +103,21 @@ void UPostProcessController::RemoveEffect(EPostProcessEffectType EffectType, boo
 
 void UPostProcessController::SetEffectIntensity(EPostProcessEffectType EffectType, float Intensity)
 {
-	if (ActiveEffects.Contains(EffectType))
+	if (FPostProcessEffectSettings* Settings = ActiveEffects.Find(EffectType))
 	{
-		ActiveEffects[EffectType].Intensity = FMath::Clamp(Intensity, 0.0f, 1.0f);
-		UpdateMaterialParameters(EffectType, ActiveEffects[EffectType].Intensity);
+		Settings->Intensity = FMath::Clamp(Intensity, 0.0f, 1.0f);
+		if (!UpdateMaterialParameters(EffectType, Settings->Intensity))
+		{
+			ActiveEffects.Remove(EffectType);
+		}
 	}
 }
 
 float UPostProcessController::GetEffectIntensity(EPostProcessEffectType EffectType) const
 {
-	if (ActiveEffects.Contains(EffectType))
+	if (const FPostProcessEffectSettings* Settings = ActiveEffects.Find(EffectType))
 	{
-		return ActiveEffects[EffectType].Intensity;
+		return Settings->Intensity;
 	}
 	return 0.0f;
 }
@@ -204,79 +225,126 @@ void UPostProcessController::UpdateEffectIntensities(float DeltaTime)
 	}
 }
 
-void UPostProcessController::CreateDynamicMaterial(EPostProcessEffectType EffectType)
+bool UPostProcessController::CreateDynamicMaterial(EPostProcessEffectType EffectType)
 {
-	if (EffectMaterials.Contains(EffectType) && EffectMaterials[EffectType])
+	if (TObjectPtr<UMaterialInterface>* MaterialPtr = EffectMaterials.Find(EffectType); MaterialPtr && *MaterialPtr)
 	{
-		UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(EffectMaterials[EffectType], this);
+		UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(MaterialPtr->Get(), this);
 		if (DynMat)
 		{
 			DynamicMaterials.Add(EffectType, DynMat);
+			return true;
 		}
 	}
+
+	return false;
 }
 
-void UPostProcessController::UpdateMaterialParameters(EPostProcessEffectType EffectType, float Intensity)
+bool UPostProcessController::UpdateMaterialParameters(EPostProcessEffectType EffectType, float Intensity)
 {
-	if (!DynamicMaterials.Contains(EffectType))
+	UMaterialInstanceDynamic* DynMat = FindDynamicMaterial(EffectType);
+	if (!ApplyCommonMaterialParameters(DynMat, Intensity))
 	{
-		return;
+		return false;
 	}
 
-	UMaterialInstanceDynamic* DynMat = DynamicMaterials[EffectType];
-	if (!DynMat)
-	{
-		return;
-	}
+	ApplyEffectSpecificMaterialParameters(EffectType, DynMat, Intensity);
+	return true;
+}
 
-	// Update common parameters
-	DynMat->SetScalarParameterValue(FName("Intensity"), Intensity);
+UMaterialInstanceDynamic* UPostProcessController::FindDynamicMaterial(EPostProcessEffectType EffectType) const
+{
+	const TObjectPtr<UMaterialInstanceDynamic>* DynamicMaterialPtr = DynamicMaterials.Find(EffectType);
+	return DynamicMaterialPtr && IsValid(DynamicMaterialPtr->Get()) ? DynamicMaterialPtr->Get() : nullptr;
+}
+
+bool UPostProcessController::ApplyCommonMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity)
+{
+	if (!IsValid(DynamicMaterial))
+	{
+		return false;
+	}
 
 	UWorld* World = GetWorld();
 	if (!World)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PostProcessController: World is null in UpdateMaterialParameters"));
+		return false;
+	}
+
+	DynamicMaterial->SetScalarParameterValue(FName("Intensity"), Intensity);
+	DynamicMaterial->SetScalarParameterValue(FName("Time"), World->GetTimeSeconds());
+	return true;
+}
+
+void UPostProcessController::ApplyEffectSpecificMaterialParameters(EPostProcessEffectType EffectType, UMaterialInstanceDynamic* DynamicMaterial, float Intensity)
+{
+	if (!DynamicMaterial)
+	{
 		return;
 	}
-	DynMat->SetScalarParameterValue(FName("Time"), World->GetTimeSeconds());
 
-	// Update specific parameters based on effect type
 	switch (EffectType)
 	{
 	case EPostProcessEffectType::PressureVignette:
-		DynMat->SetScalarParameterValue(FName("VignetteIntensity"), Intensity);
-		DynMat->SetScalarParameterValue(FName("VignettePower"), 2.0f + Intensity * 2.0f);
+		ApplyPressureMaterialParameters(DynamicMaterial, Intensity);
 		break;
 
 	case EPostProcessEffectType::ChromaticAberration:
-		DynMat->SetScalarParameterValue(FName("AberrationAmount"), Intensity * 5.0f);
+		DynamicMaterial->SetScalarParameterValue(FName("AberrationAmount"), Intensity * 5.0f);
 		break;
 
 	case EPostProcessEffectType::NoiseOverlay:
-		DynMat->SetScalarParameterValue(FName("NoiseAmount"), Intensity);
-		DynMat->SetScalarParameterValue(FName("NoiseScale"), 100.0f);
+		ApplyNoiseMaterialParameters(DynamicMaterial, Intensity);
 		break;
 
 	case EPostProcessEffectType::Scanlines:
-		DynMat->SetScalarParameterValue(FName("ScanlineSpeed"), ScanlineSpeed);
-		DynMat->SetScalarParameterValue(FName("ScanlineCount"), 200.0f);
+		ApplyScanlineMaterialParameters(DynamicMaterial);
 		break;
 
 	case EPostProcessEffectType::LensDroplets:
-		DynMat->SetScalarParameterValue(FName("DropletAmount"), Intensity);
+		DynamicMaterial->SetScalarParameterValue(FName("DropletAmount"), Intensity);
 		break;
 
 	case EPostProcessEffectType::FearEffect:
-		DynMat->SetScalarParameterValue(FName("DistortionAmount"), Intensity * 0.1f);
-		DynMat->SetScalarParameterValue(FName("ColorShift"), Intensity);
+		ApplyFearMaterialParameters(DynamicMaterial, Intensity);
 		break;
 
 	case EPostProcessEffectType::DeathEffect:
-		DynMat->SetScalarParameterValue(FName("Desaturation"), Intensity);
-		DynMat->SetScalarParameterValue(FName("Darkness"), Intensity);
+		ApplyDeathMaterialParameters(DynamicMaterial, Intensity);
 		break;
 
 	default:
 		break;
 	}
+}
+
+void UPostProcessController::ApplyPressureMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const
+{
+	DynamicMaterial->SetScalarParameterValue(FName("VignetteIntensity"), Intensity);
+	DynamicMaterial->SetScalarParameterValue(FName("VignettePower"), 2.0f + Intensity * 2.0f);
+}
+
+void UPostProcessController::ApplyNoiseMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const
+{
+	DynamicMaterial->SetScalarParameterValue(FName("NoiseAmount"), Intensity);
+	DynamicMaterial->SetScalarParameterValue(FName("NoiseScale"), 100.0f);
+}
+
+void UPostProcessController::ApplyScanlineMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial) const
+{
+	DynamicMaterial->SetScalarParameterValue(FName("ScanlineSpeed"), ScanlineSpeed);
+	DynamicMaterial->SetScalarParameterValue(FName("ScanlineCount"), PostProcessScanlineCount);
+}
+
+void UPostProcessController::ApplyFearMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const
+{
+	DynamicMaterial->SetScalarParameterValue(FName("DistortionAmount"), Intensity * 0.1f);
+	DynamicMaterial->SetScalarParameterValue(FName("ColorShift"), Intensity);
+}
+
+void UPostProcessController::ApplyDeathMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const
+{
+	DynamicMaterial->SetScalarParameterValue(FName("Desaturation"), Intensity);
+	DynamicMaterial->SetScalarParameterValue(FName("Darkness"), Intensity);
 }

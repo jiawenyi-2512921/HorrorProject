@@ -76,7 +76,7 @@ foreach ($LangCode in $Languages.Keys) {
         } elseif ($LangCode -eq "es" -and $SpanishTranslations.ContainsKey($Entry.Key)) {
             $LocalizationData[$Entry.Key] = $SpanishTranslations[$Entry.Key]
         } else {
-            $LocalizationData[$Entry.Key] = "[TODO: $LangName] $($Entry.Text)"
+            $LocalizationData[$Entry.Key] = "[PENDING_TRANSLATION: $LangName] $($Entry.Text)"
         }
     }
 

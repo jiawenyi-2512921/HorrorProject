@@ -2,17 +2,44 @@
 
 #include "AI/HorrorGolemBehaviorComponent.h"
 #include "AI/HorrorThreatCharacter.h"
+#include "AIController.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "NavigationPath.h"
+#include "NavigationSystem.h"
+
+namespace HorrorGolemBehavior
+{
+	constexpr float BehaviorTickIntervalSeconds = 0.1f;
+	constexpr float ChaseTriggerMinimumSeconds = 3.0f;
+	constexpr float PatrolPauseChancePerTick = 0.01f;
+	constexpr float FullChaseDestructionChancePerTick = 0.05f;
+	constexpr float DirectionalBlendWeight = 0.5f;
+	constexpr float PatrolDistanceToleranceCm = 100.0f;
+	constexpr float DistantSightRotationInterpSpeed = 2.0f;
+	constexpr float MoveRotationInterpSpeed = 5.0f;
+	constexpr float PatrolRotationInterpSpeed = 3.0f;
+	constexpr float NavigationAcceptanceRadiusCm = 75.0f;
+	constexpr float PatrolNavigationStepCm = 300.0f;
+	constexpr float FinalImpactTriggerGraceSeconds = 0.1f;
+	constexpr float EnvironmentDestructionForwardOffsetCm = 200.0f;
+	constexpr float DebugStateHeightOffsetCm = 200.0f;
+	constexpr float DebugTextHeightOffsetCm = 250.0f;
+	constexpr float DebugStateSphereRadiusCm = 50.0f;
+	constexpr int32 DebugSphereSegments = 16;
+	constexpr float DebugLifetimeSeconds = 1.0f;
+	constexpr float DebugLineThickness = 2.0f;
+}
 
 UHorrorGolemBehaviorComponent::UHorrorGolemBehaviorComponent()
 {
 	// Performance optimization: Reduce tick frequency for AI behavior
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	PrimaryComponentTick.TickInterval = 0.1f; // Update at 10Hz instead of 60Hz
+	PrimaryComponentTick.TickInterval = HorrorGolemBehavior::BehaviorTickIntervalSeconds;
 }
 
 void UHorrorGolemBehaviorComponent::BeginPlay()
@@ -50,6 +77,7 @@ void UHorrorGolemBehaviorComponent::ActivateBehavior(AActor* InTargetActor)
 	TargetActor = InTargetActor;
 	bBehaviorActive = true;
 	StateTimer = 0.0f;
+	LostTargetTimer = 0.0f;
 
 	SetComponentTickEnabled(true);
 	TransitionToState(EGolemEncounterState::DistantSighting);
@@ -70,6 +98,7 @@ void UHorrorGolemBehaviorComponent::DeactivateBehavior()
 
 	bBehaviorActive = false;
 	SetComponentTickEnabled(false);
+	StopNavigationMove();
 	TransitionToState(EGolemEncounterState::Dormant);
 
 	if (OwnerThreat.IsValid())
@@ -107,51 +136,19 @@ void UHorrorGolemBehaviorComponent::UpdateStateMachine(float DeltaTime)
 	switch (CurrentState)
 	{
 		case EGolemEncounterState::DistantSighting:
-			if (DistanceToTarget <= CloseStalking_MaxDistance)
-			{
-				TransitionToState(EGolemEncounterState::CloseStalking);
-			}
-			else
-			{
-				UpdateDistantSighting(DeltaTime);
-			}
+			UpdateDistantSightingState(DistanceToTarget, DeltaTime);
 			break;
 
 		case EGolemEncounterState::CloseStalking:
-			if (DistanceToTarget <= ChaseTriggered_StartDistance && StateTimer >= 3.0f)
-			{
-				TransitionToState(EGolemEncounterState::ChaseTriggered);
-			}
-			else if (DistanceToTarget > CloseStalking_MaxDistance)
-			{
-				TransitionToState(EGolemEncounterState::DistantSighting);
-			}
-			else
-			{
-				UpdateCloseStalking(DeltaTime);
-			}
+			UpdateCloseStalkingState(DistanceToTarget, DeltaTime);
 			break;
 
 		case EGolemEncounterState::ChaseTriggered:
-			if (DistanceToTarget <= FullChase_MaxDistance)
-			{
-				TransitionToState(EGolemEncounterState::FullChase);
-			}
-			else
-			{
-				UpdateChaseTriggered(DeltaTime);
-			}
+			UpdateChaseTriggeredState(DistanceToTarget, DeltaTime);
 			break;
 
 		case EGolemEncounterState::FullChase:
-			if (DistanceToTarget <= FinalImpact_TriggerDistance)
-			{
-				TransitionToState(EGolemEncounterState::FinalImpact);
-			}
-			else
-			{
-				UpdateFullChase(DeltaTime);
-			}
+			UpdateFullChaseState(DistanceToTarget, DeltaTime);
 			break;
 
 		case EGolemEncounterState::FinalImpact:
@@ -161,6 +158,66 @@ void UHorrorGolemBehaviorComponent::UpdateStateMachine(float DeltaTime)
 		default:
 			break;
 	}
+}
+
+void UHorrorGolemBehaviorComponent::UpdateDistantSightingState(float DistanceToTarget, float DeltaTime)
+{
+	if (DistanceToTarget <= CloseStalking_MaxDistance)
+	{
+		TransitionToState(EGolemEncounterState::CloseStalking);
+		return;
+	}
+
+	UpdateDistantSighting(DeltaTime);
+}
+
+void UHorrorGolemBehaviorComponent::UpdateCloseStalkingState(float DistanceToTarget, float DeltaTime)
+{
+	if (DistanceToTarget <= ChaseTriggered_StartDistance && StateTimer >= HorrorGolemBehavior::ChaseTriggerMinimumSeconds)
+	{
+		TransitionToState(EGolemEncounterState::ChaseTriggered);
+		return;
+	}
+
+	if (DistanceToTarget > CloseStalking_MaxDistance)
+	{
+		TransitionToState(EGolemEncounterState::DistantSighting);
+		return;
+	}
+
+	UpdateCloseStalking(DeltaTime);
+}
+
+void UHorrorGolemBehaviorComponent::UpdateChaseTriggeredState(float DistanceToTarget, float DeltaTime)
+{
+	if (HandleLostTarget(DistanceToTarget, DeltaTime))
+	{
+		return;
+	}
+
+	if (DistanceToTarget <= FullChase_MaxDistance)
+	{
+		TransitionToState(EGolemEncounterState::FullChase);
+		return;
+	}
+
+	UpdateChaseTriggered(DeltaTime);
+}
+
+void UHorrorGolemBehaviorComponent::UpdateFullChaseState(float DistanceToTarget, float DeltaTime)
+{
+	if (HandleLostTarget(DistanceToTarget, DeltaTime))
+	{
+		return;
+	}
+
+	if (DistanceToTarget <= FinalImpact_TriggerDistance)
+	{
+		TransitionToState(EGolemEncounterState::FinalImpact);
+		return;
+	}
+
+	UpdateFullChase(DeltaTime);
 }
 
 void UHorrorGolemBehaviorComponent::TransitionToState(EGolemEncounterState NewState)
@@ -173,6 +230,7 @@ void UHorrorGolemBehaviorComponent::TransitionToState(EGolemEncounterState NewSt
 	const EGolemEncounterState OldState = CurrentState;
 	CurrentState = NewState;
 	StateTimer = 0.0f;
+	LostTargetTimer = 0.0f;
 	PatrolPauseTimer = 0.0f;
 	bPatrolPaused = false;
 
@@ -198,7 +256,7 @@ void UHorrorGolemBehaviorComponent::UpdateDistantSighting(float DeltaTime)
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	const FVector DirectionToTarget = (TargetLocation - OwnerLocation).GetSafeNormal();
 	const FRotator TargetRotation = DirectionToTarget.Rotation();
-	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, 2.0f);
+	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, HorrorGolemBehavior::DistantSightRotationInterpSpeed);
 	OwnerThreat->SetActorRotation(NewRotation);
 
 	BP_OnDistantSightingUpdate(DeltaTime);
@@ -226,7 +284,7 @@ void UHorrorGolemBehaviorComponent::UpdateCloseStalking(float DeltaTime)
 		PatrolAroundTarget(DeltaTime);
 
 		// Random pause
-		if (FMath::FRand() < 0.01f)
+		if (FMath::FRand() < HorrorGolemBehavior::PatrolPauseChancePerTick)
 		{
 			bPatrolPaused = true;
 		}
@@ -258,7 +316,7 @@ void UHorrorGolemBehaviorComponent::UpdateFullChase(float DeltaTime)
 	MoveTowardsTarget(FullChase_Speed, DeltaTime);
 
 	// Environment destruction check
-	if (bFullChase_EnableDestruction && FMath::FRand() < 0.05f)
+	if (bFullChase_EnableDestruction && FMath::FRand() < HorrorGolemBehavior::FullChaseDestructionChancePerTick)
 	{
 		CheckEnvironmentDestruction();
 	}
@@ -268,7 +326,7 @@ void UHorrorGolemBehaviorComponent::UpdateFullChase(float DeltaTime)
 
 void UHorrorGolemBehaviorComponent::UpdateFinalImpact(float DeltaTime)
 {
-	if (StateTimer < 0.1f)
+	if (StateTimer < HorrorGolemBehavior::FinalImpactTriggerGraceSeconds)
 	{
 		BP_OnFinalImpactTriggered();
 	}
@@ -276,12 +334,91 @@ void UHorrorGolemBehaviorComponent::UpdateFinalImpact(float DeltaTime)
 	// Stop movement, trigger attack animation/cutscene
 	if (OwnerThreat.IsValid())
 	{
+		StopNavigationMove();
+
 		ACharacter* ThreatCharacter = Cast<ACharacter>(OwnerThreat.Get());
 		if (ThreatCharacter && ThreatCharacter->GetCharacterMovement())
 		{
 			ThreatCharacter->GetCharacterMovement()->StopMovementImmediately();
 		}
 	}
+}
+
+bool UHorrorGolemBehaviorComponent::HandleLostTarget(float DistanceToTarget, float DeltaTime)
+{
+	if (ChaseLostTargetDistance <= 0.0f || DistanceToTarget <= ChaseLostTargetDistance)
+	{
+		LostTargetTimer = 0.0f;
+		return false;
+	}
+
+	LostTargetTimer += DeltaTime;
+	if (LostTargetTimer < ChaseLostTargetGraceTime)
+	{
+		return false;
+	}
+
+	StopNavigationMove();
+	TransitionToState(EGolemEncounterState::CloseStalking);
+	return true;
+}
+
+bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius)
+{
+	if (!OwnerThreat.IsValid())
+	{
+		return false;
+	}
+
+	ACharacter* ThreatCharacter = Cast<ACharacter>(OwnerThreat.Get());
+	if (!ThreatCharacter || !ThreatCharacter->GetCharacterMovement())
+	{
+		return false;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AAIController* AIController = Cast<AAIController>(ThreatCharacter->GetController());
+	if (!AIController)
+	{
+		ThreatCharacter->SpawnDefaultController();
+		AIController = Cast<AAIController>(ThreatCharacter->GetController());
+	}
+
+	if (!AIController)
+	{
+		return false;
+	}
+
+	UNavigationPath* NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(
+		World,
+		ThreatCharacter->GetActorLocation(),
+		Destination,
+		ThreatCharacter);
+
+	if (!NavigationPath || !NavigationPath->IsValid() || NavigationPath->PathPoints.Num() == 0)
+	{
+		AIController->StopMovement();
+		return false;
+	}
+
+	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
+	const FVector MoveDestination = NavigationPath->PathPoints.Last();
+	const EPathFollowingRequestResult::Type MoveResult = AIController->MoveToLocation(
+		MoveDestination,
+		AcceptanceRadius,
+		true,
+		true,
+		true,
+		false,
+		nullptr,
+		true);
+
+	return MoveResult != EPathFollowingRequestResult::Failed;
 }
 
 void UHorrorGolemBehaviorComponent::MoveTowardsTarget(float Speed, float DeltaTime)
@@ -301,16 +438,11 @@ void UHorrorGolemBehaviorComponent::MoveTowardsTarget(float Speed, float DeltaTi
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	const FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
 
-	// Set movement speed
-	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
-
-	// Move towards target
-	const FVector NewLocation = CurrentLocation + Direction * Speed * DeltaTime;
-	ThreatCharacter->SetActorLocation(NewLocation, true);
+	MoveToNavigableLocation(TargetLocation, Speed, HorrorGolemBehavior::NavigationAcceptanceRadiusCm);
 
 	// Face target
 	const FRotator TargetRotation = Direction.Rotation();
-	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, 5.0f);
+	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, HorrorGolemBehavior::MoveRotationInterpSpeed);
 	OwnerThreat->SetActorRotation(NewRotation);
 }
 
@@ -340,25 +472,41 @@ void UHorrorGolemBehaviorComponent::PatrolAroundTarget(float DeltaTime)
 
 	// Blend between moving closer/away and circling
 	FVector MoveDirection = CircleDirection;
-	if (CurrentDistance > DesiredDistance + 100.0f)
+	if (CurrentDistance > DesiredDistance + HorrorGolemBehavior::PatrolDistanceToleranceCm)
 	{
-		MoveDirection += ToTarget.GetSafeNormal() * 0.5f;
+		MoveDirection += ToTarget.GetSafeNormal() * HorrorGolemBehavior::DirectionalBlendWeight;
 	}
-	else if (CurrentDistance < DesiredDistance - 100.0f)
+	else if (CurrentDistance < DesiredDistance - HorrorGolemBehavior::PatrolDistanceToleranceCm)
 	{
-		MoveDirection -= ToTarget.GetSafeNormal() * 0.5f;
+		MoveDirection -= ToTarget.GetSafeNormal() * HorrorGolemBehavior::DirectionalBlendWeight;
 	}
 
 	MoveDirection.Normalize();
 
 	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = CloseStalking_PatrolSpeed;
-	const FVector NewLocation = CurrentLocation + MoveDirection * CloseStalking_PatrolSpeed * DeltaTime;
-	ThreatCharacter->SetActorLocation(NewLocation, true);
+	const FVector PatrolDestination = CurrentLocation + MoveDirection * HorrorGolemBehavior::PatrolNavigationStepCm;
+	MoveToNavigableLocation(PatrolDestination, CloseStalking_PatrolSpeed, HorrorGolemBehavior::NavigationAcceptanceRadiusCm);
 
 	// Face movement direction
 	const FRotator TargetRotation = MoveDirection.Rotation();
-	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, 3.0f);
+	const FRotator NewRotation = FMath::RInterpTo(OwnerThreat->GetActorRotation(), TargetRotation, DeltaTime, HorrorGolemBehavior::PatrolRotationInterpSpeed);
 	OwnerThreat->SetActorRotation(NewRotation);
+}
+
+void UHorrorGolemBehaviorComponent::StopNavigationMove()
+{
+	if (!OwnerThreat.IsValid())
+	{
+		return;
+	}
+
+	if (ACharacter* ThreatCharacter = Cast<ACharacter>(OwnerThreat.Get()))
+	{
+		if (AAIController* AIController = Cast<AAIController>(ThreatCharacter->GetController()))
+		{
+			AIController->StopMovement();
+		}
+	}
 }
 
 void UHorrorGolemBehaviorComponent::CheckEnvironmentDestruction()
@@ -368,7 +516,8 @@ void UHorrorGolemBehaviorComponent::CheckEnvironmentDestruction()
 		return;
 	}
 
-	const FVector DestructionLocation = OwnerThreat->GetActorLocation() + OwnerThreat->GetActorForwardVector() * 200.0f;
+	const FVector DestructionLocation =
+		OwnerThreat->GetActorLocation() + OwnerThreat->GetActorForwardVector() * HorrorGolemBehavior::EnvironmentDestructionForwardOffsetCm;
 	BP_OnEnvironmentDestruction(DestructionLocation);
 }
 
@@ -386,49 +535,76 @@ void UHorrorGolemBehaviorComponent::DrawDebugState()
 	}
 
 	const FVector GolemLocation = OwnerThreat->GetActorLocation();
-	FColor StateColor = FColor::White;
+	const FColor StateColor = GetDebugStateColor();
 
+	DrawDebugStateMarker(World, GolemLocation, StateColor);
+	DrawDebugTargetInfo(World, GolemLocation, StateColor);
+	DrawDebugDistanceThresholds(World, GolemLocation);
+}
+
+FColor UHorrorGolemBehaviorComponent::GetDebugStateColor() const
+{
 	switch (CurrentState)
 	{
 		case EGolemEncounterState::Dormant:
-			StateColor = FColor::Black;
-			break;
+			return FColor::Black;
 		case EGolemEncounterState::DistantSighting:
-			StateColor = FColor::Blue;
-			break;
+			return FColor::Blue;
 		case EGolemEncounterState::CloseStalking:
-			StateColor = FColor::Yellow;
-			break;
+			return FColor::Yellow;
 		case EGolemEncounterState::ChaseTriggered:
-			StateColor = FColor::Orange;
-			break;
+			return FColor::Orange;
 		case EGolemEncounterState::FullChase:
-			StateColor = FColor::Red;
-			break;
+			return FColor::Red;
 		case EGolemEncounterState::FinalImpact:
-			StateColor = FColor::Magenta;
-			break;
+			return FColor::Magenta;
 	}
 
-	// Draw state sphere
-	DrawDebugSphere(World, GolemLocation + FVector(0, 0, 200), 50.0f, 12, StateColor, false, -1.0f, 0, 2.0f);
+	return FColor::White;
+}
 
-	// Draw distance to target
-	if (TargetActor.IsValid())
+void UHorrorGolemBehaviorComponent::DrawDebugStateMarker(const UWorld* World, const FVector& GolemLocation, FColor StateColor) const
+{
+	DrawDebugSphere(
+		World,
+		GolemLocation + FVector(0.0f, 0.0f, HorrorGolemBehavior::DebugStateHeightOffsetCm),
+		HorrorGolemBehavior::DebugStateSphereRadiusCm,
+		HorrorGolemBehavior::DebugSphereSegments,
+		StateColor,
+		false,
+		-1.0f,
+		0,
+		HorrorGolemBehavior::DebugLineThickness);
+}
+
+void UHorrorGolemBehaviorComponent::DrawDebugTargetInfo(const UWorld* World, const FVector& GolemLocation, FColor StateColor) const
+{
+	if (!TargetActor.IsValid())
 	{
-		const FVector TargetLocation = TargetActor->GetActorLocation();
-		DrawDebugLine(World, GolemLocation, TargetLocation, StateColor, false, -1.0f, 0, 2.0f);
-
-		const float Distance = GetDistanceToTarget();
-		const FString DebugText = FString::Printf(TEXT("State: %d\nDist: %.0f cm\nTimer: %.1f s"),
-			static_cast<int32>(CurrentState), Distance, StateTimer);
-		DrawDebugString(World, GolemLocation + FVector(0, 0, 250), DebugText, nullptr, StateColor, 0.0f, true);
+		return;
 	}
 
-	// Draw phase distance thresholds
-	DrawDebugSphere(World, GolemLocation, DistantSightingMinDistance, 16, FColor::Blue, false, -1.0f, 0, 1.0f);
-	DrawDebugSphere(World, GolemLocation, CloseStalking_MaxDistance, 16, FColor::Yellow, false, -1.0f, 0, 1.0f);
-	DrawDebugSphere(World, GolemLocation, ChaseTriggered_StartDistance, 16, FColor::Orange, false, -1.0f, 0, 1.0f);
-	DrawDebugSphere(World, GolemLocation, FullChase_MaxDistance, 16, FColor::Red, false, -1.0f, 0, 1.0f);
-	DrawDebugSphere(World, GolemLocation, FinalImpact_TriggerDistance, 16, FColor::Magenta, false, -1.0f, 0, 1.0f);
+	const FVector TargetLocation = TargetActor->GetActorLocation();
+	DrawDebugLine(World, GolemLocation, TargetLocation, StateColor, false, -1.0f, 0, 2.0f);
+
+	const float Distance = GetDistanceToTarget();
+	const FString DebugText = FString::Printf(TEXT("State: %d\nDist: %.0f cm\nTimer: %.1f s"),
+		static_cast<int32>(CurrentState), Distance, StateTimer);
+	DrawDebugString(
+		World,
+		GolemLocation + FVector(0.0f, 0.0f, HorrorGolemBehavior::DebugTextHeightOffsetCm),
+		DebugText,
+		nullptr,
+		StateColor,
+		0.0f,
+		true);
+}
+
+void UHorrorGolemBehaviorComponent::DrawDebugDistanceThresholds(const UWorld* World, const FVector& GolemLocation) const
+{
+	DrawDebugSphere(World, GolemLocation, DistantSightingMinDistance, HorrorGolemBehavior::DebugSphereSegments, FColor::Blue, false, -1.0f, 0, HorrorGolemBehavior::DebugLifetimeSeconds);
+	DrawDebugSphere(World, GolemLocation, CloseStalking_MaxDistance, HorrorGolemBehavior::DebugSphereSegments, FColor::Yellow, false, -1.0f, 0, HorrorGolemBehavior::DebugLifetimeSeconds);
+	DrawDebugSphere(World, GolemLocation, ChaseTriggered_StartDistance, HorrorGolemBehavior::DebugSphereSegments, FColor::Orange, false, -1.0f, 0, HorrorGolemBehavior::DebugLifetimeSeconds);
+	DrawDebugSphere(World, GolemLocation, FullChase_MaxDistance, HorrorGolemBehavior::DebugSphereSegments, FColor::Red, false, -1.0f, 0, HorrorGolemBehavior::DebugLifetimeSeconds);
+	DrawDebugSphere(World, GolemLocation, FinalImpact_TriggerDistance, HorrorGolemBehavior::DebugSphereSegments, FColor::Magenta, false, -1.0f, 0, HorrorGolemBehavior::DebugLifetimeSeconds);
 }

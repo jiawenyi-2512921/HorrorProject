@@ -15,10 +15,11 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
+	TSharedRef<SWidget> CreateToolPanel();
+	TSharedRef<SWidget> CreateToolButtons();
+	TSharedRef<SWidget> CreateInfoPanel();
 	TSharedRef<SWidget> CreatePerformanceMonitor();
-	TSharedRef<SWidget> CreateAssetBrowser();
 	TSharedRef<SWidget> CreateLogViewer();
-	TSharedRef<SWidget> CreateTestRunner();
 	TSharedRef<SWidget> CreateBuildStatus();
 
 	FReply OnRunTests();
@@ -29,7 +30,9 @@ private:
 
 	FText GetFPSText() const;
 	FText GetMemoryText() const;
-	FText GetDrawCallsText() const;
+	FText GetFrameTimeText() const;
+	FText GetLatestLogText() const;
+	FText GetBuildStatusText() const;
 };
 
 class FHorrorEditorUI
@@ -37,7 +40,4 @@ class FHorrorEditorUI
 public:
 	static void OpenDashboard();
 	static void CloseDashboard();
-
-private:
-	static TSharedPtr<class SDockTab> DashboardTab;
 };

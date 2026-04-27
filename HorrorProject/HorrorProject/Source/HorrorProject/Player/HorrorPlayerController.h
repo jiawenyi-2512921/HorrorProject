@@ -26,6 +26,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Horror|UI")
 	TSubclassOf<UHorrorUI> HorrorUIClass;
 
+	/** Temporary prototype HUD toggle. Keep disabled for playable smoke builds. */
+	UPROPERTY(EditAnywhere, Category="Horror|UI")
+	bool bAutoCreateHorrorUI = false;
+
 	/** Pointer to the UI widget */
 	TObjectPtr<UHorrorUI> HorrorUI;
 

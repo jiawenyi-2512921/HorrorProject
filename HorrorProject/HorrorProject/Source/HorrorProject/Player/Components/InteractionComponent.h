@@ -21,6 +21,9 @@ class HORRORPROJECT_API UInteractionComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultTraceDistance = 250.0f;
+	static constexpr float DefaultNarrowTargetTraceRadius = 12.0f;
+
 	UInteractionComponent();
 
 	/**
@@ -39,11 +42,11 @@ public:
 protected:
 	/** Maximum distance for interaction raycasts (in cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction", meta=(ClampMin="1.0", Units="cm"))
-	float TraceDistance = 250.0f;
+	float TraceDistance = DefaultTraceDistance;
 
 	/** Radius for sphere sweep fallback when line trace misses narrow targets (in cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction", meta=(ClampMin="0.0", Units="cm"))
-	float NarrowTargetTraceRadius = 12.0f;
+	float NarrowTargetTraceRadius = DefaultNarrowTargetTraceRadius;
 
 	/** Collision channel used for interaction traces */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interaction")
@@ -77,4 +80,3 @@ private:
 	bool TryPlayDoorTimeline(AActor* TargetActor) const;
 	bool ResolveViewPoint(FVector& OutStart, FVector& OutDirection) const;
 };
-

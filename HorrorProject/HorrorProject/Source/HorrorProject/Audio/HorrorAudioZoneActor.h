@@ -9,6 +9,9 @@
 class UHorrorAudioZoneTrigger;
 class USoundBase;
 
+/**
+ * Implements actor-level Horror Audio Zone Actor behavior for the Audio module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorAudioZoneActor : public AActor
 {

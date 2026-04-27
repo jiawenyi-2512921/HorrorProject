@@ -145,10 +145,8 @@ void UCloudSaveSubsystem::DetectCloudProvider()
 bool UCloudSaveSubsystem::UploadToSteamCloud(int32 SlotIndex)
 {
 #if WITH_STEAMWORKS
-	// Steam Cloud implementation would go here
-	// For now, return true as placeholder
-	UE_LOG(LogTemp, Log, TEXT("Uploading save slot %d to Steam Cloud"), SlotIndex);
-	return true;
+	UE_LOG(LogTemp, Warning, TEXT("Steam Cloud upload requested for slot %d, but Steam Cloud file transfer is not wired in this build"), SlotIndex);
+	return false;
 #else
 	return false;
 #endif
@@ -157,9 +155,8 @@ bool UCloudSaveSubsystem::UploadToSteamCloud(int32 SlotIndex)
 bool UCloudSaveSubsystem::DownloadFromSteamCloud(int32 SlotIndex)
 {
 #if WITH_STEAMWORKS
-	// Steam Cloud implementation would go here
-	UE_LOG(LogTemp, Log, TEXT("Downloading save slot %d from Steam Cloud"), SlotIndex);
-	return true;
+	UE_LOG(LogTemp, Warning, TEXT("Steam Cloud download requested for slot %d, but Steam Cloud file transfer is not wired in this build"), SlotIndex);
+	return false;
 #else
 	return false;
 #endif
@@ -168,9 +165,8 @@ bool UCloudSaveSubsystem::DownloadFromSteamCloud(int32 SlotIndex)
 bool UCloudSaveSubsystem::UploadToEpicCloud(int32 SlotIndex)
 {
 #if WITH_EOS_SDK
-	// Epic Cloud implementation would go here
-	UE_LOG(LogTemp, Log, TEXT("Uploading save slot %d to Epic Cloud"), SlotIndex);
-	return true;
+	UE_LOG(LogTemp, Warning, TEXT("Epic Cloud upload requested for slot %d, but EOS Cloud file transfer is not wired in this build"), SlotIndex);
+	return false;
 #else
 	return false;
 #endif
@@ -179,9 +175,8 @@ bool UCloudSaveSubsystem::UploadToEpicCloud(int32 SlotIndex)
 bool UCloudSaveSubsystem::DownloadFromEpicCloud(int32 SlotIndex)
 {
 #if WITH_EOS_SDK
-	// Epic Cloud implementation would go here
-	UE_LOG(LogTemp, Log, TEXT("Downloading save slot %d from Epic Cloud"), SlotIndex);
-	return true;
+	UE_LOG(LogTemp, Warning, TEXT("Epic Cloud download requested for slot %d, but EOS Cloud file transfer is not wired in this build"), SlotIndex);
+	return false;
 #else
 	return false;
 #endif

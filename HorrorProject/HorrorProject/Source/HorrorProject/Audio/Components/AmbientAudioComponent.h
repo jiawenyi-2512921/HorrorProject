@@ -6,6 +6,12 @@
 #include "Components/AudioComponent.h"
 #include "AmbientAudioComponent.generated.h"
 
+namespace HorrorAmbientAudioDefaults
+{
+	inline constexpr float RandomizationIntervalSeconds = 5.0f;
+	inline constexpr float MaxDistanceCm = 5000.0f;
+}
+
 UENUM(BlueprintType)
 enum class EAmbientAudioType : uint8
 {
@@ -39,6 +45,9 @@ struct HORRORPROJECT_API FAmbientAudioLayer
 	float FadeOutTime = 2.0f;
 };
 
+/**
+ * Adds Ambient Audio Component behavior to its owning actor in the Audio module.
+ */
 UCLASS(ClassGroup=(Audio), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UAmbientAudioComponent : public UAudioComponent
 {
@@ -88,10 +97,10 @@ protected:
 	float PeakHour = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ambient Audio")
-	float RandomizationInterval = 5.0f;
+	float RandomizationInterval = HorrorAmbientAudioDefaults::RandomizationIntervalSeconds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ambient Audio")
-	float MaxDistance = 5000.0f;
+	float MaxDistance = HorrorAmbientAudioDefaults::MaxDistanceCm;
 
 private:
 	UPROPERTY(Transient)

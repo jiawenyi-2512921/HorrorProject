@@ -7,12 +7,21 @@
 #include "RenderingThread.h"
 #include "DynamicRHI.h"
 
+namespace HorrorPerformanceDiagnostics
+{
+	constexpr int32 MaxHistorySamples = 300;
+	constexpr float MillisecondsPerSecond = 1000.0f;
+	constexpr float LowFpsThreshold = 30.0f;
+	constexpr float LowFpsFrameTimeSeconds = 0.033f;
+	constexpr float FrameThreadBudgetMs = 16.0f;
+}
+
 UPerformanceDiagnostics::UPerformanceDiagnostics()
 {
 	bIsMonitoring = false;
 	MonitoringInterval = 1.0f;
-	FrameTimeHistory.Reserve(300);
-	FPSHistory.Reserve(300);
+	FrameTimeHistory.Reserve(HorrorPerformanceDiagnostics::MaxHistorySamples);
+	FPSHistory.Reserve(HorrorPerformanceDiagnostics::MaxHistorySamples);
 }
 
 void UPerformanceDiagnostics::StartMonitoring(float Interval)
@@ -22,7 +31,14 @@ void UPerformanceDiagnostics::StartMonitoring(float Interval)
 	MonitoringInterval = FMath::Max(0.1f, Interval);
 	bIsMonitoring = true;
 
-	GetWorld()->GetTimerManager().SetTimer(MonitoringTimer,
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		bIsMonitoring = false;
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(MonitoringTimer,
 		this, &UPerformanceDiagnostics::CollectPerformanceData,
 		MonitoringInterval, true);
 
@@ -33,7 +49,10 @@ void UPerformanceDiagnostics::StopMonitoring()
 {
 	if (!bIsMonitoring) return;
 
-	GetWorld()->GetTimerManager().ClearTimer(MonitoringTimer);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(MonitoringTimer);
+	}
 	bIsMonitoring = false;
 
 	UE_LOG(LogTemp, Log, TEXT("Performance monitoring stopped"));
@@ -41,33 +60,39 @@ void UPerformanceDiagnostics::StopMonitoring()
 
 void UPerformanceDiagnostics::CollectPerformanceData()
 {
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
 	FHorrorPerformanceDiagnosticsSnapshot Snapshot;
 	Snapshot.Timestamp = FDateTime::Now();
-	Snapshot.DeltaTime = GetWorld()->GetDeltaSeconds();
+	Snapshot.DeltaTime = World->GetDeltaSeconds();
 	Snapshot.FPS = 1.0f / Snapshot.DeltaTime;
 	Snapshot.GameThreadTime = FPlatformTime::ToMilliseconds(GGameThreadTime);
 	Snapshot.RenderThreadTime = FPlatformTime::ToMilliseconds(GRenderThreadTime);
 	Snapshot.GPUTime = FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
-	Snapshot.ActorCount = GetWorld()->GetActorCount();
+	Snapshot.ActorCount = World->GetActorCount();
 
 	PerformanceHistory.Add(Snapshot);
 
-	// Keep only last 300 samples
-	if (PerformanceHistory.Num() > 300)
+	// Keep only the most recent samples.
+	if (PerformanceHistory.Num() > HorrorPerformanceDiagnostics::MaxHistorySamples)
 	{
 		PerformanceHistory.RemoveAt(0);
 	}
 
 	// Update frame time history
-	FrameTimeHistory.Add(Snapshot.DeltaTime * 1000.0f);
-	if (FrameTimeHistory.Num() > 300)
+	FrameTimeHistory.Add(Snapshot.DeltaTime * HorrorPerformanceDiagnostics::MillisecondsPerSecond);
+	if (FrameTimeHistory.Num() > HorrorPerformanceDiagnostics::MaxHistorySamples)
 	{
 		FrameTimeHistory.RemoveAt(0);
 	}
 
 	// Update FPS history
 	FPSHistory.Add(Snapshot.FPS);
-	if (FPSHistory.Num() > 300)
+	if (FPSHistory.Num() > HorrorPerformanceDiagnostics::MaxHistorySamples)
 	{
 		FPSHistory.RemoveAt(0);
 	}
@@ -79,31 +104,31 @@ void UPerformanceDiagnostics::CollectPerformanceData()
 void UPerformanceDiagnostics::CheckPerformanceThresholds(const FHorrorPerformanceDiagnosticsSnapshot& Snapshot)
 {
 	// Check FPS
-	if (Snapshot.FPS < 30.0f)
+	if (Snapshot.FPS < HorrorPerformanceDiagnostics::LowFpsThreshold)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Low FPS detected: %.1f"), Snapshot.FPS);
 	}
 
 	// Check frame time
-	if (Snapshot.DeltaTime > 0.033f) // 33ms = 30 FPS
+	if (Snapshot.DeltaTime > HorrorPerformanceDiagnostics::LowFpsFrameTimeSeconds)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("High frame time: %.2f ms"), Snapshot.DeltaTime * 1000.0f);
+		UE_LOG(LogTemp, Warning, TEXT("High frame time: %.2f ms"), Snapshot.DeltaTime * HorrorPerformanceDiagnostics::MillisecondsPerSecond);
 	}
 
 	// Check game thread
-	if (Snapshot.GameThreadTime > 16.0f)
+	if (Snapshot.GameThreadTime > HorrorPerformanceDiagnostics::FrameThreadBudgetMs)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("High game thread time: %.2f ms"), Snapshot.GameThreadTime);
 	}
 
 	// Check render thread
-	if (Snapshot.RenderThreadTime > 16.0f)
+	if (Snapshot.RenderThreadTime > HorrorPerformanceDiagnostics::FrameThreadBudgetMs)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("High render thread time: %.2f ms"), Snapshot.RenderThreadTime);
 	}
 
 	// Check GPU
-	if (Snapshot.GPUTime > 16.0f)
+	if (Snapshot.GPUTime > HorrorPerformanceDiagnostics::FrameThreadBudgetMs)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("High GPU time: %.2f ms"), Snapshot.GPUTime);
 	}
@@ -148,7 +173,7 @@ FHorrorPerformanceDiagnosticsStats UPerformanceDiagnostics::GetCurrentStats() co
 	// Get current values
 	const FHorrorPerformanceDiagnosticsSnapshot& Latest = PerformanceHistory.Last();
 	Stats.CurrentFPS = Latest.FPS;
-	Stats.CurrentFrameTime = Latest.DeltaTime * 1000.0f;
+	Stats.CurrentFrameTime = Latest.DeltaTime * HorrorPerformanceDiagnostics::MillisecondsPerSecond;
 
 	return Stats;
 }
@@ -179,7 +204,7 @@ void UPerformanceDiagnostics::GeneratePerformanceReport(const FString& FilePath)
 		Content += FString::Printf(TEXT("[%s] FPS: %.1f | Frame: %.2f ms | Game: %.2f ms | Render: %.2f ms | GPU: %.2f ms | Actors: %d\n"),
 			*Snapshot.Timestamp.ToString(),
 			Snapshot.FPS,
-			Snapshot.DeltaTime * 1000.0f,
+			Snapshot.DeltaTime * HorrorPerformanceDiagnostics::MillisecondsPerSecond,
 			Snapshot.GameThreadTime,
 			Snapshot.RenderThreadTime,
 			Snapshot.GPUTime,
@@ -207,17 +232,26 @@ void UPerformanceDiagnostics::ClearHistory()
 void UPerformanceDiagnostics::CaptureFrameProfile()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Capturing frame profile..."));
-	GetWorld()->Exec(GetWorld(), TEXT("profilegpu"));
+	if (UWorld* World = GetWorld())
+	{
+		World->Exec(World, TEXT("profilegpu"));
+	}
 }
 
 void UPerformanceDiagnostics::StartCPUProfiling()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Starting CPU profiling..."));
-	GetWorld()->Exec(GetWorld(), TEXT("stat startfile"));
+	if (UWorld* World = GetWorld())
+	{
+		World->Exec(World, TEXT("stat startfile"));
+	}
 }
 
 void UPerformanceDiagnostics::StopCPUProfiling()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Stopping CPU profiling..."));
-	GetWorld()->Exec(GetWorld(), TEXT("stat stopfile"));
+	if (UWorld* World = GetWorld())
+	{
+		World->Exec(World, TEXT("stat stopfile"));
+	}
 }

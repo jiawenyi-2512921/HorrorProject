@@ -17,6 +17,7 @@ namespace
 	const FName RequiredBodycamEvidenceId(TEXT("Evidence.Bodycam"));
 	const FName RequiredFirstAnomalyEvidenceId(TEXT("Evidence.Anomaly01"));
 	const FName RequiredFirstNoteId(TEXT("Note.Intro"));
+	const FVector DefaultInteractionBoundsExtent(32.0f, 32.0f, 32.0f);
 }
 
 AFoundFootageObjectiveInteractable::AFoundFootageObjectiveInteractable()
@@ -24,7 +25,7 @@ AFoundFootageObjectiveInteractable::AFoundFootageObjectiveInteractable()
 	PrimaryActorTick.bCanEverTick = false;
 
 	InteractionBounds = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBounds"));
-	InteractionBounds->SetBoxExtent(FVector(32.0f, 32.0f, 32.0f));
+	InteractionBounds->SetBoxExtent(DefaultInteractionBoundsExtent);
 	InteractionBounds->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractionBounds->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionBounds->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -73,9 +74,6 @@ bool AFoundFootageObjectiveInteractable::CanCompleteObjectiveForInstigator(AHorr
 		return false;
 	}
 
-	const ADeepWaterStationRouteKit* OwningRouteKit = Cast<ADeepWaterStationRouteKit>(GetOwner());
-	const bool bRouteGatedByEncounter = OwningRouteKit && OwningRouteKit->IsRouteGatedByEncounter();
-
 	switch (Objective)
 	{
 	case EFoundFootageInteractableObjective::Bodycam:
@@ -91,40 +89,10 @@ bool AFoundFootageObjectiveInteractable::CanCompleteObjectiveForInstigator(AHorr
 		return GameMode->CanRecordFirstAnomaly(GameMode->IsLeadPlayerRecording());
 
 	case EFoundFootageInteractableObjective::ArchiveReview:
-	{
-		if (!GameMode->CanReviewArchive())
-		{
-			return false;
-		}
-
-		if (!InstigatorActor)
-		{
-			return false;
-		}
-
-		if (OwningRouteKit && !OwningRouteKit->CanTriggerEncounterReveal(InstigatorActor))
-		{
-			return false;
-		}
-
-		const AHorrorPlayerCharacter* PlayerCharacter = Cast<AHorrorPlayerCharacter>(InstigatorActor);
-		const UInventoryComponent* Inventory = PlayerCharacter ? PlayerCharacter->GetInventoryComponent() : nullptr;
-		const UNoteRecorderComponent* NoteRecorder = PlayerCharacter ? PlayerCharacter->GetNoteRecorderComponent() : nullptr;
-		return Inventory
-			&& NoteRecorder
-			&& Inventory->HasCollectedEvidenceId(RequiredBodycamEvidenceId)
-			&& Inventory->HasCollectedEvidenceId(RequiredFirstAnomalyEvidenceId)
-			&& NoteRecorder->HasRecordedNoteId(RequiredFirstNoteId);
-	}
+		return CanCompleteArchiveReview(*GameMode, InstigatorActor);
 
 	case EFoundFootageInteractableObjective::ExitRouteGate:
-	{
-		if (bRouteGatedByEncounter)
-		{
-			return GameMode->IsExitUnlocked() && InstigatorActor && OwningRouteKit->CanResolveEncounterAtExit();
-		}
-		return GameMode->IsExitUnlocked();
-	}
+		return CanCompleteExitRouteGate(*GameMode, InstigatorActor);
 	}
 
 	return false;
@@ -145,73 +113,22 @@ bool AFoundFootageObjectiveInteractable::TryCompleteObjectiveForInstigator(AHorr
 	switch (Objective)
 	{
 	case EFoundFootageInteractableObjective::Bodycam:
-	{
-		const FName ProgressId = ResolveSourceId();
-		RegisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		const bool bCompleted = GameMode->TryAcquireBodycam(ProgressId, bEnableBodycamOnInteract);
-		if (!bCompleted)
-		{
-			UnregisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		}
-		return bCompleted;
-	}
+		return TryCompleteBodycamObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstNote:
-	{
-		const FName ProgressId = ResolveSourceId();
-		RegisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		const bool bCompleted = GameMode->TryCollectFirstNote(ProgressId);
-		if (!bCompleted)
-		{
-			UnregisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		}
-		return bCompleted;
-	}
+		return TryCompleteFirstNoteObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
-	{
-		const FName ProgressId = ResolveSourceId();
-		const bool bCompleted = GameMode->BeginFirstAnomalyCandidate(ProgressId);
-		if (bCompleted)
-		{
-			RegisterObjectiveEventMetadata(ProgressId);
-		}
-		return bCompleted;
-	}
+		return TryCompleteFirstAnomalyCandidateObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
-	{
-		const FName ProgressId = GameMode->GetPendingFirstAnomalySourceId();
-		RegisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		const bool bCompleted = GameMode->TryRecordFirstAnomaly(GameMode->IsLeadPlayerRecording());
-		if (!bCompleted)
-		{
-			UnregisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		}
-		return bCompleted;
-	}
+		return TryCompleteFirstAnomalyRecordObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::ArchiveReview:
-	{
-		const FName ProgressId = ResolveSourceId();
-		RegisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		const bool bCompleted = GameMode->TryReviewArchive(ProgressId);
-		if (!bCompleted)
-		{
-			UnregisterObjectiveEventMetadataForCompletedObjective(GameMode, ProgressId);
-		}
-		return bCompleted;
-	}
+		return TryCompleteArchiveReviewObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::ExitRouteGate:
-	{
-		ADeepWaterStationRouteKit* OwningRouteKit = Cast<ADeepWaterStationRouteKit>(GetOwner());
-		if (OwningRouteKit && OwningRouteKit->CanResolveEncounterAtExit())
-		{
-			return GameMode->IsExitUnlocked();
-		}
-		return GameMode->IsExitUnlocked();
-	}
+		return TryCompleteExitRouteGateObjective(*GameMode);
 	}
 
 	return false;
@@ -234,46 +151,19 @@ void AFoundFootageObjectiveInteractable::RecordInstigatorProgress(AActor* Instig
 	{
 	case EFoundFootageInteractableObjective::Bodycam:
 	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
-		if (UInventoryComponent* Inventory = PlayerCharacter->GetInventoryComponent())
-		{
-			if (!EvidenceMetadata.EvidenceId.IsNone() && EvidenceMetadata.EvidenceId == ProgressId)
-			{
-				Inventory->RegisterEvidenceMetadata(EvidenceMetadata);
-			}
-			Inventory->AddCollectedEvidenceId(ProgressId);
-		}
+		RecordEvidenceProgress(*PlayerCharacter, ProgressId, true);
 		break;
 
 	case EFoundFootageInteractableObjective::FirstNote:
-		if (UNoteRecorderComponent* NoteRecorder = PlayerCharacter->GetNoteRecorderComponent())
-		{
-			if (!NoteMetadata.NoteId.IsNone() && NoteMetadata.NoteId == ProgressId)
-			{
-				NoteRecorder->RegisterNoteMetadata(NoteMetadata);
-			}
-			NoteRecorder->AddRecordedNoteId(ProgressId);
-		}
+		RecordNoteProgress(*PlayerCharacter, ProgressId);
 		break;
 
 	case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
-		if (UInventoryComponent* Inventory = PlayerCharacter->GetInventoryComponent())
-		{
-			if (!EvidenceMetadata.EvidenceId.IsNone() && EvidenceMetadata.EvidenceId == ProgressId)
-			{
-				Inventory->RegisterEvidenceMetadata(EvidenceMetadata);
-			}
-		}
+		RecordEvidenceProgress(*PlayerCharacter, ProgressId, false);
 		break;
 
 	case EFoundFootageInteractableObjective::ArchiveReview:
-		if (UInventoryComponent* Inventory = PlayerCharacter->GetInventoryComponent())
-		{
-			if (!EvidenceMetadata.EvidenceId.IsNone() && EvidenceMetadata.EvidenceId == ProgressId)
-			{
-				Inventory->RegisterEvidenceMetadata(EvidenceMetadata);
-			}
-			Inventory->AddCollectedEvidenceId(ProgressId);
-		}
+		RecordEvidenceProgress(*PlayerCharacter, ProgressId, true);
 		break;
 
 	case EFoundFootageInteractableObjective::ExitRouteGate:
@@ -316,25 +206,7 @@ void AFoundFootageObjectiveInteractable::RegisterObjectiveEventMetadataForComple
 	Metadata.ObjectiveHint = ObjectiveHint;
 	Metadata.DebugLabel = DebugLabel;
 
-	FGameplayTag EventTag;
-	switch (Objective)
-	{
-	case EFoundFootageInteractableObjective::Bodycam:
-		EventTag = HorrorFoundFootageTags::BodycamAcquiredEvent();
-		break;
-	case EFoundFootageInteractableObjective::FirstNote:
-		EventTag = HorrorFoundFootageTags::FirstNoteCollectedEvent();
-		break;
-	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
-		EventTag = HorrorFoundFootageTags::FirstAnomalyRecordedEvent();
-		break;
-	case EFoundFootageInteractableObjective::ArchiveReview:
-		EventTag = HorrorFoundFootageTags::ArchiveReviewedEvent();
-		break;
-	default:
-		break;
-	}
-
+	const FGameplayTag EventTag = ResolveCompletedObjectiveEventTag();
 	if (EventTag.IsValid())
 	{
 		EventBus->RegisterObjectiveMetadata(EventTag, ProgressId, Metadata);
@@ -350,25 +222,7 @@ void AFoundFootageObjectiveInteractable::UnregisterObjectiveEventMetadataForComp
 		return;
 	}
 
-	FGameplayTag EventTag;
-	switch (Objective)
-	{
-	case EFoundFootageInteractableObjective::Bodycam:
-		EventTag = HorrorFoundFootageTags::BodycamAcquiredEvent();
-		break;
-	case EFoundFootageInteractableObjective::FirstNote:
-		EventTag = HorrorFoundFootageTags::FirstNoteCollectedEvent();
-		break;
-	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
-		EventTag = HorrorFoundFootageTags::FirstAnomalyRecordedEvent();
-		break;
-	case EFoundFootageInteractableObjective::ArchiveReview:
-		EventTag = HorrorFoundFootageTags::ArchiveReviewedEvent();
-		break;
-	default:
-		break;
-	}
-
+	const FGameplayTag EventTag = ResolveCompletedObjectiveEventTag();
 	if (EventTag.IsValid())
 	{
 		EventBus->UnregisterObjectiveMetadata(EventTag, ProgressId);
@@ -384,4 +238,168 @@ AHorrorGameModeBase* AFoundFootageObjectiveInteractable::ResolveObjectiveGameMod
 FName AFoundFootageObjectiveInteractable::ResolveSourceId() const
 {
 	return SourceId.IsNone() ? GetFName() : SourceId;
+}
+
+ADeepWaterStationRouteKit* AFoundFootageObjectiveInteractable::ResolveOwningRouteKit() const
+{
+	return Cast<ADeepWaterStationRouteKit>(GetOwner());
+}
+
+bool AFoundFootageObjectiveInteractable::CanCompleteArchiveReview(AHorrorGameModeBase& GameMode, AActor* InstigatorActor) const
+{
+	if (!GameMode.CanReviewArchive() || !InstigatorActor)
+	{
+		return false;
+	}
+
+	const ADeepWaterStationRouteKit* OwningRouteKit = ResolveOwningRouteKit();
+	if (OwningRouteKit && !OwningRouteKit->CanTriggerEncounterReveal(InstigatorActor))
+	{
+		return false;
+	}
+
+	const AHorrorPlayerCharacter* PlayerCharacter = Cast<AHorrorPlayerCharacter>(InstigatorActor);
+	const UInventoryComponent* Inventory = PlayerCharacter ? PlayerCharacter->GetInventoryComponent() : nullptr;
+	const UNoteRecorderComponent* NoteRecorder = PlayerCharacter ? PlayerCharacter->GetNoteRecorderComponent() : nullptr;
+	return Inventory
+		&& NoteRecorder
+		&& Inventory->HasCollectedEvidenceId(RequiredBodycamEvidenceId)
+		&& Inventory->HasCollectedEvidenceId(RequiredFirstAnomalyEvidenceId)
+		&& NoteRecorder->HasRecordedNoteId(RequiredFirstNoteId);
+}
+
+bool AFoundFootageObjectiveInteractable::CanCompleteExitRouteGate(AHorrorGameModeBase& GameMode, AActor* InstigatorActor) const
+{
+	const ADeepWaterStationRouteKit* OwningRouteKit = ResolveOwningRouteKit();
+	if (OwningRouteKit && OwningRouteKit->IsRouteGatedByEncounter())
+	{
+		return GameMode.IsExitUnlocked() && InstigatorActor && OwningRouteKit->CanResolveEncounterAtExit();
+	}
+
+	return GameMode.IsExitUnlocked();
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteBodycamObjective(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = ResolveSourceId();
+	RegisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	const bool bCompleted = GameMode.TryAcquireBodycam(ProgressId, bEnableBodycamOnInteract);
+	if (!bCompleted)
+	{
+		UnregisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	}
+	return bCompleted;
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteFirstNoteObjective(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = ResolveSourceId();
+	RegisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	const bool bCompleted = GameMode.TryCollectFirstNote(ProgressId);
+	if (!bCompleted)
+	{
+		UnregisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	}
+	return bCompleted;
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteFirstAnomalyCandidateObjective(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = ResolveSourceId();
+	const bool bCompleted = GameMode.BeginFirstAnomalyCandidate(ProgressId);
+	if (bCompleted)
+	{
+		RegisterObjectiveEventMetadata(ProgressId);
+	}
+	return bCompleted;
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteFirstAnomalyRecordObjective(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = GameMode.GetPendingFirstAnomalySourceId();
+	RegisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	const bool bCompleted = GameMode.TryRecordFirstAnomaly(GameMode.IsLeadPlayerRecording());
+	if (!bCompleted)
+	{
+		UnregisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	}
+	return bCompleted;
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteArchiveReviewObjective(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = ResolveSourceId();
+	RegisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	const bool bCompleted = GameMode.TryReviewArchive(ProgressId);
+	if (!bCompleted)
+	{
+		UnregisterObjectiveEventMetadataForCompletedObjective(&GameMode, ProgressId);
+	}
+	return bCompleted;
+}
+
+bool AFoundFootageObjectiveInteractable::TryCompleteExitRouteGateObjective(AHorrorGameModeBase& GameMode) const
+{
+	if (const ADeepWaterStationRouteKit* OwningRouteKit = ResolveOwningRouteKit())
+	{
+		if (OwningRouteKit->CanResolveEncounterAtExit())
+		{
+			return GameMode.IsExitUnlocked();
+		}
+	}
+
+	return GameMode.IsExitUnlocked();
+}
+
+void AFoundFootageObjectiveInteractable::RecordEvidenceProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId, bool bMarkCollected) const
+{
+	UInventoryComponent* Inventory = PlayerCharacter.GetInventoryComponent();
+	if (!Inventory)
+	{
+		return;
+	}
+
+	if (!EvidenceMetadata.EvidenceId.IsNone() && EvidenceMetadata.EvidenceId == ProgressId)
+	{
+		Inventory->RegisterEvidenceMetadata(EvidenceMetadata);
+	}
+
+	if (bMarkCollected)
+	{
+		Inventory->AddCollectedEvidenceId(ProgressId);
+	}
+}
+
+void AFoundFootageObjectiveInteractable::RecordNoteProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId) const
+{
+	UNoteRecorderComponent* NoteRecorder = PlayerCharacter.GetNoteRecorderComponent();
+	if (!NoteRecorder)
+	{
+		return;
+	}
+
+	if (!NoteMetadata.NoteId.IsNone() && NoteMetadata.NoteId == ProgressId)
+	{
+		NoteRecorder->RegisterNoteMetadata(NoteMetadata);
+	}
+	NoteRecorder->AddRecordedNoteId(ProgressId);
+}
+
+FGameplayTag AFoundFootageObjectiveInteractable::ResolveCompletedObjectiveEventTag() const
+{
+	switch (Objective)
+	{
+	case EFoundFootageInteractableObjective::Bodycam:
+		return HorrorFoundFootageTags::BodycamAcquiredEvent();
+	case EFoundFootageInteractableObjective::FirstNote:
+		return HorrorFoundFootageTags::FirstNoteCollectedEvent();
+	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
+		return HorrorFoundFootageTags::FirstAnomalyRecordedEvent();
+	case EFoundFootageInteractableObjective::ArchiveReview:
+		return HorrorFoundFootageTags::ArchiveReviewedEvent();
+	default:
+		break;
+	}
+
+	return FGameplayTag();
 }

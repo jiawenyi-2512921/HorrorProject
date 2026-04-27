@@ -41,6 +41,9 @@ struct FPostProcessEffectSettings
 	float Duration = 0.0f;
 };
 
+/**
+ * Implements actor-level Post Process Controller behavior for the VFX module.
+ */
 UCLASS(ClassGroup=(VFX), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UPostProcessController : public UActorComponent
 {
@@ -126,8 +129,16 @@ protected:
 
 private:
 	void UpdateEffectIntensities(float DeltaTime);
-	void CreateDynamicMaterial(EPostProcessEffectType EffectType);
-	void UpdateMaterialParameters(EPostProcessEffectType EffectType, float Intensity);
+	bool CreateDynamicMaterial(EPostProcessEffectType EffectType);
+	bool UpdateMaterialParameters(EPostProcessEffectType EffectType, float Intensity);
+	UMaterialInstanceDynamic* FindDynamicMaterial(EPostProcessEffectType EffectType) const;
+	bool ApplyCommonMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity);
+	void ApplyEffectSpecificMaterialParameters(EPostProcessEffectType EffectType, UMaterialInstanceDynamic* DynamicMaterial, float Intensity);
+	void ApplyPressureMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const;
+	void ApplyNoiseMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const;
+	void ApplyScanlineMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial) const;
+	void ApplyFearMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const;
+	void ApplyDeathMaterialParameters(UMaterialInstanceDynamic* DynamicMaterial, float Intensity) const;
 
 	float CurrentPressure = 0.0f;
 	float CurrentFear = 0.0f;

@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -13,6 +13,9 @@ class AHorrorEncounterDirector;
 class AHorrorPlayerCharacter;
 class UHorrorSaveSubsystem;
 
+/**
+ * Defines Horror Game Mode Base behavior for the Game module.
+ */
 UCLASS()
 class HORRORPROJECT_API AHorrorGameModeBase : public AGameModeBase
 {
@@ -104,12 +107,16 @@ public:
 	virtual void BeginPlay() override;
 
 private:
+	static constexpr float DefaultRuntimeRouteKitHeight = 80.0f;
+
 	bool RecordFoundFootageEvent(FGameplayTag EventTag, FName SourceId);
 	AHorrorPlayerCharacter* ResolveLeadPlayerCharacter() const;
 	ADeepWaterStationRouteKit* EnsureRouteKit();
 	AHorrorEncounterDirector* EnsureEncounterDirector();
 	void RegisterDefaultObjectiveMetadata();
 	void HandleObjectiveStateChange(FGameplayTag StateTag);
+	void HandleEncounterObjectiveStateChange(FGameplayTag StateTag);
+	void HandleAutosaveObjectiveStateChange(FGameplayTag StateTag);
 	void TryAutosaveOnMilestone(FName CheckpointId);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Bootstrap", meta=(AllowPrivateAccess="true"))
@@ -119,7 +126,7 @@ private:
 	bool bAutoSpawnRouteKitOnBeginPlay = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route", meta=(AllowPrivateAccess="true"))
-	FTransform RuntimeRouteKitTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, 80.0f));
+	FTransform RuntimeRouteKitTransform = FTransform(FRotator::ZeroRotator, FVector(0.0f, 0.0f, DefaultRuntimeRouteKitHeight));
 
 	UPROPERTY(Transient)
 	TObjectPtr<ADeepWaterStationRouteKit> RuntimeRouteKit;

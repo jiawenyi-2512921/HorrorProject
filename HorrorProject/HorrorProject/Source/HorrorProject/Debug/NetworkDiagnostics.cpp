@@ -8,12 +8,22 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Engine/NetDriver.h"
+
+namespace HorrorNetworkDiagnostics
+{
+	constexpr float DefaultHighPingThresholdMs = 150.0f;
+	constexpr float ExcellentPingThresholdMs = 50.0f;
+	constexpr float GoodPingThresholdMs = 100.0f;
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr int32 MaxHistorySamples = 300;
+}
 
 UNetworkDiagnostics::UNetworkDiagnostics()
 {
 	bIsMonitoring = false;
 	MonitoringInterval = 2.0f;
-	HighPingThreshold = 150.0f;
+	HighPingThreshold = HorrorNetworkDiagnostics::DefaultHighPingThresholdMs;
 	PacketLossThreshold = 5.0f;
 }
 
@@ -30,7 +40,14 @@ void UNetworkDiagnostics::StartMonitoring(float Interval)
 	MonitoringInterval = FMath::Max(1.0f, Interval);
 	bIsMonitoring = true;
 
-	GetWorld()->GetTimerManager().SetTimer(MonitoringTimer,
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		bIsMonitoring = false;
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(MonitoringTimer,
 		this, &UNetworkDiagnostics::CollectNetworkData,
 		MonitoringInterval, true);
 
@@ -41,7 +58,10 @@ void UNetworkDiagnostics::StopMonitoring()
 {
 	if (!bIsMonitoring) return;
 
-	GetWorld()->GetTimerManager().ClearTimer(MonitoringTimer);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(MonitoringTimer);
+	}
 	bIsMonitoring = false;
 
 	UE_LOG(LogTemp, Log, TEXT("Network monitoring stopped"));
@@ -49,25 +69,44 @@ void UNetworkDiagnostics::StopMonitoring()
 
 void UNetworkDiagnostics::CollectNetworkData()
 {
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
 	FNetworkSnapshot Snapshot;
 	Snapshot.Timestamp = FDateTime::Now();
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
 	if (PC && PC->PlayerState)
 	{
 		Snapshot.PingMS = PC->PlayerState->GetPingInMilliseconds();
 	}
 
-	// TODO: Collect actual packet loss and bandwidth data
-	Snapshot.PacketLossPercent = 0.0f;
-	Snapshot.BytesSent = 0;
-	Snapshot.BytesReceived = 0;
-	Snapshot.ConnectedPlayers = GetWorld()->GetNumPlayerControllers();
+	if (const UNetDriver* NetDriver = World->GetNetDriver())
+	{
+		Snapshot.BytesSent = static_cast<int32>(FMath::Min<uint32>(NetDriver->OutBytesPerSecond, MAX_int32));
+		Snapshot.BytesReceived = static_cast<int32>(FMath::Min<uint32>(NetDriver->InBytesPerSecond, MAX_int32));
+
+		const uint32 LostPackets = NetDriver->InPacketsLost + NetDriver->OutPacketsLost;
+		const uint32 TotalPackets = NetDriver->InPackets + NetDriver->OutPackets + LostPackets;
+		Snapshot.PacketLossPercent = TotalPackets > 0
+			? (static_cast<float>(LostPackets) / static_cast<float>(TotalPackets)) * HorrorNetworkDiagnostics::PercentMultiplier
+			: 0.0f;
+	}
+	else
+	{
+		Snapshot.PacketLossPercent = 0.0f;
+		Snapshot.BytesSent = 0;
+		Snapshot.BytesReceived = 0;
+	}
+	Snapshot.ConnectedPlayers = World->GetNumPlayerControllers();
 
 	NetworkHistory.Add(Snapshot);
 
-	// Keep only last 300 samples
-	if (NetworkHistory.Num() > 300)
+	// Keep only the most recent samples.
+	if (NetworkHistory.Num() > HorrorNetworkDiagnostics::MaxHistorySamples)
 	{
 		NetworkHistory.RemoveAt(0);
 	}
@@ -184,21 +223,27 @@ void UNetworkDiagnostics::TestConnection()
 		return;
 	}
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
 	if (PC && PC->PlayerState)
 	{
 		float Ping = PC->PlayerState->GetPingInMilliseconds();
 		UE_LOG(LogTemp, Log, TEXT("Current Ping: %.0f ms"), Ping);
 
-		if (Ping < 50.0f)
+		if (Ping < HorrorNetworkDiagnostics::ExcellentPingThresholdMs)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Connection Quality: Excellent"));
 		}
-		else if (Ping < 100.0f)
+		else if (Ping < HorrorNetworkDiagnostics::GoodPingThresholdMs)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Connection Quality: Good"));
 		}
-		else if (Ping < 150.0f)
+		else if (Ping < HorrorNetworkDiagnostics::DefaultHighPingThresholdMs)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Connection Quality: Fair"));
 		}
@@ -208,34 +253,41 @@ void UNetworkDiagnostics::TestConnection()
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Connected Players: %d"), GetWorld()->GetNumPlayerControllers());
-	UE_LOG(LogTemp, Log, TEXT("Net Mode: %d"), (int32)GetWorld()->GetNetMode());
+	UE_LOG(LogTemp, Log, TEXT("Connected Players: %d"), World->GetNumPlayerControllers());
+	UE_LOG(LogTemp, Log, TEXT("Net Mode: %d"), (int32)World->GetNetMode());
 }
 
 void UNetworkDiagnostics::DumpNetworkStats()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Dumping network statistics..."));
 
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("=== NETWORK STATISTICS ==="));
-	const ENetMode NetMode = GetWorld()->GetNetMode();
+	const ENetMode NetMode = World->GetNetMode();
 	const bool bIsServer = NetMode == NM_ListenServer || NetMode == NM_DedicatedServer;
 	const bool bIsClient = NetMode == NM_Client;
 	UE_LOG(LogTemp, Log, TEXT("Net Mode: %d"), (int32)NetMode);
 	UE_LOG(LogTemp, Log, TEXT("Is Server: %s"), bIsServer ? TEXT("Yes") : TEXT("No"));
 	UE_LOG(LogTemp, Log, TEXT("Is Client: %s"), bIsClient ? TEXT("Yes") : TEXT("No"));
-	UE_LOG(LogTemp, Log, TEXT("Player Controllers: %d"), GetWorld()->GetNumPlayerControllers());
+	UE_LOG(LogTemp, Log, TEXT("Player Controllers: %d"), World->GetNumPlayerControllers());
 
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
 	if (PC && PC->PlayerState)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Ping: %.0f ms"), PC->PlayerState->GetPingInMilliseconds());
 	}
 
 	// Execute engine network commands
-	GetWorld()->Exec(GetWorld(), TEXT("stat net"));
+	World->Exec(World, TEXT("stat net"));
 }
 
 bool UNetworkDiagnostics::IsNetworked() const
 {
-	return GetWorld()->GetNetMode() != NM_Standalone;
+	const UWorld* World = GetWorld();
+	return World && World->GetNetMode() != NM_Standalone;
 }

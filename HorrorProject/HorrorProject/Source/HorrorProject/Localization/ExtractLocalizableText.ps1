@@ -2,9 +2,16 @@
 # Usage: .\ExtractLocalizableText.ps1
 
 param(
-    [string]$SourcePath = "D:\gptzuo\HorrorProject\HorrorProject\Source",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Content\Localization\ExtractedTexts.csv"
+    [string]$SourcePath = "",
+    [string]$OutputPath = ""
 )
+
+$ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($SourcePath)) { $SourcePath = Join-Path $ProjectRoot "Source" }
+if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $ProjectRoot "Content\Localization\ExtractedTexts.csv" }
 
 Write-Host "Extracting localizable text from: $SourcePath"
 
@@ -19,16 +26,17 @@ $TextPatterns = @(
 function Extract-TextFromFile {
     param([string]$FilePath)
 
-    $Content = Get-Content $FilePath -Raw -ErrorAction SilentlyContinue
+    $Content = Get-Content -LiteralPath $FilePath -Raw -ErrorAction SilentlyContinue
     if (-not $Content) { return }
 
+    $FileTexts = @()
     foreach ($Pattern in $TextPatterns) {
         $Matches = [regex]::Matches($Content, $Pattern)
         foreach ($Match in $Matches) {
             $Text = if ($Match.Groups.Count -gt 2) { $Match.Groups[2].Value } else { $Match.Groups[1].Value }
 
             if ($Text -and $Text.Length -gt 0) {
-                $ExtractedTexts += [PSCustomObject]@{
+                $FileTexts += [PSCustomObject]@{
                     File = $FilePath
                     Key = $Text
                     Text = $Text
@@ -37,20 +45,22 @@ function Extract-TextFromFile {
             }
         }
     }
+
+    return $FileTexts
 }
 
 # Find all C++ source files
-$SourceFiles = Get-ChildItem -Path $SourcePath -Recurse -Include *.cpp,*.h
+$SourceFiles = @(Get-ChildItem -LiteralPath $SourcePath -Recurse -File -Include *.cpp,*.h)
 
 Write-Host "Found $($SourceFiles.Count) source files"
 
 foreach ($File in $SourceFiles) {
     Write-Host "Processing: $($File.Name)"
-    Extract-TextFromFile -FilePath $File.FullName
+    $ExtractedTexts += Extract-TextFromFile -FilePath $File.FullName
 }
 
 # Remove duplicates
-$UniqueTexts = $ExtractedTexts | Sort-Object -Property Key -Unique
+$UniqueTexts = @($ExtractedTexts | Sort-Object -Property Key -Unique)
 
 Write-Host "Extracted $($UniqueTexts.Count) unique text entries"
 

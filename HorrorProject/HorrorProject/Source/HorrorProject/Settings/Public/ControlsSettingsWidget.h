@@ -87,4 +87,12 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UControlSettings> ControlSettings;
+
+	void ResolveControlSettings();
+	void BindMouseControls();
+	void BindGamepadControls();
+	void BindAccessibilityControls();
+	void RefreshMouseControls();
+	void RefreshGamepadControls();
+	void RefreshAccessibilityControls();
 };

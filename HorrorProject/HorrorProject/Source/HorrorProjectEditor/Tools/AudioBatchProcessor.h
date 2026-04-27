@@ -11,6 +11,9 @@ struct FAudioProcessingSettings
 {
 	GENERATED_BODY()
 
+	static constexpr int32 DefaultTargetSampleRate = 44100;
+	static constexpr float DefaultCompressionQuality = 75.0f;
+
 	UPROPERTY()
 	bool bNormalize = true;
 
@@ -18,10 +21,10 @@ struct FAudioProcessingSettings
 	bool bConvertToMono = false;
 
 	UPROPERTY()
-	int32 TargetSampleRate = 44100;
+	int32 TargetSampleRate = DefaultTargetSampleRate;
 
 	UPROPERTY()
-	float CompressionQuality = 75.0f;
+	float CompressionQuality = DefaultCompressionQuality;
 
 	UPROPERTY()
 	bool bEnableStreaming = true;
@@ -37,5 +40,5 @@ public:
 	static void ProcessAudioFile(USoundWave* Sound, const FAudioProcessingSettings& Settings);
 
 private:
-	static FAudioProcessingSettings DefaultSettings;
+	static const FAudioProcessingSettings& GetDefaultSettings();
 };

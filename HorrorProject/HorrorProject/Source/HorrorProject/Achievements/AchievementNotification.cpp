@@ -57,13 +57,16 @@ void UAchievementNotification::ShowNotification(const FAchievementData& Achievem
 	FadeIn();
 
 	// Set timer to fade out
-	GetWorld()->GetTimerManager().SetTimer(
-		DisplayTimerHandle,
-		this,
-		&UAchievementNotification::FadeOut,
-		DisplayDuration,
-		false
-	);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			DisplayTimerHandle,
+			this,
+			&UAchievementNotification::FadeOut,
+			DisplayDuration,
+			false
+		);
+	}
 
 	// Play sound
 	// UGameplayStatics::PlaySound2D(GetWorld(), AchievementUnlockSound);
@@ -109,13 +112,20 @@ void UAchievementNotification::FadeOut()
 	}
 
 	// Set timer to remove widget
-	GetWorld()->GetTimerManager().SetTimer(
-		DisplayTimerHandle,
-		this,
-		&UAchievementNotification::RemoveNotification,
-		FadeOutDuration,
-		false
-	);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			DisplayTimerHandle,
+			this,
+			&UAchievementNotification::RemoveNotification,
+			FadeOutDuration,
+			false
+		);
+	}
+	else
+	{
+		RemoveNotification();
+	}
 }
 
 void UAchievementNotification::RemoveNotification()

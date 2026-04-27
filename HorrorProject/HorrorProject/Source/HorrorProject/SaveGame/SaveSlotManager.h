@@ -12,6 +12,9 @@ class UHorrorSaveGame;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSaveSlotChanged, int32, SlotIndex, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveSlotDeleted, int32, SlotIndex);
 
+/**
+ * Defines Save Slot Manager behavior for the SaveGame module.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API USaveSlotManager : public UObject
 {

@@ -1,9 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "DataEncryption.h"
-#include "Misc/SecureHash.h"
+#include "HAL/PlatformMisc.h"
+#include "Misc/AES.h"
+#include "Misc/App.h"
 #include "Misc/Base64.h"
-#include "HAL/PlatformFileManager.h"
+#include "Misc/Guid.h"
+
+namespace
+{
+	constexpr uint8 MinPKCS7Padding = 1;
+	constexpr uint8 MaxPKCS7Padding = FAES::AESBlockSize;
+
+	void AppendStringBytes(const FString& Value, TArray<uint8>& OutBytes)
+	{
+		FTCHARToUTF8 Converter(*Value);
+		OutBytes.Append(reinterpret_cast<const uint8*>(Converter.Get()), Converter.Length());
+	}
+}
 
 bool UDataEncryption::EncryptData(const TArray<uint8>& PlainData, TArray<uint8>& OutEncryptedData, const FString& Key)
 {
@@ -15,19 +29,68 @@ bool UDataEncryption::EncryptData(const TArray<uint8>& PlainData, TArray<uint8>&
 	TArray<uint8> KeyBytes;
 	DeriveKeyFromPassword(Key, KeyBytes);
 
-	OutEncryptedData.SetNum(PlainData.Num());
-
-	for (int32 i = 0; i < PlainData.Num(); ++i)
+	if (KeyBytes.Num() != FAES::FAESKey::KeySize)
 	{
-		OutEncryptedData[i] = PlainData[i] ^ KeyBytes[i % KeyBytes.Num()];
+		return false;
 	}
+
+	OutEncryptedData = PlainData;
+
+	const int32 PaddingSize = FAES::AESBlockSize - (OutEncryptedData.Num() % FAES::AESBlockSize);
+	const uint8 PaddingByte = static_cast<uint8>(PaddingSize);
+	for (int32 PaddingIndex = 0; PaddingIndex < PaddingSize; ++PaddingIndex)
+	{
+		OutEncryptedData.Add(PaddingByte);
+	}
+
+	FAES::EncryptData(
+		OutEncryptedData.GetData(),
+		static_cast<uint64>(OutEncryptedData.Num()),
+		KeyBytes.GetData(),
+		static_cast<uint32>(KeyBytes.Num()));
 
 	return true;
 }
 
 bool UDataEncryption::DecryptData(const TArray<uint8>& EncryptedData, TArray<uint8>& OutPlainData, const FString& Key)
 {
-	return EncryptData(EncryptedData, OutPlainData, Key);
+	if (EncryptedData.Num() == 0 || Key.IsEmpty() || EncryptedData.Num() % FAES::AESBlockSize != 0)
+	{
+		return false;
+	}
+
+	TArray<uint8> KeyBytes;
+	DeriveKeyFromPassword(Key, KeyBytes);
+	if (KeyBytes.Num() != FAES::FAESKey::KeySize)
+	{
+		return false;
+	}
+
+	OutPlainData = EncryptedData;
+	FAES::DecryptData(
+		OutPlainData.GetData(),
+		static_cast<uint64>(OutPlainData.Num()),
+		KeyBytes.GetData(),
+		static_cast<uint32>(KeyBytes.Num()));
+
+	const uint8 PaddingByte = OutPlainData.Last();
+	if (PaddingByte < MinPKCS7Padding || PaddingByte > MaxPKCS7Padding || PaddingByte > OutPlainData.Num())
+	{
+		OutPlainData.Reset();
+		return false;
+	}
+
+	for (int32 Index = OutPlainData.Num() - PaddingByte; Index < OutPlainData.Num(); ++Index)
+	{
+		if (!OutPlainData.IsValidIndex(Index) || OutPlainData[Index] != PaddingByte)
+		{
+			OutPlainData.Reset();
+			return false;
+		}
+	}
+
+	OutPlainData.SetNum(OutPlainData.Num() - PaddingByte);
+	return true;
 }
 
 FString UDataEncryption::GenerateSHA256Hash(const TArray<uint8>& Data)
@@ -37,10 +100,13 @@ FString UDataEncryption::GenerateSHA256Hash(const TArray<uint8>& Data)
 		return FString();
 	}
 
-	FSHAHash Hash;
-	FSHA1::HashBuffer(Data.GetData(), Data.Num(), Hash.Hash);
+	FSHA256Signature Signature;
+	if (!FPlatformMisc::GetSHA256Signature(Data.GetData(), static_cast<uint32>(Data.Num()), Signature))
+	{
+		return FString();
+	}
 
-	return Hash.ToString();
+	return Signature.ToString();
 }
 
 bool UDataEncryption::VerifyDataIntegrity(const TArray<uint8>& Data, const FString& ExpectedHash)
@@ -54,27 +120,12 @@ FString UDataEncryption::GenerateSecureKey(int32 KeyLength)
 	FString Key;
 	Key.Reserve(KeyLength);
 
-	for (int32 i = 0; i < KeyLength; ++i)
+	while (Key.Len() < KeyLength)
 	{
-		int32 RandomValue = FMath::RandRange(0, 61);
-		TCHAR Char;
-
-		if (RandomValue < 10)
-		{
-			Char = '0' + RandomValue;
-		}
-		else if (RandomValue < 36)
-		{
-			Char = 'A' + (RandomValue - 10);
-		}
-		else
-		{
-			Char = 'a' + (RandomValue - 36);
-		}
-
-		Key.AppendChar(Char);
+		Key += FGuid::NewGuid().ToString(EGuidFormats::Digits);
 	}
 
+	Key.LeftInline(KeyLength);
 	return Key;
 }
 
@@ -92,33 +143,34 @@ bool UDataEncryption::DecryptSaveData(const TArray<uint8>& EncryptedData, TArray
 
 FString UDataEncryption::GetEncryptionKey()
 {
-	static FString CachedKey;
+	const FString KeyMaterial = FString::Printf(
+		TEXT("%s:%s:%s"),
+		FApp::GetProjectName(),
+		*FPlatformMisc::GetLoginId(),
+		*FPlatformMisc::GetDeviceId());
 
-	if (CachedKey.IsEmpty())
-	{
-		CachedKey = TEXT("HorrorProject_SecureKey_2026_v1");
-	}
-
-	return CachedKey;
+	TArray<uint8> KeyMaterialBytes;
+	AppendStringBytes(KeyMaterial, KeyMaterialBytes);
+	return GenerateSHA256Hash(KeyMaterialBytes);
 }
 
 void UDataEncryption::DeriveKeyFromPassword(const FString& Password, TArray<uint8>& OutKey)
 {
 	OutKey.Reset();
 
-	FTCHARToUTF8 Converter(*Password);
-	const uint8* UTF8Data = (const uint8*)Converter.Get();
-	int32 UTF8Length = Converter.Length();
-
-	OutKey.Append(UTF8Data, UTF8Length);
-
-	while (OutKey.Num() < 32)
+	TArray<uint8> PasswordBytes;
+	AppendStringBytes(Password, PasswordBytes);
+	if (PasswordBytes.Num() == 0)
 	{
-		OutKey.Append(UTF8Data, FMath::Min(UTF8Length, 32 - OutKey.Num()));
+		return;
 	}
 
-	if (OutKey.Num() > 32)
+	FSHA256Signature Signature;
+	if (FPlatformMisc::GetSHA256Signature(
+		PasswordBytes.GetData(),
+		static_cast<uint32>(PasswordBytes.Num()),
+		Signature))
 	{
-		OutKey.SetNum(32);
+		OutKey.Append(Signature.Signature, UE_ARRAY_COUNT(Signature.Signature));
 	}
 }

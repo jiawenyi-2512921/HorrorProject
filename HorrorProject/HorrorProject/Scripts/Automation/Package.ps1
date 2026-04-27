@@ -10,15 +10,20 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$ProjectFile = "$ProjectRoot\HorrorProject.uproject"
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UE5Path = Join-Path $UE5Root "Engine\Build\BatchFiles"
-$LogDir = "$ProjectRoot\Build\Logs\Package"
+
+$ValidationCommon = Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1"
+. $ValidationCommon
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$ProjectName = [System.IO.Path]::GetFileNameWithoutExtension($ProjectFile)
+$UE5Root = Get-HorrorUERoot
+$RunUATPath = Get-HorrorBuildScript -UERoot $UE5Root -ScriptName "RunUAT.bat"
+$LogDir = Join-Path $ProjectRoot "Build\Logs\Package"
 $PackageStartTime = Get-Date
 
 if (-not $OutputDir) {
-    $OutputDir = "$ProjectRoot\Build\Packages\$Configuration-$Platform-$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+    $OutputDir = Join-Path $ProjectRoot "Build\Packages\$Configuration-$Platform-$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 }
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
@@ -56,13 +61,73 @@ function Invoke-PackageBuild {
 
     Write-Log "Running: RunUAT.bat $($packageArgs -join ' ')"
 
-    $process = Start-Process -FilePath "$UE5Path\RunUAT.bat" -ArgumentList $packageArgs -NoNewWindow -Wait -PassThru
+    $process = Start-Process -FilePath $RunUATPath -ArgumentList $packageArgs -NoNewWindow -Wait -PassThru
 
     if ($process.ExitCode -ne 0) {
         throw "Package failed with exit code: $($process.ExitCode)"
     }
 
     Write-Log "Package complete" "SUCCESS"
+}
+
+function Get-LatestAutomationToolLog {
+    $automationLogRoot = Join-Path $env:APPDATA "Unreal Engine\AutomationTool\Logs"
+    if (-not (Test-Path -LiteralPath $automationLogRoot)) {
+        throw "AutomationTool log root not found: $automationLogRoot"
+    }
+
+    $candidateLog = Get-ChildItem -LiteralPath $automationLogRoot -Recurse -Filter "Log.txt" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTime -ge $PackageStartTime.AddMinutes(-5) } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if (-not $candidateLog) {
+        throw "No recent AutomationTool Log.txt found under $automationLogRoot"
+    }
+
+    return $candidateLog.FullName
+}
+
+function Test-PackageLogQuality {
+    Write-Log "Checking AutomationTool log quality..."
+
+    $automationLog = Get-LatestAutomationToolLog
+    $capturedLog = Join-Path $LogDir "AutomationTool_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+    Copy-Item -LiteralPath $automationLog -Destination $capturedLog -Force
+    Write-Log "Captured AutomationTool log: $capturedLog"
+
+    $problemMatches = Select-String -LiteralPath $automationLog -Pattern @(
+        ":\s*Warning:",
+        ":\s*Error:",
+        "Fatal error",
+        "Warning/Error Summary",
+        "AutomationTool exiting with ExitCode=[1-9]"
+    ) -CaseSensitive:$false
+
+    if ($problemMatches) {
+        foreach ($match in $problemMatches) {
+            Write-Log "AutomationTool log issue at line $($match.LineNumber): $($match.Line.Trim())" "ERROR"
+        }
+        throw "Package log quality gate failed"
+    }
+
+    $cleanSummary = Select-String -LiteralPath $automationLog -Pattern "Success - 0 error\(s\), 0 warning\(s\)" -CaseSensitive:$false
+    if (-not $cleanSummary) {
+        throw "Package log quality gate failed: missing clean Unreal summary ('Success - 0 error(s), 0 warning(s)')"
+    }
+
+    $advisoryMatches = Select-String -LiteralPath $automationLog -Pattern @(
+        "Display:.*should be fixed",
+        "Display:.*silently failing"
+    ) -CaseSensitive:$false
+
+    if ($advisoryMatches) {
+        foreach ($match in $advisoryMatches) {
+            Write-Log "AutomationTool advisory at line $($match.LineNumber): $($match.Line.Trim())" "INFO"
+        }
+    }
+
+    Write-Log "AutomationTool log quality gate passed" "SUCCESS"
 }
 
 function Test-PackageIntegrity {
@@ -73,23 +138,72 @@ function Test-PackageIntegrity {
 
     Write-Log "Validating package..."
 
-    $requiredFiles = @(
-        "HorrorProject.exe",
-        "HorrorProject\Content\Paks\HorrorProject-WindowsNoEditor.pak"
-    )
+    $stageRoots = @(
+        (Join-Path $OutputDir "Windows"),
+        (Join-Path $OutputDir "WindowsNoEditor"),
+        $OutputDir
+    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -Unique
 
-    $allFilesExist = $true
-    foreach ($file in $requiredFiles) {
-        $fullPath = Join-Path $OutputDir "WindowsNoEditor\$file"
-        if (-not (Test-Path $fullPath)) {
-            Write-Log "Missing required file: $file" "ERROR"
-            $allFilesExist = $false
+    if (-not $stageRoots) {
+        throw "Package validation failed: no staged output directory found under $OutputDir"
+    }
+
+    $validationPassed = $false
+    $validationErrors = New-Object System.Collections.Generic.List[string]
+
+    foreach ($stageRoot in $stageRoots) {
+        $rootExe = Join-Path $stageRoot "$ProjectName.exe"
+        $binaryExe = Join-Path $stageRoot "$ProjectName\Binaries\$Platform\$ProjectName.exe"
+        $pakDir = Join-Path $stageRoot "$ProjectName\Content\Paks"
+
+        $errors = New-Object System.Collections.Generic.List[string]
+
+        if (-not ((Test-Path -LiteralPath $rootExe) -and ((Get-Item -LiteralPath $rootExe).Length -gt 0))) {
+            $errors.Add("missing launcher executable: $rootExe")
+        }
+
+        if (-not ((Test-Path -LiteralPath $binaryExe) -and ((Get-Item -LiteralPath $binaryExe).Length -gt 0))) {
+            $errors.Add("missing game executable: $binaryExe")
+        }
+
+        if (-not (Test-Path -LiteralPath $pakDir)) {
+            $errors.Add("missing pak directory: $pakDir")
+        } else {
+            $pakFiles = Get-ChildItem -LiteralPath $pakDir -Filter "$ProjectName-*.pak" -File -ErrorAction SilentlyContinue
+            $ucasFiles = Get-ChildItem -LiteralPath $pakDir -Filter "$ProjectName-*.ucas" -File -ErrorAction SilentlyContinue
+            $utocFiles = Get-ChildItem -LiteralPath $pakDir -Filter "$ProjectName-*.utoc" -File -ErrorAction SilentlyContinue
+
+            if (-not ($pakFiles | Where-Object { $_.Length -gt 0 })) {
+                $errors.Add("missing non-empty project pak: $pakDir\$ProjectName-*.pak")
+            }
+
+            if (-not ($ucasFiles | Where-Object { $_.Length -gt 0 })) {
+                $errors.Add("missing non-empty project IoStore ucas: $pakDir\$ProjectName-*.ucas")
+            }
+
+            if (-not ($utocFiles | Where-Object { $_.Length -gt 0 })) {
+                $errors.Add("missing non-empty project IoStore utoc: $pakDir\$ProjectName-*.utoc")
+            }
+        }
+
+        if ($errors.Count -eq 0) {
+            Write-Log "Validated launcher: $rootExe" "SUCCESS"
+            Write-Log "Validated game executable: $binaryExe" "SUCCESS"
+            Write-Log "Validated pak directory: $pakDir" "SUCCESS"
+            Write-Log "Package validation passed" "SUCCESS"
+            $validationPassed = $true
+            break
+        }
+
+        foreach ($errorItem in $errors) {
+            $validationErrors.Add("[$stageRoot] $errorItem")
         }
     }
 
-    if ($allFilesExist) {
-        Write-Log "Package validation passed" "SUCCESS"
-    } else {
+    if (-not $validationPassed) {
+        foreach ($errorItem in $validationErrors) {
+            Write-Log $errorItem "ERROR"
+        }
         throw "Package validation failed"
     }
 }
@@ -99,9 +213,9 @@ function Invoke-ArchivePackage {
         Write-Log "Creating archive..."
 
         $archiveName = "HorrorProject_$Configuration-$Platform-$(Get-Date -Format 'yyyyMMdd_HHmmss').zip"
-        $archivePath = "$ProjectRoot\Build\Archives\$archiveName"
+        $archivePath = Join-Path $ProjectRoot "Build\Archives\$archiveName"
 
-        New-Item -ItemType Directory -Force -Path "$ProjectRoot\Build\Archives" | Out-Null
+        New-Item -ItemType Directory -Force -Path (Join-Path $ProjectRoot "Build\Archives") | Out-Null
 
         Compress-Archive -Path "$OutputDir\*" -DestinationPath $archivePath -Force
 
@@ -133,6 +247,7 @@ try {
     Write-Log "Starting HorrorProject packaging..."
 
     Invoke-PackageBuild
+    Test-PackageLogQuality
     Test-PackageIntegrity
     Invoke-ArchivePackage
     Write-PackageReport

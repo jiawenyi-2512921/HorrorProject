@@ -1,9 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ControlRemapping.h"
+#include "Dom/JsonObject.h"
+#include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "JsonObjectConverter.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 void UControlRemapping::RemapAction(FName ActionName, FKey NewKey, bool bIsPrimary)
 {
@@ -82,43 +86,77 @@ void UControlRemapping::ResetToDefaults()
 
 void UControlRemapping::SaveMappings()
 {
-    FString JsonString;
-    if (FJsonObjectConverter::UStructToJsonObjectString(FInputMapping(), JsonString))
+    TArray<FString> JsonArray;
+    FString MappingJson;
+    for (const FInputMapping& Mapping : InputMappings)
     {
-        TArray<FString> JsonArray;
-        for (const FInputMapping& Mapping : InputMappings)
+        MappingJson.Reset();
+        if (FJsonObjectConverter::UStructToJsonObjectString(Mapping, MappingJson))
         {
-            FString MappingJson;
-            if (FJsonObjectConverter::UStructToJsonObjectString(Mapping, MappingJson))
-            {
-                JsonArray.Add(MappingJson);
-            }
+            JsonArray.Add(MappingJson);
         }
+    }
 
-        FString CombinedJson = FString::Printf(TEXT("[%s]"), *FString::Join(JsonArray, TEXT(",")));
-        FString SavePath = GetMappingsSavePath();
+    const FString CombinedJson = FString::Printf(TEXT("[%s]"), *FString::Join(JsonArray, TEXT(",")));
+    const FString SavePath = GetMappingsSavePath();
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(SavePath), true);
 
-        if (FFileHelper::SaveStringToFile(CombinedJson, *SavePath))
-        {
-            UE_LOG(LogTemp, Log, TEXT("Control mappings saved to: %s"), *SavePath);
-        }
+    if (FFileHelper::SaveStringToFile(CombinedJson, *SavePath))
+    {
+        UE_LOG(LogTemp, Log, TEXT("Control mappings saved to: %s"), *SavePath);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to save control mappings to: %s"), *SavePath);
     }
 }
 
 void UControlRemapping::LoadMappings()
 {
-    FString SavePath = GetMappingsSavePath();
+    const FString SavePath = GetMappingsSavePath();
     FString JsonString;
 
     if (FFileHelper::LoadFileToString(JsonString, *SavePath))
     {
-        // Parse JSON array and load mappings
-        UE_LOG(LogTemp, Log, TEXT("Control mappings loaded from: %s"), *SavePath);
+        TArray<TSharedPtr<FJsonValue>> MappingValues;
+        const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+        if (FJsonSerializer::Deserialize(Reader, MappingValues))
+        {
+            TArray<FInputMapping> LoadedMappings;
+            for (const TSharedPtr<FJsonValue>& MappingValue : MappingValues)
+            {
+                if (!MappingValue.IsValid() || MappingValue->Type != EJson::Object)
+                {
+                    continue;
+                }
+
+                FInputMapping LoadedMapping;
+                if (FJsonObjectConverter::JsonObjectToUStruct(
+                    MappingValue->AsObject().ToSharedRef(),
+                    FInputMapping::StaticStruct(),
+                    &LoadedMapping,
+                    0,
+                    0) && !LoadedMapping.ActionName.IsNone())
+                {
+                    LoadedMappings.Add(LoadedMapping);
+                }
+            }
+
+            if (LoadedMappings.Num() > 0)
+            {
+                InputMappings = MoveTemp(LoadedMappings);
+                OnControlsRemapped.Broadcast(InputMappings);
+                UE_LOG(LogTemp, Log, TEXT("Loaded %d control mappings from: %s"), InputMappings.Num(), *SavePath);
+                return;
+            }
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("Control mapping file was invalid or empty, restoring defaults: %s"), *SavePath);
     }
-    else
-    {
-        InitializeDefaultMappings();
-    }
+
+    InputMappings.Empty();
+    InitializeDefaultMappings();
+    OnControlsRemapped.Broadcast(InputMappings);
 }
 
 bool UControlRemapping::IsKeyConflicting(FKey Key, FName ExcludeAction) const
@@ -149,7 +187,8 @@ void UControlRemapping::SetDoubleTapWindow(float Window)
 
 void UControlRemapping::InitializeDefaultMappings()
 {
-    // Initialize with default key mappings
+    InputMappings.Empty();
+
     FInputMapping MoveForward;
     MoveForward.ActionName = TEXT("MoveForward");
     MoveForward.PrimaryKey = EKeys::W;

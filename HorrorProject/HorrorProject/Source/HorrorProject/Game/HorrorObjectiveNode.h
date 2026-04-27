@@ -27,6 +27,9 @@ enum class EHorrorObjectiveNodeState : uint8
 	Failed UMETA(DisplayName="Failed")
 };
 
+/**
+ * Implements actor-level Horror Objective Node behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorObjectiveNode : public AActor
 {

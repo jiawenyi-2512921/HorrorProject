@@ -3,6 +3,11 @@
 #include "InputValidator.h"
 #include "Misc/Char.h"
 
+namespace
+{
+	constexpr int32 MaxSaveSlotIndex = 99;
+}
+
 bool UInputValidator::ValidateString(const FString& Input, int32 MaxLength, bool bAllowSpecialChars)
 {
 	if (Input.IsEmpty() || Input.Len() > MaxLength)
@@ -29,9 +34,10 @@ FString UInputValidator::SanitizeString(const FString& Input, int32 MaxLength)
 	FString Sanitized;
 	Sanitized.Reserve(FMath::Min(Input.Len(), MaxLength));
 
-	for (int32 i = 0; i < Input.Len() && Sanitized.Len() < MaxLength; ++i)
+	const TCHAR* InputCursor = *Input;
+	for (int32 i = 0; i < Input.Len() && Sanitized.Len() < MaxLength; ++i, ++InputCursor)
 	{
-		const TCHAR& Char = Input[i];
+		const TCHAR Char = *InputCursor;
 		if (FChar::IsAlnum(Char) || FChar::IsWhitespace(Char) || Char == '_' || Char == '-')
 		{
 			Sanitized.AppendChar(Char);
@@ -63,7 +69,7 @@ FString UInputValidator::SanitizeSessionName(const FString& SessionName)
 
 bool UInputValidator::ValidateSaveSlotIndex(int32 SlotIndex)
 {
-	return ValidateInt32(SlotIndex, 0, 99);
+	return ValidateInt32(SlotIndex, 0, MaxSaveSlotIndex);
 }
 
 bool UInputValidator::ValidateSaveSlotName(const FString& SlotName)

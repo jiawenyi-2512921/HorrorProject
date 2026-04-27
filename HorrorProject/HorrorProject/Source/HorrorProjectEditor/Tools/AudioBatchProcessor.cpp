@@ -4,8 +4,13 @@
 #include "Sound/SoundWave.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Misc/MessageDialog.h"
+#include "UObject/UnrealType.h"
 
-FAudioProcessingSettings UAudioBatchProcessor::DefaultSettings;
+const FAudioProcessingSettings& UAudioBatchProcessor::GetDefaultSettings()
+{
+	static const FAudioProcessingSettings Settings;
+	return Settings;
+}
 
 void UAudioBatchProcessor::ProcessAudioFiles()
 {
@@ -20,7 +25,7 @@ void UAudioBatchProcessor::ProcessAudioFiles()
 		USoundWave* Sound = Cast<USoundWave>(AssetData.GetAsset());
 		if (Sound)
 		{
-			ProcessAudioFile(Sound, DefaultSettings);
+			ProcessAudioFile(Sound, GetDefaultSettings());
 			ProcessedCount++;
 		}
 	}
@@ -45,7 +50,18 @@ void UAudioBatchProcessor::ProcessAudioFile(USoundWave* Sound, const FAudioProce
 	}
 
 	// Apply compression quality
-	Sound->CompressionQuality = Settings.CompressionQuality;
+	if (FIntProperty* CompressionQualityProperty = FindFProperty<FIntProperty>(USoundWave::StaticClass(), TEXT("CompressionQuality")))
+	{
+		const int32 CompressionQuality = FMath::Clamp(FMath::RoundToInt(Settings.CompressionQuality), 1, 100);
+		Sound->PreEditChange(CompressionQualityProperty);
+		CompressionQualityProperty->SetPropertyValue_InContainer(Sound, CompressionQuality);
+		FPropertyChangedEvent ChangeEvent(CompressionQualityProperty);
+		Sound->PostEditChangeProperty(ChangeEvent);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unable to find CompressionQuality property for %s"), *Sound->GetName());
+	}
 
 	Sound->PostEditChange();
 

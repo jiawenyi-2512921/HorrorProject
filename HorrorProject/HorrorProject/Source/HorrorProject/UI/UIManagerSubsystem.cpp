@@ -31,9 +31,9 @@ UUserWidget* UUIManagerSubsystem::CreateWidget(TSubclassOf<UUserWidget> WidgetCl
 		return nullptr;
 	}
 
-	if (ManagedWidgets.Contains(WidgetName))
+	if (TObjectPtr<UUserWidget>* ExistingWidget = ManagedWidgets.Find(WidgetName))
 	{
-		return ManagedWidgets[WidgetName];
+		return ExistingWidget->Get();
 	}
 
 	UWorld* World = GetWorld();

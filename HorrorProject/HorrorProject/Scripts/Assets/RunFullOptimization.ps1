@@ -2,7 +2,7 @@
 # Runs complete optimization workflow
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [switch]$SkipAnalysis,
     [switch]$SkipLODs,
     [switch]$SkipTextures,
@@ -12,7 +12,15 @@ param(
     [switch]$EnableVirtualTextures
 )
 
-$ScriptsPath = "$ProjectPath\Scripts\Assets"
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+
+$ScriptsPath = Join-Path $ProjectPath "Scripts\Assets"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Horror Project - Full Asset Optimization" -ForegroundColor Cyan

@@ -5,6 +5,44 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "UObject/FieldIterator.h"
+#include "UObject/UnrealType.h"
+
+namespace
+{
+const FVector SwitchInteractionExtent(50.0f, 50.0f, 50.0f);
+
+bool CanInvokeActivationFunction(const UFunction* Function)
+{
+	if (!Function || Function->NumParms != 1)
+	{
+		return false;
+	}
+
+	const FBoolProperty* BoolParameter = nullptr;
+	for (TFieldIterator<FProperty> PropertyIt(Function); PropertyIt; ++PropertyIt)
+	{
+		const FProperty* Property = *PropertyIt;
+		if (!Property->HasAnyPropertyFlags(CPF_Parm))
+		{
+			continue;
+		}
+
+		if (Property->HasAnyPropertyFlags(CPF_ReturnParm) || BoolParameter)
+		{
+			return false;
+		}
+
+		BoolParameter = CastField<FBoolProperty>(Property);
+		if (!BoolParameter)
+		{
+			return false;
+		}
+	}
+
+	return BoolParameter != nullptr;
+}
+}
 
 ASwitchInteractable::ASwitchInteractable()
 {
@@ -21,7 +59,7 @@ ASwitchInteractable::ASwitchInteractable()
 
 	InteractionVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionVolume"));
 	InteractionVolume->SetupAttachment(SwitchBase);
-	InteractionVolume->SetBoxExtent(FVector(50.0f, 50.0f, 50.0f));
+	InteractionVolume->SetBoxExtent(SwitchInteractionExtent);
 	InteractionVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractionVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -91,13 +129,16 @@ void ASwitchInteractable::OnInteract(AActor* InstigatorActor, const FHitResult& 
 		// Schedule deactivation
 		if (MomentaryDuration > 0.0f)
 		{
-			GetWorld()->GetTimerManager().SetTimer(
-				MomentaryTimer,
-				this,
-				&ASwitchInteractable::DeactivateSwitch,
-				MomentaryDuration,
-				false
-			);
+			if (UWorld* World = GetWorld())
+			{
+				World->GetTimerManager().SetTimer(
+					MomentaryTimer,
+					this,
+					&ASwitchInteractable::DeactivateSwitch,
+					MomentaryDuration,
+					false
+				);
+			}
 		}
 	}
 	else if (SwitchType == ESwitchType::OneTime)
@@ -133,9 +174,10 @@ void ASwitchInteractable::ActivateSwitch()
 	bIsAnimating = true;
 
 	// Play sound
-	if (ActivateSound && GetWorld())
+	UWorld* World = GetWorld();
+	if (ActivateSound && World)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ActivateSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(World, ActivateSound, GetActorLocation());
 	}
 
 	// Trigger connected actors
@@ -155,9 +197,10 @@ void ASwitchInteractable::DeactivateSwitch()
 	bIsAnimating = true;
 
 	// Play sound
-	if (DeactivateSound && GetWorld())
+	UWorld* World = GetWorld();
+	if (DeactivateSound && World)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeactivateSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(World, DeactivateSound, GetActorLocation());
 	}
 
 	// Broadcast event
@@ -169,6 +212,11 @@ void ASwitchInteractable::DeactivateSwitch()
 
 void ASwitchInteractable::TriggerConnectedActors()
 {
+	if (ActivationFunctionName.IsNone())
+	{
+		return;
+	}
+
 	for (AActor* ConnectedActor : ConnectedActors)
 	{
 		if (!ConnectedActor)
@@ -179,6 +227,13 @@ void ASwitchInteractable::TriggerConnectedActors()
 		// Try to call the activation function on the connected actor
 		if (UFunction* Function = ConnectedActor->FindFunction(ActivationFunctionName))
 		{
+			if (!CanInvokeActivationFunction(Function))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Switch activation skipped for %s: function %s must take exactly one bool parameter."),
+					*GetNameSafe(ConnectedActor), *ActivationFunctionName.ToString());
+				continue;
+			}
+
 			struct FActivationParams
 			{
 				bool bIsOn;
@@ -194,13 +249,14 @@ void ASwitchInteractable::TriggerConnectedActors()
 
 void ASwitchInteractable::UpdateVisuals()
 {
-	if (!SwitchHandle)
+	UWorld* World = GetWorld();
+	if (!SwitchHandle || !World)
 	{
 		return;
 	}
 
 	// Animate to target rotation
-	const float DeltaTime = GetWorld()->GetDeltaSeconds();
+	const float DeltaTime = World->GetDeltaSeconds();
 	CurrentRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, AnimationSpeed);
 
 	SwitchHandle->SetRelativeRotation(CurrentRotation);

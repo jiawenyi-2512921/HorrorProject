@@ -19,6 +19,9 @@ enum class EFearLevel : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFearLevelChangedSignature, EFearLevel, NewLevel, float, FearPercent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFearValueChangedSignature, float, FearValue, float, FearPercent);
 
+/**
+ * Adds Fear Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UFearComponent : public UActorComponent
 {
@@ -70,6 +73,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fear", meta=(ClampMin="0.0", ClampMax="1000.0"))
 	float MaxFearValue = 100.0f;
@@ -108,7 +112,6 @@ private:
 	void UpdateFearDecay(float DeltaTime);
 	void UpdateFearLevel();
 	EFearLevel CalculateFearLevel() const;
-	void ApplyMovementSpeedEffect();
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, SaveGame, Category="Fear", meta=(AllowPrivateAccess="true"))
 	float FearValue = 0.0f;
@@ -120,5 +123,7 @@ private:
 
 	// Performance optimization: Timer handle for decay updates
 	FTimerHandle FearDecayTimerHandle;
+	void StartFearDecayTimer();
+	void StopFearDecayTimer();
 	void UpdateFearDecayTimer();
 };

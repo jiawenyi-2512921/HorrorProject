@@ -5,9 +5,14 @@
 #include "AchievementDefinition.h"
 #include "AchievementSubsystem.generated.h"
 
+struct FAchievementSaveRecord;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAchievementUnlocked, const FAchievementData&, Achievement);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAchievementProgress, FName, AchievementID, float, Progress);
 
+/**
+ * Coordinates Achievement Subsystem services for the Achievements module.
+ */
 UCLASS()
 class HORRORPROJECT_API UAchievementSubsystem : public UGameInstanceSubsystem
 {
@@ -80,6 +85,8 @@ private:
 	void UnlockAchievementInternal(FName AchievementID, bool bSyncPlatform = true);
 	void SyncSteamAchievement(FName AchievementID);
 	void SyncEpicAchievement(FName AchievementID);
+	void ResetAchievementRuntimeState();
+	void ApplyAchievementSaveRecord(const FAchievementSaveRecord& Record);
 
 	bool bInitialized;
 	bool bPlatformAvailable;

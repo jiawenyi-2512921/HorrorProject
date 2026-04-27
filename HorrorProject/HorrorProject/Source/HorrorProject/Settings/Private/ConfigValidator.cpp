@@ -6,6 +6,19 @@
 #include "ControlSettings.h"
 #include "GameplaySettings.h"
 
+namespace
+{
+	constexpr int32 ConfigMaxFrameRateLimit = 300;
+	constexpr int32 ConfigMaxAudioChannels = 128;
+	constexpr float ConfigMinAutoSaveIntervalSeconds = 60.0f;
+	constexpr int32 ConfigMinResolutionWidth = 640;
+	constexpr int32 ConfigMinResolutionHeight = 480;
+	constexpr int32 ConfigMaxResolutionWidth = 7680;
+	constexpr int32 ConfigMaxResolutionHeight = 4320;
+	constexpr float ConfigMinFieldOfView = 60.0f;
+	constexpr float ConfigMaxFieldOfView = 120.0f;
+}
+
 bool UConfigValidator::ValidateGraphicsSettings(UGraphicsSettings* Settings)
 {
 	ClearResults();
@@ -23,13 +36,19 @@ bool UConfigValidator::ValidateGraphicsSettings(UGraphicsSettings* Settings)
 			Settings->Resolution.X, Settings->Resolution.Y));
 	}
 
-	// Validate frame rate limit
-	if (Settings->FrameRateLimit < 0 || Settings->FrameRateLimit > 300)
+	ValidateGraphicsQualitySettings(Settings);
+	ValidateGraphicsDisplaySettings(Settings);
+
+	return LastValidationResult.bIsValid;
+}
+
+void UConfigValidator::ValidateGraphicsQualitySettings(const UGraphicsSettings* Settings)
+{
+	if (Settings->FrameRateLimit < 0 || Settings->FrameRateLimit > ConfigMaxFrameRateLimit)
 	{
 		AddWarning(TEXT("Frame rate limit should be between 0 and 300"));
 	}
 
-	// Validate quality settings
 	if (Settings->ViewDistanceQuality < 0 || Settings->ViewDistanceQuality > 4)
 	{
 		AddError(TEXT("View distance quality out of range (0-4)"));
@@ -39,7 +58,10 @@ bool UConfigValidator::ValidateGraphicsSettings(UGraphicsSettings* Settings)
 	{
 		AddError(TEXT("Texture quality out of range (0-4)"));
 	}
+}
 
+void UConfigValidator::ValidateGraphicsDisplaySettings(UGraphicsSettings* Settings)
+{
 	// Validate brightness and gamma
 	if (Settings->Brightness < 0.0f || Settings->Brightness > 2.0f)
 	{
@@ -57,8 +79,6 @@ bool UConfigValidator::ValidateGraphicsSettings(UGraphicsSettings* Settings)
 		AddWarning(TEXT("Ray tracing is not supported on this hardware"));
 		Settings->bRayTracingEnabled = false;
 	}
-
-	return LastValidationResult.bIsValid;
 }
 
 bool UConfigValidator::ValidateAudioSettings(UHorrorAudioSettings* Settings)
@@ -98,7 +118,7 @@ bool UConfigValidator::ValidateAudioSettings(UHorrorAudioSettings* Settings)
 		AddError(TEXT("Audio quality out of range (0-4)"));
 	}
 
-	if (Settings->MaxChannels < 8 || Settings->MaxChannels > 128)
+	if (Settings->MaxChannels < 8 || Settings->MaxChannels > ConfigMaxAudioChannels)
 	{
 		AddWarning(TEXT("Max channels should be between 8 and 128"));
 	}
@@ -183,7 +203,7 @@ bool UConfigValidator::ValidateGameplaySettings(UGameplaySettings* Settings)
 	}
 
 	// Validate auto-save interval
-	if (Settings->bEnableAutoSave && Settings->AutoSaveInterval < 60.0f)
+	if (Settings->bEnableAutoSave && Settings->AutoSaveInterval < ConfigMinAutoSaveIntervalSeconds)
 	{
 		AddWarning(TEXT("Auto-save interval should be at least 60 seconds"));
 	}
@@ -218,8 +238,8 @@ FValidationResult UConfigValidator::ValidateAllSettings(UGraphicsSettings* Graph
 
 bool UConfigValidator::ValidateResolution(const FIntPoint& Resolution)
 {
-	return Resolution.X >= 640 && Resolution.X <= 7680 &&
-		   Resolution.Y >= 480 && Resolution.Y <= 4320;
+	return Resolution.X >= ConfigMinResolutionWidth && Resolution.X <= ConfigMaxResolutionWidth &&
+		   Resolution.Y >= ConfigMinResolutionHeight && Resolution.Y <= ConfigMaxResolutionHeight;
 }
 
 bool UConfigValidator::ValidateVolumeRange(float Volume)
@@ -264,7 +284,7 @@ bool UConfigValidator::ValidateKeyBindings(UControlSettings* Settings)
 
 bool UConfigValidator::ValidateFOV(float FOV)
 {
-	return FOV >= 60.0f && FOV <= 120.0f;
+	return FOV >= ConfigMinFieldOfView && FOV <= ConfigMaxFieldOfView;
 }
 
 void UConfigValidator::AddError(const FString& Error)

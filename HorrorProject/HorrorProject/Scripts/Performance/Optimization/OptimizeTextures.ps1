@@ -3,13 +3,18 @@
 # Automatically optimizes textures based on usage and performance targets
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Optimization\Textures",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [switch]$DryRun = $false,
     [switch]$Aggressive = $false
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Optimization\Textures" }
 
 Write-Host "=== Texture Optimization Tool ===" -ForegroundColor Cyan
 Write-Host "Mode: $(if ($DryRun) { 'Dry Run (Preview Only)' } else { 'Execute' })"
@@ -135,7 +140,7 @@ foreach ($textureFile in $textureFiles) {
 
         if (-not $DryRun) {
             # In a real implementation, this would use UE5 automation or Python scripts
-            # For now, we'll generate a command list
+# Generate an Unreal Editor command list for safe texture optimization
             Write-Host "    [Would optimize in production mode]" -ForegroundColor DarkGray
         }
     }

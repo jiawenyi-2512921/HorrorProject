@@ -2,14 +2,25 @@
 # Optimizes texture compression, mipmaps, and resolution
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$AssetReport = "D:\gptzuo\HorrorProject\HorrorProject\Scripts\Assets\AssetReport.json",
+    [string]$ProjectPath = "",
+    [string]$AssetReport = "",
     [switch]$EnableVirtualTextures
 )
 
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
-$UEEditorCmd = Join-Path $UE5Root "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-$ProjectFile = "$ProjectPath\HorrorProject.uproject"
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
+if ([string]::IsNullOrWhiteSpace($AssetReport)) {
+    $AssetReport = Join-Path $PSScriptRoot "AssetReport.json"
+}
+
+$UE5Root = Get-HorrorUERoot
+$UEEditorCmd = Get-HorrorEditorCmd -UERoot $UE5Root
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectPath
 
 Write-Host "=== Texture Optimization Tool ===" -ForegroundColor Cyan
 
@@ -63,7 +74,8 @@ def optimize_texture(texture_path, enable_virtual=False):
         if 'ui' in texture_name or 'hud' in texture_name:
             target_group = unreal.TextureGroup.TEXTUREGROUP_UI
         elif 'character' in texture_name:
-            target_group = unreal.TextureGroup.TEXTUREGROUP_CHARACTER      elif 'world' in texture_name or 'environment' in texture_name:
+            target_group = unreal.TextureGroup.TEXTUREGROUP_CHARACTER
+        elif 'world' in texture_name or 'environment' in texture_name:
             target_group = unreal.TextureGroup.TEXTUREGROUP_WORLD
         else:
             target_group = unreal.TextureGroup.TEXTUREGROUP_WORLD

@@ -4,11 +4,18 @@
 
 param(
     [switch]$Detailed = $false,
-    [string]$OutputFile = "D:\gptzuo\ContextVault\TIMELINE.md"
+    [string]$OutputFile = ""
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
+. (Join-Path $PSScriptRoot "MonitoringCommon.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$WorkspaceRoot = Split-Path -Parent (Split-Path -Parent $ProjectRoot)
+$VaultRoot = if ($env:CONTEXTVAULT_ROOT) { $env:CONTEXTVAULT_ROOT } else { Join-Path $WorkspaceRoot "ContextVault" }
+if ([string]::IsNullOrWhiteSpace($OutputFile)) {
+    $OutputFile = Join-Path $VaultRoot "TIMELINE.md"
+}
 
 Write-Host "=== Timeline Generation ===" -ForegroundColor Cyan
 Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
@@ -338,6 +345,7 @@ $timeline += @"
 
 # Write timeline to file
 Write-Host "`nGenerating timeline file..." -ForegroundColor Yellow
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $OutputFile) | Out-Null
 Set-Content -Path $OutputFile -Value $timeline
 Write-Host "Timeline generated: $OutputFile" -ForegroundColor Green
 

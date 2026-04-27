@@ -10,10 +10,21 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HorrorProject.h"
 
+namespace
+{
+	constexpr float InitialCapsuleRadius = 55.0f;
+	constexpr float CapsuleHalfHeight = 96.0f;
+	constexpr float CollisionCapsuleRadius = 34.0f;
+	constexpr float FirstPersonCameraYaw = 90.0f;
+	constexpr float FirstPersonCameraRoll = -90.0f;
+	constexpr float FirstPersonFieldOfView = 70.0f;
+	constexpr float FallingBrakeDeceleration = 1500.0f;
+}
+
 AHorrorProjectCharacter::AHorrorProjectCharacter()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(InitialCapsuleRadius, CapsuleHalfHeight);
 	
 	// Create the first person mesh that will be viewed only by this character's owner
 	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
@@ -26,23 +37,25 @@ AHorrorProjectCharacter::AHorrorProjectCharacter()
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
 	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+	FirstPersonCameraComponent->SetRelativeLocationAndRotation(
+		FVector(-2.8f, 5.89f, 0.0f),
+		FRotator(0.0f, FirstPersonCameraYaw, FirstPersonCameraRoll));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
-	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
+	FirstPersonCameraComponent->FirstPersonFieldOfView = FirstPersonFieldOfView;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
-	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
+	GetCapsuleComponent()->SetCapsuleSize(CollisionCapsuleRadius, CapsuleHalfHeight);
 
 	// Configure character movement
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakeDeceleration;
 	GetCharacterMovement()->AirControl = 0.5f;
 }
 

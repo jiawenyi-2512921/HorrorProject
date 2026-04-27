@@ -9,22 +9,29 @@
 class UImage;
 class UCanvasPanel;
 
+namespace HorrorVisualAudioCueDefaults
+{
+	inline constexpr float CueDurationSeconds = 2.0f;
+	inline constexpr float MaxCueDistanceCm = 3000.0f;
+	inline constexpr float DefaultIntensity = 1.0f;
+}
+
 USTRUCT(BlueprintType)
 struct FVisualCue
 {
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadWrite, Category = "AudioCue")
-    FVector2D ScreenPosition;
+    FVector2D ScreenPosition = FVector2D::ZeroVector;
 
     UPROPERTY(BlueprintReadWrite, Category = "AudioCue")
     FString CueType;
 
     UPROPERTY(BlueprintReadWrite, Category = "AudioCue")
-    float Intensity = 1.0f;
+    float Intensity = HorrorVisualAudioCueDefaults::DefaultIntensity;
 
     UPROPERTY(BlueprintReadWrite, Category = "AudioCue")
-    float TimeRemaining = 2.0f;
+    float TimeRemaining = HorrorVisualAudioCueDefaults::CueDurationSeconds;
 
     UPROPERTY(BlueprintReadWrite, Category = "AudioCue")
     FLinearColor Color = FLinearColor::White;
@@ -58,10 +65,10 @@ protected:
     UCanvasPanel* CueCanvas;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AudioCue")
-    float CueDuration = 2.0f;
+    float CueDuration = HorrorVisualAudioCueDefaults::CueDurationSeconds;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AudioCue")
-    float MaxCueDistance = 3000.0f;
+    float MaxCueDistance = HorrorVisualAudioCueDefaults::MaxCueDistanceCm;
 
 private:
     UFUNCTION()

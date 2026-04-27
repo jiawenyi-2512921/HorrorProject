@@ -22,7 +22,8 @@ void UCameraPhotoComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	QuantumCamera = GetOwner()->FindComponentByClass<UQuantumCameraComponent>();
+	AActor* Owner = GetOwner();
+	QuantumCamera = Owner ? Owner->FindComponentByClass<UQuantumCameraComponent>() : nullptr;
 	if (!QuantumCamera)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CameraPhotoComponent: No QuantumCameraComponent found on owner"));
@@ -108,7 +109,8 @@ bool UCameraPhotoComponent::CanTakePhoto() const
 		return false;
 	}
 
-	const float CurrentTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+	UWorld* World = GetWorld();
+	const float CurrentTime = World ? World->GetTimeSeconds() : 0.0f;
 	if (CurrentTime - LastPhotoTime < PhotoCooldownTime)
 	{
 		return false;
@@ -119,41 +121,13 @@ bool UCameraPhotoComponent::CanTakePhoto() const
 
 bool UCameraPhotoComponent::TakePhoto(bool bUseFlash)
 {
-	if (!CanTakePhoto())
-	{
-		return false;
-	}
-
-	if (!PhotoRenderTarget || !ThumbnailRenderTarget || !CaptureComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("CameraPhotoComponent: Capture components not initialized"));
-		return false;
-	}
-
-	bIsCapturing = true;
-	LastPhotoTime = GetWorld()->GetTimeSeconds();
-
-	UCameraComponent* PlayerCamera = nullptr;
-	if (APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController()))
-	{
-		if (APawn* Pawn = PC->GetPawn())
-		{
-			PlayerCamera = Pawn->FindComponentByClass<UCameraComponent>();
-		}
-	}
-
+	UCameraComponent* PlayerCamera = BeginPhotoCapture();
 	if (!PlayerCamera)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CameraPhotoComponent: No player camera found"));
-		bIsCapturing = false;
 		return false;
 	}
 
-	CaptureComponent->SetWorldLocationAndRotation(
-		PlayerCamera->GetComponentLocation(),
-		PlayerCamera->GetComponentRotation()
-	);
-	CaptureComponent->FOVAngle = PlayerCamera->FieldOfView;
+	SyncCaptureComponentToCamera(PlayerCamera);
 
 	const bool bShouldFlash = bUseFlash && bFlashEnabled;
 	if (bShouldFlash)
@@ -163,33 +137,91 @@ bool UCameraPhotoComponent::TakePhoto(bool bUseFlash)
 
 	PlayShutterSound();
 
-	CaptureComponent->TextureTarget = PhotoRenderTarget;
-	CaptureComponent->CaptureScene();
-
+	CaptureSceneToRenderTarget(PhotoRenderTarget);
 	UTexture2D* PhotoTexture = CaptureToTexture(PhotoRenderTarget);
 
-	CaptureComponent->TextureTarget = ThumbnailRenderTarget;
-	CaptureComponent->CaptureScene();
-
+	CaptureSceneToRenderTarget(ThumbnailRenderTarget);
 	UTexture2D* ThumbnailTexture = CaptureToTexture(ThumbnailRenderTarget);
 
-	FCameraPhoto NewPhoto;
-	NewPhoto.Metadata = BuildPhotoMetadata(bShouldFlash);
-	NewPhoto.PhotoTexture = PhotoTexture;
-	NewPhoto.ThumbnailTexture = ThumbnailTexture;
-
-	if (bAutoDetectEvidence)
-	{
-		NewPhoto.Metadata.DetectedEvidenceIds = DetectEvidenceInView();
-	}
-
-	StorePhoto(NewPhoto);
-
-	OnPhotoTaken.Broadcast(NewPhoto);
-
-	bIsCapturing = false;
+	FCameraPhoto NewPhoto = BuildCapturedPhoto(bShouldFlash, PhotoTexture, ThumbnailTexture);
+	CompletePhotoCapture(NewPhoto);
 
 	return true;
+}
+
+UCameraComponent* UCameraPhotoComponent::BeginPhotoCapture()
+{
+	if (!CanTakePhoto())
+	{
+		return nullptr;
+	}
+
+	if (!AreCaptureComponentsReady())
+	{
+		UE_LOG(LogTemp, Error, TEXT("CameraPhotoComponent: Capture components not initialized"));
+		return nullptr;
+	}
+
+	bIsCapturing = true;
+	UWorld* World = GetWorld();
+	if (!World || !GetOwner())
+	{
+		bIsCapturing = false;
+		return nullptr;
+	}
+
+	LastPhotoTime = World->GetTimeSeconds();
+	UCameraComponent* PlayerCamera = ResolvePlayerCamera();
+	if (!PlayerCamera)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CameraPhotoComponent: No player camera found"));
+		bIsCapturing = false;
+	}
+	return PlayerCamera;
+}
+
+void UCameraPhotoComponent::CompletePhotoCapture(const FCameraPhoto& Photo)
+{
+	StorePhoto(Photo);
+	OnPhotoTaken.Broadcast(Photo);
+	bIsCapturing = false;
+}
+
+bool UCameraPhotoComponent::AreCaptureComponentsReady() const
+{
+	return PhotoRenderTarget && ThumbnailRenderTarget && CaptureComponent;
+}
+
+UCameraComponent* UCameraPhotoComponent::ResolvePlayerCamera() const
+{
+	AActor* Owner = GetOwner();
+	APlayerController* PlayerController = Owner ? Cast<APlayerController>(Owner->GetInstigatorController()) : nullptr;
+	APawn* Pawn = PlayerController ? PlayerController->GetPawn() : nullptr;
+	return Pawn ? Pawn->FindComponentByClass<UCameraComponent>() : nullptr;
+}
+
+void UCameraPhotoComponent::SyncCaptureComponentToCamera(const UCameraComponent* PlayerCamera)
+{
+	if (!CaptureComponent || !PlayerCamera)
+	{
+		return;
+	}
+
+	CaptureComponent->SetWorldLocationAndRotation(
+		PlayerCamera->GetComponentLocation(),
+		PlayerCamera->GetComponentRotation());
+	CaptureComponent->FOVAngle = PlayerCamera->FieldOfView;
+}
+
+void UCameraPhotoComponent::CaptureSceneToRenderTarget(UTextureRenderTarget2D* RenderTarget)
+{
+	if (!CaptureComponent || !RenderTarget)
+	{
+		return;
+	}
+
+	CaptureComponent->TextureTarget = RenderTarget;
+	CaptureComponent->CaptureScene();
 }
 
 UTexture2D* UCameraPhotoComponent::CaptureToTexture(UTextureRenderTarget2D* RenderTarget)
@@ -216,27 +248,51 @@ UTexture2D* UCameraPhotoComponent::CaptureToTexture(UTextureRenderTarget2D* Rend
 	{
 		RenderTargetResource->ReadPixels(SurfaceData);
 
-		void* TextureData = NewTexture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-		const int32 TextureDataSize = SurfaceData.Num() * sizeof(FColor);
-		FMemory::Memcpy(TextureData, SurfaceData.GetData(), TextureDataSize);
-		NewTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
+		FTexturePlatformData* PlatformData = NewTexture->GetPlatformData();
+		if (PlatformData && PlatformData->Mips.Num() > 0)
+		{
+			FTexture2DMipMap* Mip = *PlatformData->Mips.GetData();
+			if (Mip)
+			{
+				void* TextureData = Mip->BulkData.Lock(LOCK_READ_WRITE);
+				const int32 TextureDataSize = SurfaceData.Num() * sizeof(FColor);
+				FMemory::Memcpy(TextureData, SurfaceData.GetData(), TextureDataSize);
+				Mip->BulkData.Unlock();
 
-		NewTexture->UpdateResource();
+				NewTexture->UpdateResource();
+			}
+		}
 	}
 
 	return NewTexture;
 }
 
+FCameraPhoto UCameraPhotoComponent::BuildCapturedPhoto(bool bFlashUsed, UTexture2D* PhotoTexture, UTexture2D* ThumbnailTexture)
+{
+	FCameraPhoto NewPhoto;
+	NewPhoto.Metadata = BuildPhotoMetadata(bFlashUsed);
+	NewPhoto.PhotoTexture = PhotoTexture;
+	NewPhoto.ThumbnailTexture = ThumbnailTexture;
+
+	if (bAutoDetectEvidence)
+	{
+		NewPhoto.Metadata.DetectedEvidenceIds = DetectEvidenceInView();
+	}
+
+	return NewPhoto;
+}
+
 void UCameraPhotoComponent::TriggerFlashEffect(float Intensity)
 {
-	if (!GetWorld())
+	UWorld* World = GetWorld();
+	if (!World)
 	{
 		return;
 	}
 
 	OnFlashFired.Broadcast(Intensity);
 
-	if (UHorrorAudioSubsystem* AudioSubsystem = GetWorld()->GetSubsystem<UHorrorAudioSubsystem>())
+	if (UHorrorAudioSubsystem* AudioSubsystem = World->GetSubsystem<UHorrorAudioSubsystem>())
 	{
 		if (FlashChargeSound)
 		{
@@ -247,12 +303,13 @@ void UCameraPhotoComponent::TriggerFlashEffect(float Intensity)
 
 void UCameraPhotoComponent::PlayShutterSound()
 {
-	if (!GetWorld() || !ShutterSound)
+	UWorld* World = GetWorld();
+	if (!World || !ShutterSound)
 	{
 		return;
 	}
 
-	if (UHorrorAudioSubsystem* AudioSubsystem = GetWorld()->GetSubsystem<UHorrorAudioSubsystem>())
+	if (UHorrorAudioSubsystem* AudioSubsystem = World->GetSubsystem<UHorrorAudioSubsystem>())
 	{
 		AudioSubsystem->PlaySound2D(ShutterSound, ShutterVolume);
 	}
@@ -262,41 +319,50 @@ TArray<FName> UCameraPhotoComponent::DetectEvidenceInView()
 {
 	TArray<FName> DetectedEvidence;
 
-	if (!GetWorld())
+	const UCameraComponent* PlayerCamera = ResolvePlayerCamera();
+	if (!PlayerCamera)
 	{
 		return DetectedEvidence;
 	}
 
-	FVector CameraLocation = FVector::ZeroVector;
-	FRotator CameraRotation = FRotator::ZeroRotator;
+	CollectEvidenceTagsFromHits(TraceEvidenceInView(PlayerCamera), &DetectedEvidence);
+	return DetectedEvidence;
+}
 
-	if (APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController()))
+TArray<FHitResult> UCameraPhotoComponent::TraceEvidenceInView(const UCameraComponent* PlayerCamera) const
+{
+	TArray<FHitResult> HitResults;
+	UWorld* World = GetWorld();
+	AActor* Owner = GetOwner();
+	if (!World || !Owner || !PlayerCamera)
 	{
-		if (APawn* Pawn = PC->GetPawn())
-		{
-			if (UCameraComponent* Camera = Pawn->FindComponentByClass<UCameraComponent>())
-			{
-				CameraLocation = Camera->GetComponentLocation();
-				CameraRotation = Camera->GetComponentRotation();
-			}
-		}
+		return HitResults;
 	}
 
-	TArray<FHitResult> HitResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.bTraceComplex = false;
-	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.AddIgnoredActor(Owner);
 
-	const FVector ForwardVector = CameraRotation.Vector();
-	const FVector TraceEnd = CameraLocation + (ForwardVector * EvidenceDetectionRadius);
+	const FVector CameraLocation = PlayerCamera->GetComponentLocation();
+	const FVector TraceEnd = CameraLocation + (PlayerCamera->GetForwardVector() * EvidenceDetectionRadius);
 
-	GetWorld()->LineTraceMultiByChannel(
+	World->LineTraceMultiByChannel(
 		HitResults,
 		CameraLocation,
 		TraceEnd,
 		ECC_Visibility,
 		QueryParams
 	);
+
+	return HitResults;
+}
+
+void UCameraPhotoComponent::CollectEvidenceTagsFromHits(const TArray<FHitResult>& HitResults, TArray<FName>* OutDetectedEvidence) const
+{
+	if (!OutDetectedEvidence)
+	{
+		return;
+	}
 
 	for (const FHitResult& Hit : HitResults)
 	{
@@ -308,32 +374,26 @@ TArray<FName> UCameraPhotoComponent::DetectEvidenceInView()
 				{
 					if (Tag.ToString().Contains(TEXT("Evidence")))
 					{
-						DetectedEvidence.AddUnique(Tag);
+						OutDetectedEvidence->AddUnique(Tag);
 					}
 				}
 			}
 		}
 	}
-
-	return DetectedEvidence;
 }
 
 FCameraPhotoMetadata UCameraPhotoComponent::BuildPhotoMetadata(bool bFlashUsed)
 {
 	FCameraPhotoMetadata Metadata;
+	Metadata.PhotoId = FGuid::NewGuid();
+	Metadata.CaptureTimestamp = FDateTime::Now();
 	Metadata.bFlashUsed = bFlashUsed;
 	Metadata.ExposureValue = 1.0f;
 
-	if (APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController()))
+	if (const UCameraComponent* PlayerCamera = ResolvePlayerCamera())
 	{
-		if (APawn* Pawn = PC->GetPawn())
-		{
-			if (UCameraComponent* Camera = Pawn->FindComponentByClass<UCameraComponent>())
-			{
-				Metadata.CaptureLocation = Camera->GetComponentLocation();
-				Metadata.CaptureRotation = Camera->GetComponentRotation();
-			}
-		}
+		Metadata.CaptureLocation = PlayerCamera->GetComponentLocation();
+		Metadata.CaptureRotation = PlayerCamera->GetComponentRotation();
 	}
 
 	if (PhotoEvidenceTag.IsValid())
@@ -374,14 +434,16 @@ FCameraPhoto UCameraPhotoComponent::GetPhoto(FGuid PhotoId) const
 
 bool UCameraPhotoComponent::DeletePhoto(FGuid PhotoId)
 {
-	for (int32 i = 0; i < StoredPhotos.Num(); ++i)
+	const int32 PhotoIndex = StoredPhotos.IndexOfByPredicate([PhotoId](const FCameraPhoto& Photo)
 	{
-		if (StoredPhotos[i].Metadata.PhotoId == PhotoId)
-		{
-			StoredPhotos.RemoveAt(i);
-			UE_LOG(LogTemp, Log, TEXT("CameraPhotoComponent: Photo deleted. Remaining: %d"), StoredPhotos.Num());
-			return true;
-		}
+		return Photo.Metadata.PhotoId == PhotoId;
+	});
+
+	if (PhotoIndex != INDEX_NONE)
+	{
+		StoredPhotos.RemoveAt(PhotoIndex);
+		UE_LOG(LogTemp, Log, TEXT("CameraPhotoComponent: Photo deleted. Remaining: %d"), StoredPhotos.Num());
+		return true;
 	}
 
 	return false;

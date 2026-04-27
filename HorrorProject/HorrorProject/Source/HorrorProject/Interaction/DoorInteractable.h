@@ -30,6 +30,8 @@ class HORRORPROJECT_API ADoorInteractable : public ABaseInteractable
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultOpenAngle = 90.0f;
+
 	ADoorInteractable();
 
 	virtual void Tick(float DeltaTime) override;
@@ -72,7 +74,7 @@ private:
 	TObjectPtr<UBoxComponent> InteractionVolume;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Door|Animation", meta=(AllowPrivateAccess="true"))
-	float OpenAngle = 90.0f;
+	float OpenAngle = DefaultOpenAngle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Door|Animation", meta=(AllowPrivateAccess="true"))
 	float OpenSpeed = 2.0f;

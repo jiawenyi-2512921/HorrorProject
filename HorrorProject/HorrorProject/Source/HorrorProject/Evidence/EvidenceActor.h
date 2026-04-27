@@ -8,6 +8,9 @@
 #include "Evidence/EvidenceTypes.h"
 #include "EvidenceActor.generated.h"
 
+/**
+ * Implements actor-level Evidence Actor behavior for the Evidence module.
+ */
 UCLASS(BlueprintType, Blueprintable)
 class HORRORPROJECT_API AEvidenceActor : public AActor, public IInteractableInterface
 {

@@ -2,9 +2,16 @@
 # Usage: .\ValidateTranslations.ps1
 
 param(
-    [string]$LocalizationPath = "D:\gptzuo\HorrorProject\HorrorProject\Content\Localization",
-    [string]$ReportPath = "D:\gptzuo\HorrorProject\HorrorProject\Content\Localization\ValidationReport.html"
+    [string]$LocalizationPath = "",
+    [string]$ReportPath = ""
 )
+
+$ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\..\Scripts\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($LocalizationPath)) { $LocalizationPath = Join-Path $ProjectRoot "Content\Localization" }
+if ([string]::IsNullOrWhiteSpace($ReportPath)) { $ReportPath = Join-Path $LocalizationPath "ValidationReport.html" }
 
 Write-Host "Validating translations in: $LocalizationPath"
 
@@ -27,21 +34,21 @@ function Test-TranslationQuality {
         $LocalIssues += "Missing translation"
     }
 
-    # Check for TODO markers
-    if ($Translation -like "[TODO:*") {
+    # Check for pending translation markers
+    if ($Translation -like "[PENDING_TRANSLATION:*") {
         $LocalIssues += "Translation pending"
     }
 
-    # Check for placeholder text
+    # Check for untranslated fallback text
     if ($Translation -eq $SourceText -and $Language -ne "en") {
-        $LocalIssues += "Using English text as placeholder"
+        $LocalIssues += "Using English text as fallback"
     }
 
     # Check for format string mismatches
-    $SourcePlaceholders = [regex]::Matches($SourceText, '\{(\d+)\}').Count
-    $TransPlaceholders = [regex]::Matches($Translation, '\{(\d+)\}').Count
-    if ($SourcePlaceholders -ne $TransPlaceholders) {
-        $LocalIssues += "Format placeholder mismatch (source: $SourcePlaceholders, translation: $TransPlaceholders)"
+    $SourceFormatTokens = [regex]::Matches($SourceText, '\{(\d+)\}').Count
+    $TranslatedFormatTokens = [regex]::Matches($Translation, '\{(\d+)\}').Count
+    if ($SourceFormatTokens -ne $TranslatedFormatTokens) {
+        $LocalIssues += "Format token mismatch (source: $SourceFormatTokens, translation: $TranslatedFormatTokens)"
     }
 
     # Check for excessive length difference (potential truncation issues)
@@ -98,7 +105,7 @@ foreach ($Entry in $MasterTable) {
         } else {
             if ([string]::IsNullOrWhiteSpace($Translation)) {
                 $Stats[$Lang].Missing++
-            } elseif ($Translation -like "[TODO:*") {
+            } elseif ($Translation -like "[PENDING_TRANSLATION:*") {
                 $Stats[$Lang].Pending++
             } else {
                 $Stats[$Lang].Issues++

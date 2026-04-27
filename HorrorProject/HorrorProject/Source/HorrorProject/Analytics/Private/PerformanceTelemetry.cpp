@@ -4,13 +4,19 @@
 #include "HAL/PlatformMemory.h"
 #include "Engine/Engine.h"
 
+namespace HorrorPerformanceTelemetry
+{
+	constexpr float MillisecondsPerSecond = 1000.0f;
+	constexpr float BytesPerMegabyte = 1024.0f * 1024.0f;
+}
+
 void UPerformanceTelemetry::Update(float DeltaTime)
 {
 	FPerformanceTelemetrySnapshot Snapshot;
 
 	// Calculate FPS
 	Snapshot.FPS = DeltaTime > 0.0f ? 1.0f / DeltaTime : 0.0f;
-	Snapshot.FrameTimeMs = DeltaTime * 1000.0f;
+	Snapshot.FrameTimeMs = DeltaTime * HorrorPerformanceTelemetry::MillisecondsPerSecond;
 	Snapshot.MemoryUsageMB = CalculateMemoryUsage();
 	Snapshot.Timestamp = FDateTime::UtcNow();
 
@@ -71,5 +77,5 @@ void UPerformanceTelemetry::RecordSnapshot(const FPerformanceTelemetrySnapshot& 
 float UPerformanceTelemetry::CalculateMemoryUsage() const
 {
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-	return static_cast<float>(MemStats.UsedPhysical) / (1024.0f * 1024.0f);
+	return static_cast<float>(MemStats.UsedPhysical) / HorrorPerformanceTelemetry::BytesPerMegabyte;
 }

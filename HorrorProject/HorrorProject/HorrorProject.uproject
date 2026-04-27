@@ -8,6 +8,11 @@
       "Name": "HorrorProject",
       "Type": "Runtime",
       "LoadingPhase": "Default"
+    },
+    {
+      "Name": "HorrorProjectEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

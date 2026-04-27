@@ -6,6 +6,11 @@
 #include "AudioDevice.h"
 #include "Engine/Engine.h"
 
+namespace
+{
+	constexpr int32 HorrorAudioDefaultMaxChannels = 32;
+}
+
 UHorrorAudioSettings::UHorrorAudioSettings()
 {
 	MasterVolume = 1.0f;
@@ -18,7 +23,7 @@ UHorrorAudioSettings::UHorrorAudioSettings()
 	AudioQuality = 3;
 	bEnableReverb = true;
 	bEnableOcclusion = true;
-	MaxChannels = 32;
+	MaxChannels = HorrorAudioDefaultMaxChannels;
 
 	bEnableSpatialAudio = true;
 	bEnableHRTF = false;

@@ -1,10 +1,14 @@
 # AggregateLogs.ps1 - 日志聚合
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject",
+    [string]$ProjectPath = "",
     [int]$DaysToKeep = 30
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+
 $MonitoringRoot = Split-Path -Parent $PSScriptRoot
 $LogDir = Join-Path $MonitoringRoot "Logs"
 $AggregatedDir = Join-Path $MonitoringRoot "Data\Aggregated"

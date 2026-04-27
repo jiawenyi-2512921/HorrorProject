@@ -6,12 +6,17 @@
 #include "Game/HorrorObjectiveNode.h"
 #include "HorrorNavigationNode.generated.h"
 
+/**
+ * Implements actor-level Horror Navigation Node behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorNavigationNode : public AHorrorObjectiveNode
 {
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultActivationRadius = 500.0f;
+
 	AHorrorNavigationNode();
 
 	virtual void BeginPlay() override;
@@ -20,7 +25,7 @@ public:
 	bool bAutoCompleteOnOverlap = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Navigation")
-	float ActivationRadius = 500.0f;
+	float ActivationRadius = DefaultActivationRadius;
 
 protected:
 	virtual void OnNodeActivated_Implementation() override;

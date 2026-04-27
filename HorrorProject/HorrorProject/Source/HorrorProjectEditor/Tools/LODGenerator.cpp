@@ -9,7 +9,11 @@
 #include "MeshUtilities.h"
 #include "IMeshReductionManagerModule.h"
 
-FLODGenerationSettings ULODGenerator::DefaultSettings;
+const FLODGenerationSettings& ULODGenerator::GetDefaultSettings()
+{
+	static const FLODGenerationSettings Settings;
+	return Settings;
+}
 
 void ULODGenerator::GenerateLODsForSelection()
 {
@@ -24,7 +28,7 @@ void ULODGenerator::GenerateLODsForSelection()
 		UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
 		if (Mesh)
 		{
-			GenerateLODsForMesh(Mesh, DefaultSettings);
+			GenerateLODsForMesh(Mesh, GetDefaultSettings());
 			ProcessedCount++;
 		}
 	}
@@ -100,7 +104,7 @@ void ULODGenerator::GenerateLODsForAllMeshes()
 		UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
 		if (Mesh)
 		{
-			GenerateLODsForMesh(Mesh, DefaultSettings);
+			GenerateLODsForMesh(Mesh, GetDefaultSettings());
 			ProcessedCount++;
 		}
 	}

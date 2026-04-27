@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/Set.h"
 #include "Game/FoundFootageObjectiveInteractable.h"
 #include "GameFramework/Actor.h"
 #include "DeepWaterStationRouteKit.generated.h"
@@ -10,6 +11,15 @@
 class AHorrorEncounterDirector;
 class AHorrorThreatCharacter;
 class USceneComponent;
+
+namespace HorrorRouteKitDefaults
+{
+	inline constexpr float ObjectiveHeightCm = 80.0f;
+	inline constexpr float EncounterDirectorXOffsetCm = 1000.0f;
+	inline constexpr float EncounterDirectorYOffsetCm = 300.0f;
+	inline constexpr float EncounterRevealRadiusCm = 1200.0f;
+	inline constexpr float EncounterThreatXOffsetCm = 100.0f;
+}
 
 USTRUCT(BlueprintType)
 struct HORRORPROJECT_API FDeepWaterStationObjectiveNode
@@ -47,6 +57,9 @@ struct HORRORPROJECT_API FDeepWaterStationObjectiveNode
 	FText DebugLabel;
 };
 
+/**
+ * Implements actor-level Deep Water Station Route Kit behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API ADeepWaterStationRouteKit : public AActor
 {
@@ -102,19 +115,26 @@ public:
 	TSubclassOf<AHorrorEncounterDirector> EncounterDirectorClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
-	FTransform EncounterDirectorRelativeTransform = FTransform(FRotator::ZeroRotator, FVector(1000.0f, 300.0f, 80.0f));
+	FTransform EncounterDirectorRelativeTransform = FTransform(
+		FRotator::ZeroRotator,
+		FVector(
+			HorrorRouteKitDefaults::EncounterDirectorXOffsetCm,
+			HorrorRouteKitDefaults::EncounterDirectorYOffsetCm,
+			HorrorRouteKitDefaults::ObjectiveHeightCm));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
 	FName EncounterId = TEXT("Encounter.GolemReveal01");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route", meta=(ClampMin="0.0", Units="cm"))
-	float EncounterRevealRadius = 1200.0f;
+	float EncounterRevealRadius = HorrorRouteKitDefaults::EncounterRevealRadiusCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
 	TSubclassOf<AHorrorThreatCharacter> EncounterThreatClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
-	FTransform EncounterThreatRelativeTransform = FTransform(FRotator::ZeroRotator, FVector(100.0f, 0.0f, 0.0f));
+	FTransform EncounterThreatRelativeTransform = FTransform(
+		FRotator::ZeroRotator,
+		FVector(HorrorRouteKitDefaults::EncounterThreatXOffsetCm, 0.0f, 0.0f));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
 	bool bAutoPrimeEncounter = true;
@@ -136,4 +156,22 @@ private:
 	TObjectPtr<AHorrorEncounterDirector> SpawnedEncounterDirector;
 
 	TArray<AFoundFootageObjectiveInteractable*> SpawnedObjectiveInteractableViews;
+
+	void ValidateRouteKitClassSettings(TArray<FText>& ValidationErrors) const;
+	void ValidateObjectiveRouteOrder(TArray<FText>& ValidationErrors) const;
+	void ValidateObjectiveNodeDefinitions(TArray<FText>& ValidationErrors) const;
+	void ValidateObjectiveNodeIdentity(
+		const FDeepWaterStationObjectiveNode& ObjectiveNode,
+		int32 NodeIndex,
+		TSet<FName>& SeenSourceIds,
+		TSet<FName>& SeenTrailerBeatIds,
+		TArray<FText>& ValidationErrors) const;
+	void ValidateObjectiveNodeText(
+		const FDeepWaterStationObjectiveNode& ObjectiveNode,
+		int32 NodeIndex,
+		TArray<FText>& ValidationErrors) const;
+	void ValidateObjectiveNodeRequirements(
+		const FDeepWaterStationObjectiveNode& ObjectiveNode,
+		int32 NodeIndex,
+		TArray<FText>& ValidationErrors) const;
 };

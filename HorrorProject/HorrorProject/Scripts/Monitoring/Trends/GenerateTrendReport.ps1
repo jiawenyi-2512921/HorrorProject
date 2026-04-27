@@ -216,7 +216,7 @@ function Generate-TrendReportHTML {
             margin: 5px 0;
         }
 
-        .chart-placeholder {
+        .chart-empty-state {
             width: 100%;
             height: 300px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);

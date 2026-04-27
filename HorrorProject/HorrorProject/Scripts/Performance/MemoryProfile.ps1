@@ -2,11 +2,19 @@
 # Captures memory snapshots and analyzes memory usage
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectPath = "",
     [int]$SnapshotIntervalSeconds = 60,
     [int]$DurationMinutes = 10,
     [switch]$DetectLeaks = $false
 )
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
+    $ProjectPath = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+}
 
 Write-Host "=== HorrorProject Memory Profiling ===" -ForegroundColor Cyan
 Write-Host ""

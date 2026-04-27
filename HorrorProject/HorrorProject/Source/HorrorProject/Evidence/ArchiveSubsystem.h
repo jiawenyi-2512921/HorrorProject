@@ -52,6 +52,9 @@ struct HORRORPROJECT_API FArchiveFilter
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FArchiveEntryAddedSignature, const FArchiveEntry&, Entry);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FArchiveEntryViewedSignature, FName, EntryId);
 
+/**
+ * Coordinates Archive Subsystem services for the Evidence module.
+ */
 UCLASS()
 class HORRORPROJECT_API UArchiveSubsystem : public UGameInstanceSubsystem
 {
@@ -99,6 +102,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Archive")
 	void ImportArchiveState(const TArray<FName>& EntryIds);
+
+	UFUNCTION(BlueprintCallable, Category="Archive")
+	TArray<FArchiveEntry> ExportArchiveEntries() const;
+
+	UFUNCTION(BlueprintCallable, Category="Archive")
+	void ImportArchiveEntries(const TArray<FArchiveEntry>& Entries);
 
 	UPROPERTY(BlueprintAssignable, Category="Archive")
 	FArchiveEntryAddedSignature OnArchiveEntryAdded;

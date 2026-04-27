@@ -42,5 +42,6 @@ UUserWidget* UUIEventManager::GetRegisteredWidget(FName WidgetName) const
 
 bool UUIEventManager::IsWidgetRegistered(FName WidgetName) const
 {
-	return RegisteredWidgets.Contains(WidgetName) && RegisteredWidgets[WidgetName].IsValid();
+	const TWeakObjectPtr<UUserWidget>* WidgetPtr = RegisteredWidgets.Find(WidgetName);
+	return WidgetPtr && WidgetPtr->IsValid();
 }

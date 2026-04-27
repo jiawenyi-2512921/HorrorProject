@@ -2,10 +2,20 @@
 # Generates comprehensive asset reports for HorrorProject
 
 param(
-    [string]$ContentPath = "D:\gptzuo\HorrorProject\HorrorProject\Content",
-    [string]$OutputPath = "D:\gptzuo\HorrorProject\HorrorProject\Docs\Assets\Reports",
+    [string]$ContentPath = "",
+    [string]$OutputPath = "",
     [switch]$IncludeDetails = $false
 )
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ContentPath)) {
+    $ContentPath = Join-Path $ProjectRoot "Content"
+}
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Join-Path $ProjectRoot "Docs\Assets\Reports"
+}
 
 # Create output directory
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null

@@ -9,6 +9,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 #include "Camera/CameraComponent.h"
+#include "InputCoreTypes.h"
+
+namespace
+{
+	const FVector ExamineInteractionExtent(100.0f, 100.0f, 100.0f);
+	constexpr float MaxExaminePitchDegrees = 89.0f;
+}
 
 AExaminableInteractable::AExaminableInteractable()
 {
@@ -23,7 +30,7 @@ AExaminableInteractable::AExaminableInteractable()
 
 	InteractionVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionVolume"));
 	InteractionVolume->SetupAttachment(ExamineMesh);
-	InteractionVolume->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
+	InteractionVolume->SetBoxExtent(ExamineInteractionExtent);
 	InteractionVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	InteractionVolume->SetCollisionResponseToAllChannels(ECR_Ignore);
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -172,7 +179,7 @@ void AExaminableInteractable::RotateObject(float Yaw, float Pitch)
 	CurrentExamineRotation.Pitch += Pitch;
 
 	// Clamp pitch to avoid flipping
-	CurrentExamineRotation.Pitch = FMath::Clamp(CurrentExamineRotation.Pitch, -89.0f, 89.0f);
+	CurrentExamineRotation.Pitch = FMath::Clamp(CurrentExamineRotation.Pitch, -MaxExaminePitchDegrees, MaxExaminePitchDegrees);
 }
 
 void AExaminableInteractable::ZoomObject(float ZoomDelta)
@@ -222,6 +229,50 @@ void AExaminableInteractable::UpdateExamineCamera(float DeltaTime)
 
 void AExaminableInteractable::ProcessPlayerInput(float DeltaTime)
 {
-	// This would be called from player input bindings
-	// For now, it's a placeholder for input processing
+	if (!ExaminingPlayerController)
+	{
+		return;
+	}
+
+	if (ExaminingPlayerController->WasInputKeyJustPressed(EKeys::Escape)
+		|| ExaminingPlayerController->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
+	{
+		StopExamining();
+		return;
+	}
+
+	float MouseDeltaX = 0.0f;
+	float MouseDeltaY = 0.0f;
+	ExaminingPlayerController->GetInputMouseDelta(MouseDeltaX, MouseDeltaY);
+
+	const bool bRotateWithMouse = ExaminingPlayerController->IsInputKeyDown(EKeys::LeftMouseButton)
+		|| ExaminingPlayerController->IsInputKeyDown(EKeys::RightMouseButton);
+	if (bRotateWithMouse && (!FMath::IsNearlyZero(MouseDeltaX) || !FMath::IsNearlyZero(MouseDeltaY)))
+	{
+		constexpr float MouseRotationScale = 0.01f;
+		RotateObject(MouseDeltaX * RotationSpeed * MouseRotationScale, MouseDeltaY * RotationSpeed * MouseRotationScale);
+	}
+
+	const float GamepadYaw = ExaminingPlayerController->GetInputAnalogKeyState(EKeys::Gamepad_RightX);
+	const float GamepadPitch = ExaminingPlayerController->GetInputAnalogKeyState(EKeys::Gamepad_RightY);
+	if (!FMath::IsNearlyZero(GamepadYaw) || !FMath::IsNearlyZero(GamepadPitch))
+	{
+		RotateObject(GamepadYaw * RotationSpeed * DeltaTime, GamepadPitch * RotationSpeed * DeltaTime);
+	}
+
+	if (ExaminingPlayerController->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+	{
+		ZoomObject(-ZoomSpeed);
+	}
+	else if (ExaminingPlayerController->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+	{
+		ZoomObject(ZoomSpeed);
+	}
+
+	const float ZoomAxis = ExaminingPlayerController->GetInputAnalogKeyState(EKeys::Gamepad_RightTriggerAxis)
+		- ExaminingPlayerController->GetInputAnalogKeyState(EKeys::Gamepad_LeftTriggerAxis);
+	if (!FMath::IsNearlyZero(ZoomAxis))
+	{
+		ZoomObject(-ZoomAxis * ZoomSpeed * DeltaTime);
+	}
 }

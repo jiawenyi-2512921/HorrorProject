@@ -30,6 +30,9 @@ struct FLocalizedString
 	FText Spanish;
 };
 
+/**
+ * Exposes Blueprint helper functions for Text Localization Library workflows.
+ */
 UCLASS(BlueprintType)
 class HORRORPROJECT_API UTextLocalizationLibrary : public UBlueprintFunctionLibrary
 {
@@ -52,6 +55,9 @@ public:
 	static FString SanitizeTextForLocalization(const FString& Text);
 };
 
+/**
+ * Defines Text Localization Data data used by the Localization module.
+ */
 UCLASS()
 class HORRORPROJECT_API UTextLocalizationData : public UDataAsset
 {

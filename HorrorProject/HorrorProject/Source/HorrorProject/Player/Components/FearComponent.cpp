@@ -1,8 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/FearComponent.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 UFearComponent::UFearComponent()
 {
@@ -17,12 +15,12 @@ void UFearComponent::BeginPlay()
 	FearValue = 0.0f;
 	CurrentFearLevel = EFearLevel::Calm;
 	TimeSinceLastFearIncrease = 0.0f;
+}
 
-	// Performance optimization: Use timer instead of tick for decay updates
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(FearDecayTimerHandle, this, &UFearComponent::UpdateFearDecayTimer, 0.1f, true);
-	}
+void UFearComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	StopFearDecayTimer();
+	Super::EndPlay(EndPlayReason);
 }
 
 void UFearComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -33,9 +31,14 @@ void UFearComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UFearComponent::UpdateFearDecayTimer()
 {
+	if (FearValue <= 0.0f)
+	{
+		StopFearDecayTimer();
+		return;
+	}
+
 	const float DeltaTime = 0.1f;
 	UpdateFearDecay(DeltaTime);
-	UpdateFearLevel();
 }
 
 bool UFearComponent::AddFear(float Amount, FName SourceId)
@@ -52,6 +55,8 @@ bool UFearComponent::AddFear(float Amount, FName SourceId)
 	if (FearValue != OldValue)
 	{
 		OnFearValueChanged.Broadcast(FearValue, GetFearPercent());
+		UpdateFearLevel();
+		StartFearDecayTimer();
 		return true;
 	}
 
@@ -71,6 +76,11 @@ bool UFearComponent::RemoveFear(float Amount)
 	if (FearValue != OldValue)
 	{
 		OnFearValueChanged.Broadcast(FearValue, GetFearPercent());
+		UpdateFearLevel();
+		if (FearValue <= 0.0f)
+		{
+			StopFearDecayTimer();
+		}
 		return true;
 	}
 
@@ -85,8 +95,22 @@ bool UFearComponent::SetFearValue(float NewValue)
 		return false;
 	}
 
+	const float OldValue = FearValue;
 	FearValue = ClampedValue;
+	if (FearValue > OldValue)
+	{
+		TimeSinceLastFearIncrease = 0.0f;
+	}
 	OnFearValueChanged.Broadcast(FearValue, GetFearPercent());
+	UpdateFearLevel();
+	if (FearValue > 0.0f)
+	{
+		StartFearDecayTimer();
+	}
+	else
+	{
+		StopFearDecayTimer();
+	}
 	return true;
 }
 
@@ -127,6 +151,7 @@ void UFearComponent::UpdateFearDecay(float DeltaTime)
 {
 	if (FearValue <= 0.0f)
 	{
+		StopFearDecayTimer();
 		return;
 	}
 
@@ -146,7 +171,6 @@ void UFearComponent::UpdateFearLevel()
 	{
 		CurrentFearLevel = NewLevel;
 		OnFearLevelChanged.Broadcast(CurrentFearLevel, GetFearPercent());
-		ApplyMovementSpeedEffect();
 	}
 }
 
@@ -174,20 +198,21 @@ EFearLevel UFearComponent::CalculateFearLevel() const
 	return EFearLevel::Calm;
 }
 
-void UFearComponent::ApplyMovementSpeedEffect()
+void UFearComponent::StartFearDecayTimer()
 {
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (!OwnerCharacter || !OwnerCharacter->GetCharacterMovement())
+	UWorld* World = GetWorld();
+	if (!World || World->GetTimerManager().IsTimerActive(FearDecayTimerHandle))
 	{
 		return;
 	}
 
-	// Note: This modifies the base walk speed. The sprint system in HorrorCharacter
-	// should read this value when calculating sprint speed.
-	const float SpeedMultiplier = GetMovementSpeedMultiplier();
-	UCharacterMovementComponent* Movement = OwnerCharacter->GetCharacterMovement();
+	World->GetTimerManager().SetTimer(FearDecayTimerHandle, this, &UFearComponent::UpdateFearDecayTimer, 0.1f, true);
+}
 
-	// Store original speed if not already stored (would need a base speed property)
-	// For now, we'll just apply the multiplier to current speed
-	// Blueprint can handle more sophisticated speed management
+void UFearComponent::StopFearDecayTimer()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(FearDecayTimerHandle);
+	}
 }

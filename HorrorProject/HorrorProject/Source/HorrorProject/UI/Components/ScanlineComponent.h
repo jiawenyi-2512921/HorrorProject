@@ -15,6 +15,8 @@ class HORRORPROJECT_API UScanlineComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultScanlineCount = 480.0f;
+
 	UScanlineComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -44,7 +46,7 @@ protected:
 	float ScanlineSpeed = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Scanline|Effects")
-	float ScanlineCount = 480.0f;
+	float ScanlineCount = DefaultScanlineCount;
 
 	UPROPERTY(EditDefaultsOnly, Category="Scanline|Effects")
 	float ScanlineThickness = 0.5f;

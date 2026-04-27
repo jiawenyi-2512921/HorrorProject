@@ -47,9 +47,15 @@ TArray<FString> UEventTracker::GetTopEvents(int32 Count) const
 	});
 
 	TArray<FString> TopEvents;
-	for (int32 i = 0; i < FMath::Min(Count, SortedEvents.Num()); i++)
+	const int32 MaxEventsToReturn = FMath::Min(Count, SortedEvents.Num());
+	for (const TPair<FString, int32>& EventPair : SortedEvents)
 	{
-		TopEvents.Add(SortedEvents[i].Key);
+		if (TopEvents.Num() >= MaxEventsToReturn)
+		{
+			break;
+		}
+
+		TopEvents.Add(EventPair.Key);
 	}
 
 	return TopEvents;

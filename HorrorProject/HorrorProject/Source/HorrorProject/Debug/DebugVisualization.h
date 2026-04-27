@@ -53,6 +53,7 @@ protected:
 	void DrawPlayerDebugInfo();
 	void DrawEnemyDebugInfo();
 	void DrawSanityDebugInfo();
+	void DrawPerformanceDebugInfo();
 	void DrawCollisionDebugShapes();
 	void DrawNavigationDebugInfo();
 	void DrawAudioDebugInfo();

@@ -7,6 +7,15 @@
 #include "../AccessibilitySubsystem.h"
 #include "Kismet/GameplayStatics.h"
 
+namespace HorrorSubtitleStyle
+{
+	constexpr int32 SmallFontSize = 16;
+	constexpr int32 MediumFontSize = 20;
+	constexpr int32 LargeFontSize = 26;
+	constexpr int32 ExtraLargeFontSize = 32;
+	constexpr int32 SpeakerNameFontSizeOffset = 2;
+}
+
 void USubtitleWidget::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -117,7 +126,7 @@ void USubtitleWidget::ApplySubtitleStyling()
 
     if (SpeakerNameText)
     {
-        int32 FontSize = GetFontSizeForSubtitleSize(CurrentSettings.SubtitleSize) + 2;
+        int32 FontSize = GetFontSizeForSubtitleSize(CurrentSettings.SubtitleSize) + HorrorSubtitleStyle::SpeakerNameFontSizeOffset;
         FSlateFontInfo FontInfo = SpeakerNameText->GetFont();
         FontInfo.Size = FontSize;
         SpeakerNameText->SetFont(FontInfo);
@@ -134,10 +143,10 @@ int32 USubtitleWidget::GetFontSizeForSubtitleSize(ESubtitleSize Size) const
 {
     switch (Size)
     {
-        case ESubtitleSize::Small:      return 16;
-        case ESubtitleSize::Medium:     return 20;
-        case ESubtitleSize::Large:      return 26;
-        case ESubtitleSize::ExtraLarge: return 32;
-        default:                        return 20;
+        case ESubtitleSize::Small:      return HorrorSubtitleStyle::SmallFontSize;
+        case ESubtitleSize::Medium:     return HorrorSubtitleStyle::MediumFontSize;
+        case ESubtitleSize::Large:      return HorrorSubtitleStyle::LargeFontSize;
+        case ESubtitleSize::ExtraLarge: return HorrorSubtitleStyle::ExtraLargeFontSize;
+        default:                        return HorrorSubtitleStyle::MediumFontSize;
     }
 }

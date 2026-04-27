@@ -62,9 +62,10 @@ void APickupInteractable::OnInteract(AActor* InstigatorActor, const FHitResult& 
 	if (TryAddToInventory(InstigatorActor))
 	{
 		// Play pickup sound
-		if (PickupSound && GetWorld())
+		UWorld* World = GetWorld();
+		if (PickupSound && World)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(World, PickupSound, GetActorLocation());
 		}
 
 		// Destroy pickup
@@ -107,20 +108,30 @@ bool APickupInteractable::TryAddToInventory(AActor* InstigatorActor)
 void APickupInteractable::DestroyPickup()
 {
 	// Hide mesh immediately
-	PickupMesh->SetVisibility(false);
+	if (PickupMesh)
+	{
+		PickupMesh->SetVisibility(false);
+	}
 	SetActorEnableCollision(false);
 
 	// Destroy after delay
 	if (DestroyDelay > 0.0f)
 	{
-		FTimerHandle DestroyTimer;
-		GetWorld()->GetTimerManager().SetTimer(
-			DestroyTimer,
-			this,
-			&APickupInteractable::DestroyPickupActor,
-			DestroyDelay,
-			false
-		);
+		if (UWorld* World = GetWorld())
+		{
+			FTimerHandle DestroyTimer;
+			World->GetTimerManager().SetTimer(
+				DestroyTimer,
+				this,
+				&APickupInteractable::DestroyPickupActor,
+				DestroyDelay,
+				false
+			);
+		}
+		else
+		{
+			Destroy();
+		}
 	}
 	else
 	{

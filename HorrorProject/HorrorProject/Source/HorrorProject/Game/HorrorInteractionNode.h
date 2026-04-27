@@ -7,6 +7,9 @@
 #include "Interaction/InteractableInterface.h"
 #include "HorrorInteractionNode.generated.h"
 
+/**
+ * Implements actor-level Horror Interaction Node behavior for the Game module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorInteractionNode : public AHorrorObjectiveNode, public IInteractableInterface
 {

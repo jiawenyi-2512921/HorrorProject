@@ -1,6 +1,14 @@
 #include "AchievementSubsystem.h"
-#include "Kismet/GameplayStatics.h"
+#include "AchievementSaveGame.h"
 #include "AchievementNotification.h"
+#include "Kismet/GameplayStatics.h"
+
+namespace HorrorAchievementSave
+{
+	const FString SlotName(TEXT("HorrorProject_Achievements"));
+	constexpr int32 UserIndex = 0;
+	constexpr int32 SaveVersion = 1;
+}
 
 void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -11,11 +19,6 @@ void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	InitializeAchievements();
 	LoadAchievementData();
-
-	// Check platform availability
-	#if PLATFORM_WINDOWS
-	bPlatformAvailable = true; // Steam/Epic available
-	#endif
 
 	bInitialized = true;
 
@@ -127,8 +130,11 @@ void UAchievementSubsystem::UpdateAchievementProgress(FName AchievementID, float
 	// Broadcast progress
 	if (Achievement->CurrentProgress != OldProgress)
 	{
-		float ProgressPercent = Achievement->CurrentProgress / Achievement->MaxProgress;
+		const float ProgressPercent = Achievement->MaxProgress > 0.0f
+			? Achievement->CurrentProgress / Achievement->MaxProgress
+			: 0.0f;
 		OnAchievementProgress.Broadcast(AchievementID, ProgressPercent);
+		SaveAchievementData();
 	}
 
 	// Check if completed
@@ -146,7 +152,7 @@ bool UAchievementSubsystem::IsAchievementUnlocked(FName AchievementID) const
 float UAchievementSubsystem::GetAchievementProgress(FName AchievementID) const
 {
 	const FAchievementData* Achievement = Achievements.Find(AchievementID);
-	if (Achievement && Achievement->bIsProgressive)
+	if (Achievement && Achievement->bIsProgressive && Achievement->MaxProgress > 0.0f)
 	{
 		return Achievement->CurrentProgress / Achievement->MaxProgress;
 	}
@@ -222,33 +228,120 @@ bool UAchievementSubsystem::IsPlatformAchievementSystemAvailable() const
 
 void UAchievementSubsystem::SyncSteamAchievement(FName AchievementID)
 {
-	// TODO: Integrate with Steam API
-	// ISteamUserStats* SteamUserStats = SteamUserStats();
-	// if (SteamUserStats)
-	// {
-	//     SteamUserStats->SetAchievement(TCHAR_TO_ANSI(*AchievementID.ToString()));
-	//     SteamUserStats->StoreStats();
-	// }
+	UE_LOG(LogTemp, Verbose, TEXT("Steam achievement sync skipped for %s: Steam integration is not enabled."), *AchievementID.ToString());
 }
 
 void UAchievementSubsystem::SyncEpicAchievement(FName AchievementID)
 {
-	// TODO: Integrate with Epic Online Services
-	// EOS_Achievements_UnlockAchievementsOptions Options = {};
-	// Options.ApiVersion = EOS_ACHIEVEMENTS_UNLOCKACHIEVEMENTS_API_LATEST;
-	// Options.UserId = LocalUserId;
-	// Options.AchievementIds = &AchievementId;
-	// Options.AchievementsCount = 1;
+	UE_LOG(LogTemp, Verbose, TEXT("Epic achievement sync skipped for %s: EOS integration is not enabled."), *AchievementID.ToString());
 }
 
 void UAchievementSubsystem::SaveAchievementData()
 {
-	// TODO: Implement save to file or save game system
-	UE_LOG(LogTemp, Log, TEXT("Saving achievement data..."));
+	UHorrorAchievementSaveGame* SaveGame = Cast<UHorrorAchievementSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UHorrorAchievementSaveGame::StaticClass()));
+	if (!SaveGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unable to create achievement save game object"));
+		return;
+	}
+
+	SaveGame->SaveVersion = HorrorAchievementSave::SaveVersion;
+	SaveGame->SavedAtUtc = FDateTime::UtcNow();
+	SaveGame->Records.Reserve(Achievements.Num());
+
+	for (const TPair<FName, FAchievementData>& Pair : Achievements)
+	{
+		const FAchievementData& Achievement = Pair.Value;
+
+		FAchievementSaveRecord Record;
+		Record.AchievementID = Pair.Key;
+		Record.bUnlocked = Achievement.bUnlocked || UnlockedAchievements.Contains(Pair.Key);
+		Record.Progress = Achievement.CurrentProgress;
+		Record.UnlockTime = Achievement.UnlockTime;
+		SaveGame->Records.Add(Record);
+	}
+
+	if (!UGameplayStatics::SaveGameToSlot(SaveGame, HorrorAchievementSave::SlotName, HorrorAchievementSave::UserIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to save achievement data to slot '%s'"), *HorrorAchievementSave::SlotName);
+	}
 }
 
 void UAchievementSubsystem::LoadAchievementData()
 {
-	// TODO: Implement load from file or save game system
-	UE_LOG(LogTemp, Log, TEXT("Loading achievement data..."));
+	if (!UGameplayStatics::DoesSaveGameExist(HorrorAchievementSave::SlotName, HorrorAchievementSave::UserIndex))
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("No achievement save exists in slot '%s'"), *HorrorAchievementSave::SlotName);
+		return;
+	}
+
+	UHorrorAchievementSaveGame* SaveGame = Cast<UHorrorAchievementSaveGame>(
+		UGameplayStatics::LoadGameFromSlot(HorrorAchievementSave::SlotName, HorrorAchievementSave::UserIndex));
+	if (!SaveGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load achievement data from slot '%s'"), *HorrorAchievementSave::SlotName);
+		return;
+	}
+
+	if (SaveGame->SaveVersion != HorrorAchievementSave::SaveVersion)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ignoring unsupported achievement save version %d"), SaveGame->SaveVersion);
+		return;
+	}
+
+	ResetAchievementRuntimeState();
+
+	for (const FAchievementSaveRecord& Record : SaveGame->Records)
+	{
+		ApplyAchievementSaveRecord(Record);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Loaded %d achievement save records"), SaveGame->Records.Num());
+}
+
+void UAchievementSubsystem::ResetAchievementRuntimeState()
+{
+	UnlockedAchievements.Reset();
+
+	for (TPair<FName, FAchievementData>& Pair : Achievements)
+	{
+		Pair.Value.bUnlocked = false;
+		Pair.Value.CurrentProgress = 0.0f;
+		Pair.Value.UnlockTime = FDateTime::MinValue();
+		if (Pair.Value.bIsProgressive)
+		{
+			AchievementProgressMap.Add(Pair.Key, 0.0f);
+		}
+	}
+}
+
+void UAchievementSubsystem::ApplyAchievementSaveRecord(const FAchievementSaveRecord& Record)
+{
+	if (Record.AchievementID.IsNone())
+	{
+		return;
+	}
+
+	FAchievementData* Achievement = Achievements.Find(Record.AchievementID);
+	if (!Achievement)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("Skipping stale achievement save record '%s'"), *Record.AchievementID.ToString());
+		return;
+	}
+
+	const float MaxProgress = FMath::Max(Achievement->MaxProgress, 0.0f);
+	Achievement->bUnlocked = Record.bUnlocked;
+	Achievement->CurrentProgress = Record.bUnlocked ? MaxProgress : FMath::Clamp(Record.Progress, 0.0f, MaxProgress);
+	Achievement->UnlockTime = Record.bUnlocked ? Record.UnlockTime : FDateTime::MinValue();
+
+	if (Achievement->bIsProgressive)
+	{
+		AchievementProgressMap.Add(Record.AchievementID, Achievement->CurrentProgress);
+	}
+
+	if (Record.bUnlocked)
+	{
+		UnlockedAchievements.Add(Record.AchievementID);
+	}
 }

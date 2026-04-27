@@ -3,13 +3,18 @@
 # Analyzes level loading and asset streaming performance
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Profiling\Loading",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [string]$Map = "MainLevel",
     [int]$Iterations = 5
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Profiling\Loading" }
 
 Write-Host "=== Loading Time Profiler ===" -ForegroundColor Cyan
 Write-Host "Iterations: $Iterations"

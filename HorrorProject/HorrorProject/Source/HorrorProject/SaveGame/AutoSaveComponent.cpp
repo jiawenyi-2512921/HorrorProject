@@ -5,6 +5,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 
+namespace
+{
+	constexpr float AutoSaveMinIntervalSeconds = 30.0f;
+	constexpr float AutoSaveMaxIntervalSeconds = 600.0f;
+}
+
 UAutoSaveComponent::UAutoSaveComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -54,7 +60,7 @@ void UAutoSaveComponent::EnableAutoSave(bool bEnable)
 
 void UAutoSaveComponent::SetAutoSaveInterval(float Seconds)
 {
-	AutoSaveIntervalSeconds = FMath::Clamp(Seconds, 30.0f, 600.0f);
+	AutoSaveIntervalSeconds = FMath::Clamp(Seconds, AutoSaveMinIntervalSeconds, AutoSaveMaxIntervalSeconds);
 
 	if (bAutoSaveEnabled)
 	{

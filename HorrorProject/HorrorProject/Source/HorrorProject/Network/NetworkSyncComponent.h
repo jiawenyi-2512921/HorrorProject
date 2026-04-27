@@ -34,6 +34,9 @@ struct FSyncedVariable
 	{}
 };
 
+/**
+ * Adds Network Sync Component behavior to its owning actor in the Network module.
+ */
 UCLASS(ClassGroup=(Network), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UNetworkSyncComponent : public UActorComponent
 {

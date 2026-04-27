@@ -10,9 +10,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$ProjectFile = "$ProjectRoot\HorrorProject.uproject"
-$UE5Root = if ($env:UE5_ROOT) { $env:UE5_ROOT } elseif ($env:UE_5_6_ROOT) { $env:UE_5_6_ROOT } elseif (Test-Path 'D:\UnrealEngine\UE_5.6') { 'D:\UnrealEngine\UE_5.6' } else { 'C:\Program Files\Epic Games\UE_5.6' }
+
+$ValidationCommon = Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1"
+. $ValidationCommon
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$ProjectFile = Get-HorrorProjectFile -ProjectRoot $ProjectRoot
+$UE5Root = Get-HorrorUERoot
 $UE5Path = Join-Path $UE5Root "Engine\Build\BatchFiles"
 $LogDir = "$ProjectRoot\Build\Logs"
 $BuildStartTime = Get-Date

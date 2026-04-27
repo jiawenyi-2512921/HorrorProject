@@ -39,6 +39,9 @@ struct HORRORPROJECT_API FHorrorNoteMetadata
 	FText Body;
 };
 
+/**
+ * Adds Note Recorder Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UNoteRecorderComponent : public UActorComponent
 {

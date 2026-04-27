@@ -9,6 +9,23 @@
 class AHorrorThreatCharacter;
 class AActor;
 
+namespace HorrorGolemDefaults
+{
+	inline constexpr float DistantSightingMinDistanceCm = 3000.0f;
+	inline constexpr float DistantSightingMoveSpeedCmPerSecond = 50.0f;
+	inline constexpr float CloseStalkingMinDistanceCm = 1000.0f;
+	inline constexpr float CloseStalkingMaxDistanceCm = 1500.0f;
+	inline constexpr float CloseStalkingPatrolSpeedCmPerSecond = 150.0f;
+	inline constexpr float CloseStalkingPatrolPauseSeconds = 2.0f;
+	inline constexpr float ChaseTriggeredStartDistanceCm = 2000.0f;
+	inline constexpr float ChaseTriggeredSpeedMultiplier = 0.7f;
+	inline constexpr float ChaseTriggeredBaseSpeedCmPerSecond = 400.0f;
+	inline constexpr float FullChaseMinDistanceCm = 1000.0f;
+	inline constexpr float FullChaseMaxDistanceCm = 2500.0f;
+	inline constexpr float FullChaseSpeedCmPerSecond = 600.0f;
+	inline constexpr float FinalImpactTriggerDistanceCm = 500.0f;
+}
+
 UENUM(BlueprintType)
 enum class EGolemEncounterState : uint8
 {
@@ -22,6 +39,9 @@ enum class EGolemEncounterState : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGolemStateChangedSignature, EGolemEncounterState, OldState, EGolemEncounterState, NewState);
 
+/**
+ * Adds Horror Golem Behavior Component behavior to its owning actor in the AI module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UHorrorGolemBehaviorComponent : public UActorComponent
 {
@@ -58,53 +78,59 @@ public:
 
 	// Phase 1: Distant Sighting (30m+)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase1", meta=(ClampMin="0.0", Units="cm"))
-	float DistantSightingMinDistance = 3000.0f;
+	float DistantSightingMinDistance = HorrorGolemDefaults::DistantSightingMinDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase1", meta=(ClampMin="0.0", Units="cm/s"))
-	float DistantSightingMoveSpeed = 50.0f;
+	float DistantSightingMoveSpeed = HorrorGolemDefaults::DistantSightingMoveSpeedCmPerSecond;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase1")
 	bool bDistantSightingStationary = true;
 
 	// Phase 2: Close Stalking (10-15m)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase2", meta=(ClampMin="0.0", Units="cm"))
-	float CloseStalking_MinDistance = 1000.0f;
+	float CloseStalking_MinDistance = HorrorGolemDefaults::CloseStalkingMinDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase2", meta=(ClampMin="0.0", Units="cm"))
-	float CloseStalking_MaxDistance = 1500.0f;
+	float CloseStalking_MaxDistance = HorrorGolemDefaults::CloseStalkingMaxDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase2", meta=(ClampMin="0.0", Units="cm/s"))
-	float CloseStalking_PatrolSpeed = 150.0f;
+	float CloseStalking_PatrolSpeed = HorrorGolemDefaults::CloseStalkingPatrolSpeedCmPerSecond;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase2", meta=(ClampMin="0.0", Units="s"))
-	float CloseStalking_PatrolPauseTime = 2.0f;
+	float CloseStalking_PatrolPauseTime = HorrorGolemDefaults::CloseStalkingPatrolPauseSeconds;
 
 	// Phase 3: Chase Triggered (20m start, 70% speed)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase3", meta=(ClampMin="0.0", Units="cm"))
-	float ChaseTriggered_StartDistance = 2000.0f;
+	float ChaseTriggered_StartDistance = HorrorGolemDefaults::ChaseTriggeredStartDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase3", meta=(ClampMin="0.0", ClampMax="1.0"))
-	float ChaseTriggered_SpeedMultiplier = 0.7f;
+	float ChaseTriggered_SpeedMultiplier = HorrorGolemDefaults::ChaseTriggeredSpeedMultiplier;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase3", meta=(ClampMin="0.0", Units="cm/s"))
-	float ChaseTriggered_BaseSpeed = 400.0f;
+	float ChaseTriggered_BaseSpeed = HorrorGolemDefaults::ChaseTriggeredBaseSpeedCmPerSecond;
 
 	// Phase 4: Full Chase (10-25m, 100% speed + destruction)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="cm"))
-	float FullChase_MinDistance = 1000.0f;
+	float FullChase_MinDistance = HorrorGolemDefaults::FullChaseMinDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="cm"))
-	float FullChase_MaxDistance = 2500.0f;
+	float FullChase_MaxDistance = HorrorGolemDefaults::FullChaseMaxDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="cm/s"))
-	float FullChase_Speed = 600.0f;
+	float FullChase_Speed = HorrorGolemDefaults::FullChaseSpeedCmPerSecond;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="cm"))
+	float ChaseLostTargetDistance = 4000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="s"))
+	float ChaseLostTargetGraceTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4")
 	bool bFullChase_EnableDestruction = true;
 
 	// Phase 5: Final Impact (5m, attack)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase5", meta=(ClampMin="0.0", Units="cm"))
-	float FinalImpact_TriggerDistance = 500.0f;
+	float FinalImpact_TriggerDistance = HorrorGolemDefaults::FinalImpactTriggerDistanceCm;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase5")
 	bool bFinalImpact_TriggerCutscene = true;
@@ -145,12 +171,17 @@ private:
 	bool bBehaviorActive = false;
 
 	float StateTimer = 0.0f;
+	float LostTargetTimer = 0.0f;
 	int32 PatrolWaypointIndex = 0;
 	FVector LastPatrolLocation = FVector::ZeroVector;
 	bool bPatrolPaused = false;
 	float PatrolPauseTimer = 0.0f;
 
 	void UpdateStateMachine(float DeltaTime);
+	void UpdateDistantSightingState(float DistanceToTarget, float DeltaTime);
+	void UpdateCloseStalkingState(float DistanceToTarget, float DeltaTime);
+	void UpdateChaseTriggeredState(float DistanceToTarget, float DeltaTime);
+	void UpdateFullChaseState(float DistanceToTarget, float DeltaTime);
 	void TransitionToState(EGolemEncounterState NewState);
 
 	void UpdateDistantSighting(float DeltaTime);
@@ -159,9 +190,16 @@ private:
 	void UpdateFullChase(float DeltaTime);
 	void UpdateFinalImpact(float DeltaTime);
 
+	bool HandleLostTarget(float DistanceToTarget, float DeltaTime);
+	bool MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius);
 	void MoveTowardsTarget(float Speed, float DeltaTime);
 	void PatrolAroundTarget(float DeltaTime);
+	void StopNavigationMove();
 	void CheckEnvironmentDestruction();
 
 	void DrawDebugState();
+	FColor GetDebugStateColor() const;
+	void DrawDebugStateMarker(const UWorld* World, const FVector& GolemLocation, FColor StateColor) const;
+	void DrawDebugTargetInfo(const UWorld* World, const FVector& GolemLocation, FColor StateColor) const;
+	void DrawDebugDistanceThresholds(const UWorld* World, const FVector& GolemLocation) const;
 };

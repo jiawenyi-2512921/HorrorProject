@@ -7,7 +7,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
 $LogDir = "$ProjectRoot\Build\Logs"
 $ReportDir = "$ProjectRoot\Build\Reports"
 $ReportDate = Get-Date -Format "yyyy-MM-dd"

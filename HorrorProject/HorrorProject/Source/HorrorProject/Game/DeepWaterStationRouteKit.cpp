@@ -8,6 +8,167 @@
 #include "Engine/World.h"
 #include "Game/HorrorEncounterDirector.h"
 
+namespace
+{
+struct FFirstLoopObjectiveSpec
+{
+	EFoundFootageInteractableObjective Objective;
+	const TCHAR* SourceId;
+	float XOffsetCm;
+	const TCHAR* TrailerBeatId;
+	const TCHAR* ObjectiveHint;
+	const TCHAR* DebugLabel;
+	bool bEnableBodycamOnInteract;
+	bool bIsRecordingForFirstAnomalyRecord;
+	const TCHAR* EvidenceId;
+	const TCHAR* EvidenceDisplayName;
+	const TCHAR* NoteId;
+	const TCHAR* NoteTitle;
+};
+
+constexpr float BodycamXOffsetCm = 200.0f;
+constexpr float FirstNoteXOffsetCm = 600.0f;
+constexpr float FirstAnomalyCandidateXOffsetCm = 1000.0f;
+constexpr float FirstAnomalyRecordXOffsetCm = 1400.0f;
+constexpr float ArchiveReviewXOffsetCm = 1800.0f;
+constexpr float ExitRouteGateXOffsetCm = 2200.0f;
+
+constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
+	{
+		EFoundFootageInteractableObjective::Bodycam,
+		TEXT("Evidence.Bodycam"),
+		BodycamXOffsetCm,
+		TEXT("Beat.BodycamAcquire"),
+		TEXT("Recover the bodycam."),
+		TEXT("Bodycam Pickup"),
+		true,
+		false,
+		TEXT("Evidence.Bodycam"),
+		TEXT("Bodycam"),
+		nullptr,
+		nullptr
+	},
+	{
+		EFoundFootageInteractableObjective::FirstNote,
+		TEXT("Note.Intro"),
+		FirstNoteXOffsetCm,
+		TEXT("Beat.FirstNote"),
+		TEXT("Read the first station note."),
+		TEXT("Intro Note"),
+		true,
+		false,
+		nullptr,
+		nullptr,
+		TEXT("Note.Intro"),
+		TEXT("Intro")
+	},
+	{
+		EFoundFootageInteractableObjective::FirstAnomalyCandidate,
+		TEXT("Evidence.Anomaly01"),
+		FirstAnomalyCandidateXOffsetCm,
+		TEXT("Beat.FirstAnomalyCandidate"),
+		TEXT("Frame the first anomaly."),
+		TEXT("Anomaly Candidate"),
+		true,
+		false,
+		TEXT("Evidence.Anomaly01"),
+		TEXT("First Anomaly"),
+		nullptr,
+		nullptr
+	},
+	{
+		EFoundFootageInteractableObjective::FirstAnomalyRecord,
+		TEXT("Evidence.Recorder"),
+		FirstAnomalyRecordXOffsetCm,
+		TEXT("Beat.FirstAnomalyRecord"),
+		TEXT("Record while the anomaly is visible."),
+		TEXT("Anomaly Recording Window"),
+		true,
+		true,
+		TEXT("Evidence.Anomaly01"),
+		TEXT("First Anomaly"),
+		nullptr,
+		nullptr
+	},
+	{
+		EFoundFootageInteractableObjective::ArchiveReview,
+		TEXT("Archive.Terminal"),
+		ArchiveReviewXOffsetCm,
+		TEXT("Beat.ArchiveReview"),
+		TEXT("Review the tape at the archive terminal."),
+		TEXT("Archive Terminal"),
+		true,
+		false,
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr
+	},
+	{
+		EFoundFootageInteractableObjective::ExitRouteGate,
+		TEXT("Exit.Gate"),
+		ExitRouteGateXOffsetCm,
+		TEXT("Beat.ExitGate"),
+		TEXT("Leave through the unlocked service gate."),
+		TEXT("Exit Gate"),
+		true,
+		false,
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr
+	}
+};
+
+constexpr EFoundFootageInteractableObjective DeepWaterExpectedObjectiveOrder[] = {
+	EFoundFootageInteractableObjective::Bodycam,
+	EFoundFootageInteractableObjective::FirstNote,
+	EFoundFootageInteractableObjective::FirstAnomalyCandidate,
+	EFoundFootageInteractableObjective::FirstAnomalyRecord,
+	EFoundFootageInteractableObjective::ArchiveReview,
+	EFoundFootageInteractableObjective::ExitRouteGate
+};
+
+FVector MakeFirstLoopRelativeLocation(float XOffsetCm)
+{
+	return FVector(XOffsetCm, 0.0f, HorrorRouteKitDefaults::ObjectiveHeightCm);
+}
+
+FDeepWaterStationObjectiveNode MakeFirstLoopNode(
+	EFoundFootageInteractableObjective Objective,
+	FName SourceId,
+	const FVector& RelativeLocation,
+	FName TrailerBeatId,
+	const TCHAR* ObjectiveHint,
+	const TCHAR* DebugLabel,
+	bool bEnableBodycamOnInteract = true,
+	bool bIsRecordingForFirstAnomalyRecord = false)
+{
+	FDeepWaterStationObjectiveNode Node;
+	Node.Objective = Objective;
+	Node.SourceId = SourceId;
+	Node.RelativeTransform = FTransform(FRotator::ZeroRotator, RelativeLocation);
+	Node.bEnableBodycamOnInteract = bEnableBodycamOnInteract;
+	Node.bIsRecordingForFirstAnomalyRecord = bIsRecordingForFirstAnomalyRecord;
+	Node.TrailerBeatId = TrailerBeatId;
+	Node.ObjectiveHint = FText::FromString(ObjectiveHint);
+	Node.DebugLabel = FText::FromString(DebugLabel);
+	return Node;
+}
+
+bool DeepWaterObjectiveRequiresEvidenceMetadata(EFoundFootageInteractableObjective Objective)
+{
+	return Objective == EFoundFootageInteractableObjective::Bodycam
+		|| Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
+		|| Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord;
+}
+
+bool DeepWaterObjectiveRequiresNoteMetadata(EFoundFootageInteractableObjective Objective)
+{
+	return Objective == EFoundFootageInteractableObjective::FirstNote;
+}
+}
+
 ADeepWaterStationRouteKit::ADeepWaterStationRouteKit()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -31,46 +192,48 @@ void ADeepWaterStationRouteKit::BeginPlay()
 
 void ADeepWaterStationRouteKit::ConfigureDefaultFirstLoopObjectiveNodes()
 {
-	ObjectiveNodes = {
-		{ EFoundFootageInteractableObjective::Bodycam, TEXT("Evidence.Bodycam"), FTransform(FRotator::ZeroRotator, FVector(200.0f, 0.0f, 80.0f)) },
-		{ EFoundFootageInteractableObjective::FirstNote, TEXT("Note.Intro"), FTransform(FRotator::ZeroRotator, FVector(600.0f, 0.0f, 80.0f)) },
-		{ EFoundFootageInteractableObjective::FirstAnomalyCandidate, TEXT("Evidence.Anomaly01"), FTransform(FRotator::ZeroRotator, FVector(1000.0f, 0.0f, 80.0f)) },
-		{ EFoundFootageInteractableObjective::FirstAnomalyRecord, TEXT("Evidence.Recorder"), FTransform(FRotator::ZeroRotator, FVector(1400.0f, 0.0f, 80.0f)), true, true },
-		{ EFoundFootageInteractableObjective::ArchiveReview, TEXT("Archive.Terminal"), FTransform(FRotator::ZeroRotator, FVector(1800.0f, 0.0f, 80.0f)) },
-		{ EFoundFootageInteractableObjective::ExitRouteGate, TEXT("Exit.Gate"), FTransform(FRotator::ZeroRotator, FVector(2200.0f, 0.0f, 80.0f)) }
-	};
-	ObjectiveNodes[0].EvidenceMetadata.EvidenceId = TEXT("Evidence.Bodycam");
-	ObjectiveNodes[0].EvidenceMetadata.DisplayName = FText::FromString(TEXT("Bodycam"));
-	ObjectiveNodes[0].TrailerBeatId = TEXT("Beat.BodycamAcquire");
-	ObjectiveNodes[0].ObjectiveHint = FText::FromString(TEXT("Recover the bodycam."));
-	ObjectiveNodes[0].DebugLabel = FText::FromString(TEXT("Bodycam Pickup"));
-	ObjectiveNodes[1].NoteMetadata.NoteId = TEXT("Note.Intro");
-	ObjectiveNodes[1].NoteMetadata.Title = FText::FromString(TEXT("Intro"));
-	ObjectiveNodes[1].TrailerBeatId = TEXT("Beat.FirstNote");
-	ObjectiveNodes[1].ObjectiveHint = FText::FromString(TEXT("Read the first station note."));
-	ObjectiveNodes[1].DebugLabel = FText::FromString(TEXT("Intro Note"));
-	ObjectiveNodes[2].EvidenceMetadata.EvidenceId = TEXT("Evidence.Anomaly01");
-	ObjectiveNodes[2].EvidenceMetadata.DisplayName = FText::FromString(TEXT("First Anomaly"));
-	ObjectiveNodes[2].TrailerBeatId = TEXT("Beat.FirstAnomalyCandidate");
-	ObjectiveNodes[2].ObjectiveHint = FText::FromString(TEXT("Frame the first anomaly."));
-	ObjectiveNodes[2].DebugLabel = FText::FromString(TEXT("Anomaly Candidate"));
-	ObjectiveNodes[3].EvidenceMetadata.EvidenceId = TEXT("Evidence.Anomaly01");
-	ObjectiveNodes[3].EvidenceMetadata.DisplayName = FText::FromString(TEXT("First Anomaly"));
-	ObjectiveNodes[3].TrailerBeatId = TEXT("Beat.FirstAnomalyRecord");
-	ObjectiveNodes[3].ObjectiveHint = FText::FromString(TEXT("Record while the anomaly is visible."));
-	ObjectiveNodes[3].DebugLabel = FText::FromString(TEXT("Anomaly Recording Window"));
-	ObjectiveNodes[4].TrailerBeatId = TEXT("Beat.ArchiveReview");
-	ObjectiveNodes[4].ObjectiveHint = FText::FromString(TEXT("Review the tape at the archive terminal."));
-	ObjectiveNodes[4].DebugLabel = FText::FromString(TEXT("Archive Terminal"));
-	ObjectiveNodes[5].TrailerBeatId = TEXT("Beat.ExitGate");
-	ObjectiveNodes[5].ObjectiveHint = FText::FromString(TEXT("Leave through the unlocked service gate."));
-	ObjectiveNodes[5].DebugLabel = FText::FromString(TEXT("Exit Gate"));
+	ObjectiveNodes.Reset(UE_ARRAY_COUNT(FirstLoopObjectiveSpecs));
+	for (const FFirstLoopObjectiveSpec& Spec : FirstLoopObjectiveSpecs)
+	{
+		FDeepWaterStationObjectiveNode Node = MakeFirstLoopNode(
+			Spec.Objective,
+			Spec.SourceId,
+			MakeFirstLoopRelativeLocation(Spec.XOffsetCm),
+			Spec.TrailerBeatId,
+			Spec.ObjectiveHint,
+			Spec.DebugLabel,
+			Spec.bEnableBodycamOnInteract,
+			Spec.bIsRecordingForFirstAnomalyRecord);
+
+		if (Spec.EvidenceId && Spec.EvidenceDisplayName)
+		{
+			Node.EvidenceMetadata.EvidenceId = Spec.EvidenceId;
+			Node.EvidenceMetadata.DisplayName = FText::FromString(Spec.EvidenceDisplayName);
+		}
+
+		if (Spec.NoteId && Spec.NoteTitle)
+		{
+			Node.NoteMetadata.NoteId = Spec.NoteId;
+			Node.NoteMetadata.Title = FText::FromString(Spec.NoteTitle);
+		}
+
+		ObjectiveNodes.Add(MoveTemp(Node));
+	}
 }
 
 bool ADeepWaterStationRouteKit::ValidateObjectiveNodes(TArray<FText>& ValidationErrors) const
 {
 	ValidationErrors.Reset();
 
+	ValidateRouteKitClassSettings(ValidationErrors);
+	ValidateObjectiveRouteOrder(ValidationErrors);
+	ValidateObjectiveNodeDefinitions(ValidationErrors);
+
+	return ValidationErrors.IsEmpty();
+}
+
+void ADeepWaterStationRouteKit::ValidateRouteKitClassSettings(TArray<FText>& ValidationErrors) const
+{
 	if (!ObjectiveInteractableClass)
 	{
 		ValidationErrors.Add(FText::FromString(TEXT("ObjectiveInteractableClass is not set.")));
@@ -85,116 +248,132 @@ bool ADeepWaterStationRouteKit::ValidateObjectiveNodes(TArray<FText>& Validation
 	{
 		ValidationErrors.Add(FText::FromString(TEXT("EncounterId is not set.")));
 	}
+}
 
-	const EFoundFootageInteractableObjective ExpectedObjectiveOrder[] = {
-		EFoundFootageInteractableObjective::Bodycam,
-		EFoundFootageInteractableObjective::FirstNote,
-		EFoundFootageInteractableObjective::FirstAnomalyCandidate,
-		EFoundFootageInteractableObjective::FirstAnomalyRecord,
-		EFoundFootageInteractableObjective::ArchiveReview,
-		EFoundFootageInteractableObjective::ExitRouteGate
-	};
-
-	if (ObjectiveNodes.Num() != UE_ARRAY_COUNT(ExpectedObjectiveOrder))
+void ADeepWaterStationRouteKit::ValidateObjectiveRouteOrder(TArray<FText>& ValidationErrors) const
+{
+	if (ObjectiveNodes.Num() != UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))
 	{
 		ValidationErrors.Add(FText::Format(
 			FText::FromString(TEXT("Objective route must contain exactly {0} first-loop nodes.")),
-			FText::AsNumber(UE_ARRAY_COUNT(ExpectedObjectiveOrder))));
+			FText::AsNumber(UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))));
 	}
 
-	for (int32 ObjectiveIndex = 0; ObjectiveIndex < UE_ARRAY_COUNT(ExpectedObjectiveOrder); ++ObjectiveIndex)
+	for (int32 ObjectiveIndex = 0; ObjectiveIndex < UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder); ++ObjectiveIndex)
 	{
-		if (!ObjectiveNodes.IsValidIndex(ObjectiveIndex) || ObjectiveNodes[ObjectiveIndex].Objective != ExpectedObjectiveOrder[ObjectiveIndex])
+		if (!ObjectiveNodes.IsValidIndex(ObjectiveIndex) || ObjectiveNodes[ObjectiveIndex].Objective != DeepWaterExpectedObjectiveOrder[ObjectiveIndex])
 		{
 			ValidationErrors.Add(FText::Format(
 				FText::FromString(TEXT("Objective node {0} does not match the required first-loop order.")),
 				FText::AsNumber(ObjectiveIndex)));
 		}
 	}
+}
 
+void ADeepWaterStationRouteKit::ValidateObjectiveNodeDefinitions(TArray<FText>& ValidationErrors) const
+{
 	TSet<FName> SeenSourceIds;
 	TSet<FName> SeenTrailerBeatIds;
-	for (int32 NodeIndex = 0; NodeIndex < ObjectiveNodes.Num(); ++NodeIndex)
+	int32 NodeIndex = 0;
+	for (const FDeepWaterStationObjectiveNode& ObjectiveNode : ObjectiveNodes)
 	{
-		const FDeepWaterStationObjectiveNode& ObjectiveNode = ObjectiveNodes[NodeIndex];
-		if (ObjectiveNode.SourceId.IsNone())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} has no SourceId.")),
-				FText::AsNumber(NodeIndex)));
-		}
-		else if (SeenSourceIds.Contains(ObjectiveNode.SourceId))
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} duplicates SourceId {1}.")),
-				FText::AsNumber(NodeIndex),
-				FText::FromName(ObjectiveNode.SourceId)));
-		}
-		else
-		{
-			SeenSourceIds.Add(ObjectiveNode.SourceId);
-		}
+		ValidateObjectiveNodeIdentity(ObjectiveNode, NodeIndex, SeenSourceIds, SeenTrailerBeatIds, ValidationErrors);
+		ValidateObjectiveNodeText(ObjectiveNode, NodeIndex, ValidationErrors);
+		ValidateObjectiveNodeRequirements(ObjectiveNode, NodeIndex, ValidationErrors);
+		++NodeIndex;
+	}
+}
 
-		if (ObjectiveNode.TrailerBeatId.IsNone())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} has no TrailerBeatId.")),
-				FText::AsNumber(NodeIndex)));
-		}
-		else if (SeenTrailerBeatIds.Contains(ObjectiveNode.TrailerBeatId))
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} duplicates TrailerBeatId {1}.")),
-				FText::AsNumber(NodeIndex),
-				FText::FromName(ObjectiveNode.TrailerBeatId)));
-		}
-		else
-		{
-			SeenTrailerBeatIds.Add(ObjectiveNode.TrailerBeatId);
-		}
-
-		if (ObjectiveNode.ObjectiveHint.IsEmpty())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} has no ObjectiveHint.")),
-				FText::AsNumber(NodeIndex)));
-		}
-
-		if (ObjectiveNode.DebugLabel.IsEmpty())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} has no DebugLabel.")),
-				FText::AsNumber(NodeIndex)));
-		}
-
-		if (ObjectiveNode.bIsRecordingForFirstAnomalyRecord
-			!= (ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord))
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} has an invalid first-anomaly recording flag.")),
-				FText::AsNumber(NodeIndex)));
-		}
-
-		if ((ObjectiveNode.Objective == EFoundFootageInteractableObjective::Bodycam
-			|| ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
-			|| ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord)
-			&& ObjectiveNode.EvidenceMetadata.EvidenceId.IsNone())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} needs evidence metadata.")),
-				FText::AsNumber(NodeIndex)));
-		}
-
-		if (ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstNote
-			&& ObjectiveNode.NoteMetadata.NoteId.IsNone())
-		{
-			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} needs note metadata.")),
-				FText::AsNumber(NodeIndex)));
-		}
+void ADeepWaterStationRouteKit::ValidateObjectiveNodeIdentity(
+	const FDeepWaterStationObjectiveNode& ObjectiveNode,
+	int32 NodeIndex,
+	TSet<FName>& SeenSourceIds,
+	TSet<FName>& SeenTrailerBeatIds,
+	TArray<FText>& ValidationErrors) const
+{
+	if (ObjectiveNode.SourceId.IsNone())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} has no SourceId.")),
+			FText::AsNumber(NodeIndex)));
+	}
+	else if (SeenSourceIds.Contains(ObjectiveNode.SourceId))
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} duplicates SourceId {1}.")),
+			FText::AsNumber(NodeIndex),
+			FText::FromName(ObjectiveNode.SourceId)));
+	}
+	else
+	{
+		SeenSourceIds.Add(ObjectiveNode.SourceId);
 	}
 
-	return ValidationErrors.IsEmpty();
+	if (ObjectiveNode.TrailerBeatId.IsNone())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} has no TrailerBeatId.")),
+			FText::AsNumber(NodeIndex)));
+	}
+	else if (SeenTrailerBeatIds.Contains(ObjectiveNode.TrailerBeatId))
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} duplicates TrailerBeatId {1}.")),
+			FText::AsNumber(NodeIndex),
+			FText::FromName(ObjectiveNode.TrailerBeatId)));
+	}
+	else
+	{
+		SeenTrailerBeatIds.Add(ObjectiveNode.TrailerBeatId);
+	}
+}
+
+void ADeepWaterStationRouteKit::ValidateObjectiveNodeText(
+	const FDeepWaterStationObjectiveNode& ObjectiveNode,
+	int32 NodeIndex,
+	TArray<FText>& ValidationErrors) const
+{
+	if (ObjectiveNode.ObjectiveHint.IsEmpty())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} has no ObjectiveHint.")),
+			FText::AsNumber(NodeIndex)));
+	}
+
+	if (ObjectiveNode.DebugLabel.IsEmpty())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} has no DebugLabel.")),
+			FText::AsNumber(NodeIndex)));
+	}
+}
+
+void ADeepWaterStationRouteKit::ValidateObjectiveNodeRequirements(
+	const FDeepWaterStationObjectiveNode& ObjectiveNode,
+	int32 NodeIndex,
+	TArray<FText>& ValidationErrors) const
+{
+	if (ObjectiveNode.bIsRecordingForFirstAnomalyRecord
+		!= (ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord))
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} has an invalid first-anomaly recording flag.")),
+			FText::AsNumber(NodeIndex)));
+	}
+
+	if (DeepWaterObjectiveRequiresEvidenceMetadata(ObjectiveNode.Objective) && ObjectiveNode.EvidenceMetadata.EvidenceId.IsNone())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} needs evidence metadata.")),
+			FText::AsNumber(NodeIndex)));
+	}
+
+	if (DeepWaterObjectiveRequiresNoteMetadata(ObjectiveNode.Objective) && ObjectiveNode.NoteMetadata.NoteId.IsNone())
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::FromString(TEXT("Objective node {0} needs note metadata.")),
+			FText::AsNumber(NodeIndex)));
+	}
 }
 
 int32 ADeepWaterStationRouteKit::SpawnObjectiveNodes()

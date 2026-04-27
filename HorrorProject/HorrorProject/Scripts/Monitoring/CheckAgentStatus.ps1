@@ -7,8 +7,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject"
-$VaultRoot = "D:\gptzuo\ContextVault"
+. (Join-Path $PSScriptRoot "MonitoringCommon.ps1")
+
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+$WorkspaceRoot = Split-Path -Parent (Split-Path -Parent $ProjectRoot)
+$VaultRoot = if ($env:CONTEXTVAULT_ROOT) { $env:CONTEXTVAULT_ROOT } else { Join-Path $WorkspaceRoot "ContextVault" }
 
 Write-Host "=== Agent Status Check ===" -ForegroundColor Cyan
 Write-Host "Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray

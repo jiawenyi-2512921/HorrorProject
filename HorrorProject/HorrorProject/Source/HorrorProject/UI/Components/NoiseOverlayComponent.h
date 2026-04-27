@@ -15,6 +15,8 @@ class HORRORPROJECT_API UNoiseOverlayComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	static constexpr float DefaultNoiseSpeed = 20.0f;
+
 	UNoiseOverlayComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -41,7 +43,7 @@ protected:
 	float NoiseIntensity = 0.15f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Noise|Effects")
-	float NoiseSpeed = 20.0f;
+	float NoiseSpeed = DefaultNoiseSpeed;
 
 	UPROPERTY(EditDefaultsOnly, Category="Noise|Effects")
 	float NoiseScale = 1.0f;

@@ -56,14 +56,18 @@ TArray<FString> UErrorTelemetry::GetRecentErrors(int32 Count) const
 	TArray<FString> RecentErrors;
 	int32 StartIndex = FMath::Max(0, ErrorHistory.Num() - Count);
 
-	for (int32 i = StartIndex; i < ErrorHistory.Num(); i++)
+	int32 ErrorIndex = 0;
+	for (const FErrorReport& Error : ErrorHistory)
 	{
-		const FErrorReport& Error = ErrorHistory[i];
-		FString ErrorString = FString::Printf(TEXT("[%s] %s: %s"),
+		if (ErrorIndex++ < StartIndex)
+		{
+			continue;
+		}
+
+		RecentErrors.Emplace(FString::Printf(TEXT("[%s] %s: %s"),
 			*Error.Timestamp.ToString(),
 			*Error.ErrorCode,
-			*Error.ErrorMessage);
-		RecentErrors.Add(ErrorString);
+			*Error.ErrorMessage));
 	}
 
 	return RecentErrors;

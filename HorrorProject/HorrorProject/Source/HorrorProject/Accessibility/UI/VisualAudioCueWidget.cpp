@@ -26,16 +26,14 @@ void UVisualAudioCueWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
-    // Update cue timers
-    for (int32 i = ActiveCues.Num() - 1; i >= 0; --i)
+    for (FVisualCue& Cue : ActiveCues)
     {
-        ActiveCues[i].TimeRemaining -= InDeltaTime;
-
-        if (ActiveCues[i].TimeRemaining <= 0.0f)
-        {
-            ActiveCues.RemoveAt(i);
-        }
+        Cue.TimeRemaining -= InDeltaTime;
     }
+    ActiveCues.RemoveAll([](const FVisualCue& Cue)
+    {
+        return Cue.TimeRemaining <= 0.0f;
+    });
 
     UpdateCuePositions();
 }

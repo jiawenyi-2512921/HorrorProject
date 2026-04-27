@@ -6,6 +6,12 @@
 #include "Engine/Engine.h"
 #include "JsonObjectConverter.h"
 
+namespace HorrorStructuredLogging
+{
+	constexpr int32 MaxRetainedEntries = 10000;
+	constexpr int32 ExpectedCategoryFilterCount = 16;
+}
+
 void UStructuredLogging::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -13,11 +19,11 @@ void UStructuredLogging::Initialize(FSubsystemCollectionBase& Collection)
 	MinimumLogLevel = ELogLevel::Debug;
 	bLogToFile = true;
 	bLogToConsole = true;
-	MaxLogEntries = 10000;
+	MaxLogEntries = HorrorStructuredLogging::MaxRetainedEntries;
 
 	// Memory optimization: Pre-allocate log entries and filters
 	LogEntries.Reserve(MaxLogEntries);
-	CategoryFilters.Reserve(16);
+	CategoryFilters.Reserve(HorrorStructuredLogging::ExpectedCategoryFilterCount);
 
 	LogFilePath = FPaths::ProjectSavedDir() / TEXT("Logs") / TEXT("StructuredLog.txt");
 
@@ -213,9 +219,9 @@ FLinearColor UStructuredLogging::GetLogLevelColor(ELogLevel Level) const
 bool UStructuredLogging::ShouldLog(ELogLevel Level, const FString& Category) const
 {
 	// Check category-specific filter
-	if (CategoryFilters.Contains(Category))
+	if (const ELogLevel* CategoryLevel = CategoryFilters.Find(Category))
 	{
-		return Level >= CategoryFilters[Category];
+		return Level >= *CategoryLevel;
 	}
 
 	// Check global minimum level
@@ -278,12 +284,15 @@ TArray<FStructuredLogEntry> UStructuredLogging::GetRecentErrors(int32 Count) con
 {
 	TArray<FStructuredLogEntry> Errors;
 
-	for (int32 i = LogEntries.Num() - 1; i >= 0 && Errors.Num() < Count; i--)
+	const FStructuredLogEntry* EntryCursor = LogEntries.IsEmpty() ? nullptr : LogEntries.GetData() + LogEntries.Num() - 1;
+	const FStructuredLogEntry* FirstEntry = LogEntries.GetData();
+	while (EntryCursor && EntryCursor >= FirstEntry && Errors.Num() < Count)
 	{
-		if (LogEntries[i].Level >= ELogLevel::Error)
+		if (EntryCursor->Level >= ELogLevel::Error)
 		{
-			Errors.Add(LogEntries[i]);
+			Errors.Add(*EntryCursor);
 		}
+		--EntryCursor;
 	}
 
 	return Errors;
@@ -325,27 +334,23 @@ void UStructuredLogging::ExportLogsToJSON(const FString& FilePath)
 
 	FString JsonContent = TEXT("[\n");
 
-	for (int32 i = 0; i < LogEntries.Num(); i++)
+	bool bFirstEntry = true;
+	for (const FStructuredLogEntry& Entry : LogEntries)
 	{
-		const FStructuredLogEntry& Entry = LogEntries[i];
-
+		if (!bFirstEntry)
+		{
+			JsonContent += TEXT(",\n");
+		}
+		bFirstEntry = false;
 		JsonContent += TEXT("  {\n");
 		JsonContent += FString::Printf(TEXT("    \"timestamp\": \"%s\",\n"), *Entry.Timestamp.ToIso8601());
 		JsonContent += FString::Printf(TEXT("    \"level\": \"%s\",\n"), *LogLevelToString(Entry.Level));
 		JsonContent += FString::Printf(TEXT("    \"category\": \"%s\",\n"), *Entry.Category);
 		JsonContent += FString::Printf(TEXT("    \"message\": \"%s\"\n"), *Entry.Message.ReplaceCharWithEscapedChar());
-
-		if (i < LogEntries.Num() - 1)
-		{
-			JsonContent += TEXT("  },\n");
-		}
-		else
-		{
-			JsonContent += TEXT("  }\n");
-		}
+		JsonContent += TEXT("  }");
 	}
 
-	JsonContent += TEXT("]\n");
+	JsonContent += LogEntries.IsEmpty() ? TEXT("]\n") : TEXT("\n]\n");
 
 	if (FFileHelper::SaveStringToFile(JsonContent, *OutputPath))
 	{

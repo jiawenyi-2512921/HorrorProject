@@ -95,5 +95,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<UHorrorAudioSettings> AudioSettings;
 
+	void ResolveAudioSettings();
+	void BindVolumeControls();
+	void BindOptionControls();
+	void RefreshVolumeControls();
+	void RefreshOptionControls();
 	void PopulateOutputDevices();
 };

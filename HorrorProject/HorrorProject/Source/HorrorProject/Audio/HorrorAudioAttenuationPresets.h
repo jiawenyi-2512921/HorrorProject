@@ -7,6 +7,9 @@
 #include "Sound/SoundAttenuation.h"
 #include "HorrorAudioAttenuationPresets.generated.h"
 
+/**
+ * Defines Horror Audio Attenuation Presets data used by the Audio module.
+ */
 UCLASS()
 class HORRORPROJECT_API UHorrorAudioAttenuationPresets : public UObject
 {

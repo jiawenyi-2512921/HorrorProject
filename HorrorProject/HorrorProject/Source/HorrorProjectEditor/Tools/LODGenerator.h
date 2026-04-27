@@ -35,5 +35,5 @@ public:
 	static void GenerateLODsForAllMeshes();
 
 private:
-	static FLODGenerationSettings DefaultSettings;
+	static const FLODGenerationSettings& GetDefaultSettings();
 };

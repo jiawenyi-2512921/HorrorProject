@@ -6,6 +6,12 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "FrameTimeTracker.generated.h"
 
+namespace HorrorFrameTimeTrackerDefaults
+{
+	inline constexpr float TargetFPS = 60.0f;
+	inline constexpr int32 MaxHistorySize = 300;
+}
+
 /**
  * Frame time statistics
  */
@@ -99,11 +105,11 @@ private:
 	bool bTrackingEnabled = false;
 
 	UPROPERTY()
-	float TargetFPS = 60.0f;
+	float TargetFPS = HorrorFrameTimeTrackerDefaults::TargetFPS;
 
 	// Frame time history
 	TArray<float> FrameTimeHistory;
-	int32 MaxHistorySize = 300; // 5 seconds at 60 FPS
+	int32 MaxHistorySize = HorrorFrameTimeTrackerDefaults::MaxHistorySize;
 
 	// Statistics
 	float TotalFrameTime = 0.0f;

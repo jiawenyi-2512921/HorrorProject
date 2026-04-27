@@ -3,13 +3,18 @@
 # Measures FPS performance across different quality settings
 
 param(
-    [string]$ProjectPath = "D:\gptzuo\HorrorProject\HorrorProject",
-    [string]$OutputDir = "D:\gptzuo\HorrorProject\HorrorProject\Saved\Benchmarks",
+    [string]$ProjectPath = "",
+    [string]$OutputDir = "",
     [string]$Map = "MainLevel",
     [int]$DurationSeconds = 120
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "..\..\Validation\Common.ps1")
+$ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectPath)) { $ProjectPath = $ProjectRoot }
+if ([string]::IsNullOrWhiteSpace($OutputDir)) { $OutputDir = Join-Path $ProjectRoot "Saved\Benchmarks" }
 
 Write-Host "=== Framerate Benchmark Tool ===" -ForegroundColor Cyan
 Write-Host ""

@@ -73,6 +73,7 @@ private:
 	float LineHeight;
 	float SectionSpacing;
 
+	void DrawFearStats(UWorld* World);
 	void DrawDebugText(const FString& Text, FLinearColor Color = FLinearColor::White);
 	void DrawDebugSection(const FString& Title);
 	void ResetDrawPosition();

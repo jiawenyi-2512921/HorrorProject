@@ -10,6 +10,58 @@
 #include "HAL/PlatformMemory.h"
 #include "EngineUtils.h"
 #include "DynamicRHI.h"
+#include "AI/HorrorThreatCharacter.h"
+#include "Evidence/EvidenceActor.h"
+#include "Player/Components/FearComponent.h"
+
+namespace HorrorDebugHUD
+{
+	constexpr float DefaultLineHeight = 20.0f;
+	constexpr float DefaultSectionSpacing = 10.0f;
+	constexpr float MillisecondsPerSecond = 1000.0f;
+	constexpr float TargetFrameRate = 60.0f;
+	constexpr float WarningFrameRate = 30.0f;
+	constexpr float BytesPerMegabyte = 1024.0f * 1024.0f;
+	constexpr float PercentMultiplier = 100.0f;
+	constexpr float HealthySanityPercent = 60.0f;
+	constexpr float WarningSanityPercent = 30.0f;
+	constexpr float HealthyFearPercent = 40.0f;
+	constexpr float WarningFearPercent = 70.0f;
+	constexpr float TextOriginX = 10.0f;
+	constexpr float SectionBackgroundOriginX = 5.0f;
+	constexpr float SectionBackgroundPaddingY = 5.0f;
+	constexpr float SectionBackgroundWidth = 300.0f;
+	constexpr float SectionTitleScale = 1.2f;
+	constexpr float InitialYPosition = 50.0f;
+
+	struct FGameplayActorCounts
+	{
+		int32 TotalActors = 0;
+		int32 EnemyCount = 0;
+		int32 EvidenceCount = 0;
+		int32 CollectedEvidenceCount = 0;
+	};
+
+	FGameplayActorCounts CountGameplayActors(UWorld* World)
+	{
+		FGameplayActorCounts Counts;
+		for (TActorIterator<AActor> It(World); It; ++It)
+		{
+			Counts.TotalActors++;
+			if (It->ActorHasTag(FName("Enemy")) || Cast<AHorrorThreatCharacter>(*It))
+			{
+				Counts.EnemyCount++;
+			}
+
+			if (const AEvidenceActor* EvidenceActor = Cast<AEvidenceActor>(*It))
+			{
+				Counts.EvidenceCount++;
+				Counts.CollectedEvidenceCount += EvidenceActor->IsCollected() ? 1 : 0;
+			}
+		}
+		return Counts;
+	}
+}
 
 ADebugHUD::ADebugHUD()
 {
@@ -26,8 +78,8 @@ ADebugHUD::ADebugHUD()
 	BackgroundColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.5f);
 	TextScale = 1.0f;
 
-	LineHeight = 20.0f;
-	SectionSpacing = 10.0f;
+	LineHeight = HorrorDebugHUD::DefaultLineHeight;
+	SectionSpacing = HorrorDebugHUD::DefaultSectionSpacing;
 }
 
 void ADebugHUD::BeginPlay()
@@ -83,13 +135,23 @@ void ADebugHUD::DrawPerformanceStats()
 {
 	DrawDebugSection(TEXT("PERFORMANCE"));
 
-	float FPS = 1.0f / GetWorld()->GetDeltaSeconds();
-	float FrameTime = GetWorld()->GetDeltaSeconds() * 1000.0f;
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		DrawDebugText(TEXT("World unavailable"), FLinearColor::Red);
+		CurrentYPosition += SectionSpacing;
+		return;
+	}
+
+	float FPS = 1.0f / World->GetDeltaSeconds();
+	float FrameTime = World->GetDeltaSeconds() * HorrorDebugHUD::MillisecondsPerSecond;
 
 	DrawDebugText(FString::Printf(TEXT("FPS: %.1f"), FPS),
-		FPS >= 60.0f ? FLinearColor::Green : (FPS >= 30.0f ? FLinearColor::Yellow : FLinearColor::Red));
+		FPS >= HorrorDebugHUD::TargetFrameRate
+			? FLinearColor::Green
+			: (FPS >= HorrorDebugHUD::WarningFrameRate ? FLinearColor::Yellow : FLinearColor::Red));
 	DrawDebugText(FString::Printf(TEXT("Frame Time: %.2f ms"), FrameTime));
-	DrawDebugText(FString::Printf(TEXT("World Time: %.2f s"), GetWorld()->GetTimeSeconds()));
+	DrawDebugText(FString::Printf(TEXT("World Time: %.2f s"), World->GetTimeSeconds()));
 
 	CurrentYPosition += SectionSpacing;
 }
@@ -99,9 +161,9 @@ void ADebugHUD::DrawMemoryStats()
 	DrawDebugSection(TEXT("MEMORY"));
 
 	FPlatformMemoryStats MemStats = FPlatformMemory::GetStats();
-	float UsedPhysicalMB = MemStats.UsedPhysical / (1024.0f * 1024.0f);
-	float UsedVirtualMB = MemStats.UsedVirtual / (1024.0f * 1024.0f);
-	float AvailablePhysicalMB = MemStats.AvailablePhysical / (1024.0f * 1024.0f);
+	float UsedPhysicalMB = MemStats.UsedPhysical / HorrorDebugHUD::BytesPerMegabyte;
+	float UsedVirtualMB = MemStats.UsedVirtual / HorrorDebugHUD::BytesPerMegabyte;
+	float AvailablePhysicalMB = MemStats.AvailablePhysical / HorrorDebugHUD::BytesPerMegabyte;
 
 	DrawDebugText(FString::Printf(TEXT("Physical: %.2f MB"), UsedPhysicalMB));
 	DrawDebugText(FString::Printf(TEXT("Virtual: %.2f MB"), UsedVirtualMB));
@@ -114,7 +176,8 @@ void ADebugHUD::DrawPlayerStats()
 {
 	DrawDebugSection(TEXT("PLAYER"));
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	UWorld* World = GetWorld();
+	ACharacter* PlayerCharacter = World ? UGameplayStatics::GetPlayerCharacter(World, 0) : nullptr;
 	if (PlayerCharacter)
 	{
 		FVector Location = PlayerCharacter->GetActorLocation();
@@ -138,33 +201,44 @@ void ADebugHUD::DrawGameplayStats()
 {
 	DrawDebugSection(TEXT("GAMEPLAY"));
 
-	// Count actors
-	int32 TotalActors = 0;
-	int32 EnemyCount = 0;
-	int32 EvidenceCount = 0;
-
-	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+	UWorld* World = GetWorld();
+	if (!World)
 	{
-		TotalActors++;
-		if (It->ActorHasTag(FName("Enemy")))
-		{
-			EnemyCount++;
-		}
-		if (It->ActorHasTag(FName("Evidence")))
-		{
-			EvidenceCount++;
-		}
+		DrawDebugText(TEXT("World unavailable"), FLinearColor::Red);
+		CurrentYPosition += SectionSpacing;
+		return;
 	}
 
-	DrawDebugText(FString::Printf(TEXT("Total Actors: %d"), TotalActors));
-	DrawDebugText(FString::Printf(TEXT("Enemies: %d"), EnemyCount));
-	DrawDebugText(FString::Printf(TEXT("Evidence: %d"), EvidenceCount));
+	const HorrorDebugHUD::FGameplayActorCounts Counts = HorrorDebugHUD::CountGameplayActors(World);
+	DrawDebugText(FString::Printf(TEXT("Total Actors: %d"), Counts.TotalActors));
+	DrawDebugText(FString::Printf(TEXT("Enemies: %d"), Counts.EnemyCount));
+	DrawDebugText(FString::Printf(TEXT("Evidence: %d/%d collected"), Counts.CollectedEvidenceCount, Counts.EvidenceCount));
 
-	// TODO: Add sanity/fear stats when horror system is integrated
-	DrawDebugText(TEXT("Sanity: N/A"), FLinearColor::Gray);
-	DrawDebugText(TEXT("Fear: N/A"), FLinearColor::Gray);
-
+	DrawFearStats(World);
 	CurrentYPosition += SectionSpacing;
+}
+
+void ADebugHUD::DrawFearStats(UWorld* World)
+{
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(World, 0);
+	UFearComponent* FearComponent = PlayerCharacter ? PlayerCharacter->FindComponentByClass<UFearComponent>() : nullptr;
+	if (FearComponent)
+	{
+		const float FearPercent = FearComponent->GetFearPercent() * HorrorDebugHUD::PercentMultiplier;
+		const float SanityPercent = HorrorDebugHUD::PercentMultiplier - FearPercent;
+		DrawDebugText(FString::Printf(TEXT("Sanity: %.0f%%"), SanityPercent),
+			SanityPercent >= HorrorDebugHUD::HealthySanityPercent
+				? FLinearColor::Green
+				: (SanityPercent >= HorrorDebugHUD::WarningSanityPercent ? FLinearColor::Yellow : FLinearColor::Red));
+		DrawDebugText(FString::Printf(TEXT("Fear: %.0f%%"), FearPercent),
+			FearPercent < HorrorDebugHUD::HealthyFearPercent
+				? FLinearColor::Green
+				: (FearPercent < HorrorDebugHUD::WarningFearPercent ? FLinearColor::Yellow : FLinearColor::Red));
+	}
+	else
+	{
+		DrawDebugText(TEXT("Sanity/Fear: component unavailable"), FLinearColor::Gray);
+	}
 }
 
 void ADebugHUD::DrawSystemInfo()
@@ -265,7 +339,7 @@ void ADebugHUD::DrawDebugText(const FString& Text, FLinearColor Color)
 {
 	if (!Canvas) return;
 
-	FCanvasTextItem TextItem(FVector2D(10.0f, CurrentYPosition), FText::FromString(Text),
+	FCanvasTextItem TextItem(FVector2D(HorrorDebugHUD::TextOriginX, CurrentYPosition), FText::FromString(Text),
 		GEngine->GetSmallFont(), Color);
 	TextItem.Scale = FVector2D(TextScale, TextScale);
 	TextItem.EnableShadow(FLinearColor::Black);
@@ -279,22 +353,24 @@ void ADebugHUD::DrawDebugSection(const FString& Title)
 	if (!Canvas) return;
 
 	// Draw section background
-	FCanvasTileItem TileItem(FVector2D(5.0f, CurrentYPosition - 5.0f),
-		FVector2D(300.0f, LineHeight * TextScale + 5.0f), BackgroundColor);
+	FCanvasTileItem TileItem(
+		FVector2D(HorrorDebugHUD::SectionBackgroundOriginX, CurrentYPosition - HorrorDebugHUD::SectionBackgroundPaddingY),
+		FVector2D(HorrorDebugHUD::SectionBackgroundWidth, LineHeight * TextScale + HorrorDebugHUD::SectionBackgroundPaddingY),
+		BackgroundColor);
 	TileItem.BlendMode = SE_BLEND_Translucent;
 	Canvas->DrawItem(TileItem);
 
 	// Draw section title
-	FCanvasTextItem TextItem(FVector2D(10.0f, CurrentYPosition), FText::FromString(Title),
+	FCanvasTextItem TextItem(FVector2D(HorrorDebugHUD::TextOriginX, CurrentYPosition), FText::FromString(Title),
 		GEngine->GetSmallFont(), FLinearColor::Yellow);
-	TextItem.Scale = FVector2D(TextScale * 1.2f, TextScale * 1.2f);
+	TextItem.Scale = FVector2D(TextScale * HorrorDebugHUD::SectionTitleScale, TextScale * HorrorDebugHUD::SectionTitleScale);
 	TextItem.EnableShadow(FLinearColor::Black);
 	Canvas->DrawItem(TextItem);
 
-	CurrentYPosition += LineHeight * TextScale * 1.2f;
+	CurrentYPosition += LineHeight * TextScale * HorrorDebugHUD::SectionTitleScale;
 }
 
 void ADebugHUD::ResetDrawPosition()
 {
-	CurrentYPosition = 50.0f;
+	CurrentYPosition = HorrorDebugHUD::InitialYPosition;
 }

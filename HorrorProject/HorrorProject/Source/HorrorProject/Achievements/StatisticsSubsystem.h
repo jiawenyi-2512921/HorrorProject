@@ -7,6 +7,9 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatisticUpdated, FName, StatName, float, NewValue);
 
+/**
+ * Coordinates Statistics Subsystem services for the Achievements module.
+ */
 UCLASS()
 class HORRORPROJECT_API UStatisticsSubsystem : public UGameInstanceSubsystem
 {

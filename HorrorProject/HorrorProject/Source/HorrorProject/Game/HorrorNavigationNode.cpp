@@ -4,6 +4,11 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Character.h"
 
+namespace
+{
+	constexpr float NavigationTriggerVolumeHalfHeight = 200.0f;
+}
+
 AHorrorNavigationNode::AHorrorNavigationNode()
 {
 	NodeType = EHorrorObjectiveNodeType::Navigation;
@@ -25,7 +30,7 @@ void AHorrorNavigationNode::OnNodeActivated_Implementation()
 
 	if (TriggerVolume)
 	{
-		TriggerVolume->SetBoxExtent(FVector(ActivationRadius, ActivationRadius, 200.0f));
+		TriggerVolume->SetBoxExtent(FVector(ActivationRadius, ActivationRadius, NavigationTriggerVolumeHalfHeight));
 	}
 }
 

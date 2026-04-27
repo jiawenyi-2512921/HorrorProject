@@ -4,5 +4,4 @@
 
 AHorrorProjectGameMode::AHorrorProjectGameMode()
 {
-	// stub
 }

@@ -9,6 +9,11 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorThreatActiveChangedSignature, bool, bIsActive);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorThreatDetectedTargetChangedSignature, AActor*, DetectedTarget);
 
+namespace HorrorThreatDefaults
+{
+	inline constexpr float DetectionRadiusCm = 800.0f;
+}
+
 UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UHorrorThreatDelegateProbe : public UObject
 {
@@ -25,6 +30,9 @@ public:
 	TArray<TObjectPtr<AActor>> TargetValues;
 };
 
+/**
+ * Implements actor-level Horror Threat Character behavior for the AI module.
+ */
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Horror))
 class HORRORPROJECT_API AHorrorThreatCharacter : public ACharacter
 {
@@ -58,7 +66,7 @@ public:
 	FName ThreatId = TEXT("Threat.Default");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Threat", meta=(ClampMin="0.0", Units="cm"))
-	float DetectionRadius = 800.0f;
+	float DetectionRadius = HorrorThreatDefaults::DetectionRadiusCm;
 
 	UFUNCTION(BlueprintPure, Category="Horror|Threat")
 	class UHorrorGolemBehaviorComponent* GetGolemBehavior() const;

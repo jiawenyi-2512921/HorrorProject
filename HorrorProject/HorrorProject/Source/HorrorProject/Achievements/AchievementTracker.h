@@ -4,6 +4,9 @@
 #include "Components/ActorComponent.h"
 #include "AchievementTracker.generated.h"
 
+/**
+ * Defines Achievement Tracker behavior for the Achievements module.
+ */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UAchievementTracker : public UActorComponent
 {

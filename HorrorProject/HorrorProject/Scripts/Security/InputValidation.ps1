@@ -2,11 +2,19 @@
 # Checks for missing input validation and sanitization
 
 param(
-    [string]$ProjectRoot = "D:\gptzuo\HorrorProject\HorrorProject",
+    [string]$ProjectRoot = "",
     [string]$OutputFile = "InputValidationReport.json"
 )
 
 $ErrorActionPreference = "Stop"
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) "Validation\Common.ps1")
+
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $ProjectRoot = Get-HorrorProjectRoot -StartPath $PSScriptRoot
+} else {
+    $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
+}
 
 Write-Host "Starting Input Validation Analysis..." -ForegroundColor Cyan
 

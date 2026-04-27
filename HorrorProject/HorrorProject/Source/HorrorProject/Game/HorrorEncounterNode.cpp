@@ -7,6 +7,11 @@
 #include "Game/HorrorEncounterDirector.h"
 #include "GameFramework/Character.h"
 
+namespace
+{
+	constexpr float EncounterTriggerVolumeHalfHeight = 200.0f;
+}
+
 AHorrorEncounterNode::AHorrorEncounterNode()
 {
 	NodeType = EHorrorObjectiveNodeType::Encounter;
@@ -24,7 +29,8 @@ void AHorrorEncounterNode::BeginPlay()
 
 bool AHorrorEncounterNode::TriggerEncounter(AActor* InstigatorActor)
 {
-	if (!IsActive() || bEncounterActive || !InstigatorActor)
+	UWorld* World = GetWorld();
+	if (!IsActive() || bEncounterActive || !World)
 	{
 		return false;
 	}
@@ -35,7 +41,7 @@ bool AHorrorEncounterNode::TriggerEncounter(AActor* InstigatorActor)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
-		SpawnedEncounterDirector = GetWorld()->SpawnActor<AHorrorEncounterDirector>(EncounterDirectorClass, GetActorTransform(), SpawnParams);
+		SpawnedEncounterDirector = World->SpawnActor<AHorrorEncounterDirector>(EncounterDirectorClass, GetActorTransform(), SpawnParams);
 	}
 
 	if (ThreatClass)
@@ -43,7 +49,7 @@ bool AHorrorEncounterNode::TriggerEncounter(AActor* InstigatorActor)
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
 		FTransform WorldThreatTransform = ThreatSpawnTransform * GetActorTransform();
-		SpawnedThreat = GetWorld()->SpawnActor<AHorrorThreatCharacter>(ThreatClass, WorldThreatTransform, SpawnParams);
+		SpawnedThreat = World->SpawnActor<AHorrorThreatCharacter>(ThreatClass, WorldThreatTransform, SpawnParams);
 	}
 
 	OnEncounterTriggered(InstigatorActor);
@@ -81,7 +87,7 @@ void AHorrorEncounterNode::OnNodeActivated_Implementation()
 
 	if (TriggerVolume)
 	{
-		TriggerVolume->SetBoxExtent(FVector(TriggerRadius, TriggerRadius, 200.0f));
+		TriggerVolume->SetBoxExtent(FVector(TriggerRadius, TriggerRadius, EncounterTriggerVolumeHalfHeight));
 	}
 
 	if (bAutoTriggerOnActivate)

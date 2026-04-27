@@ -19,6 +19,9 @@ enum class ENoiseType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FNoiseGeneratedSignature, ENoiseType, NoiseType, float, Loudness, FVector, Location);
 
+/**
+ * Adds Noise Generator Component behavior to its owning actor in the Player module.
+ */
 UCLASS(ClassGroup=(Horror), BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class HORRORPROJECT_API UNoiseGeneratorComponent : public UActorComponent
 {
