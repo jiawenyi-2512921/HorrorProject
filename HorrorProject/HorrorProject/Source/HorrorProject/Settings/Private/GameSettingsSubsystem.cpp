@@ -230,11 +230,11 @@ void UGameSettingsSubsystem::ApplyQualityPreset(int32 PresetLevel)
 TArray<FString> UGameSettingsSubsystem::GetAvailableQualityPresets() const
 {
 	return TArray<FString>{
-		TEXT("Low"),
-		TEXT("Medium"),
-		TEXT("High"),
-		TEXT("Ultra"),
-		TEXT("Cinematic")
+		TEXT("低"),
+		TEXT("中"),
+		TEXT("高"),
+		TEXT("超高"),
+		TEXT("电影级")
 	};
 }
 

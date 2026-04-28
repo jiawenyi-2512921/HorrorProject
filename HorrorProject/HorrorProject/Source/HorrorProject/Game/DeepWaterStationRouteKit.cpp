@@ -24,6 +24,7 @@ struct FFirstLoopObjectiveSpec
 	const TCHAR* EvidenceDisplayName;
 	const TCHAR* NoteId;
 	const TCHAR* NoteTitle;
+	const TCHAR* NoteBody;
 };
 
 constexpr float BodycamXOffsetCm = 200.0f;
@@ -39,12 +40,13 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		TEXT("Evidence.Bodycam"),
 		BodycamXOffsetCm,
 		TEXT("Beat.BodycamAcquire"),
-		TEXT("Recover the bodycam."),
-		TEXT("Bodycam Pickup"),
+		TEXT("找回随身摄像机。"),
+		TEXT("取得随身摄像机"),
 		true,
 		false,
 		TEXT("Evidence.Bodycam"),
-		TEXT("Bodycam"),
+		TEXT("随身摄像机"),
+		nullptr,
 		nullptr,
 		nullptr
 	},
@@ -53,26 +55,28 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		TEXT("Note.Intro"),
 		FirstNoteXOffsetCm,
 		TEXT("Beat.FirstNote"),
-		TEXT("Read the first station note."),
-		TEXT("Intro Note"),
+		TEXT("阅读第一份站内笔记。"),
+		TEXT("站内笔记"),
 		true,
 		false,
 		nullptr,
 		nullptr,
 		TEXT("Note.Intro"),
-		TEXT("Intro")
+		TEXT("维修记录：路线密码"),
+		TEXT("0417 可以打开第一道维修门。1831 可以打开异常室门。1799 是后续维修舱口密码。1697 是出口路线门禁密码。标记 1939 的上层维修舱口暂时封闭，不需要攀爬；第一个异常点就在舱口下方的地面层。")
 	},
 	{
 		EFoundFootageInteractableObjective::FirstAnomalyCandidate,
 		TEXT("Evidence.Anomaly01"),
 		FirstAnomalyCandidateXOffsetCm,
 		TEXT("Beat.FirstAnomalyCandidate"),
-		TEXT("Frame the first anomaly."),
-		TEXT("Anomaly Candidate"),
+		TEXT("对准第一个异常点。"),
+		TEXT("异常目标"),
 		true,
 		false,
 		TEXT("Evidence.Anomaly01"),
-		TEXT("First Anomaly"),
+		TEXT("第一个异常"),
+		nullptr,
 		nullptr,
 		nullptr
 	},
@@ -81,12 +85,13 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		TEXT("Evidence.Recorder"),
 		FirstAnomalyRecordXOffsetCm,
 		TEXT("Beat.FirstAnomalyRecord"),
-		TEXT("Record while the anomaly is visible."),
-		TEXT("Anomaly Recording Window"),
+		TEXT("异常点可见时开始录制。"),
+		TEXT("异常录制窗口"),
 		true,
 		true,
 		TEXT("Evidence.Anomaly01"),
-		TEXT("First Anomaly"),
+		TEXT("第一个异常"),
+		nullptr,
 		nullptr,
 		nullptr
 	},
@@ -95,10 +100,11 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		TEXT("Archive.Terminal"),
 		ArchiveReviewXOffsetCm,
 		TEXT("Beat.ArchiveReview"),
-		TEXT("Review the tape at the archive terminal."),
-		TEXT("Archive Terminal"),
+		TEXT("在档案终端查看录像。"),
+		TEXT("档案终端"),
 		true,
 		false,
+		nullptr,
 		nullptr,
 		nullptr,
 		nullptr,
@@ -109,10 +115,11 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		TEXT("Exit.Gate"),
 		ExitRouteGateXOffsetCm,
 		TEXT("Beat.ExitGate"),
-		TEXT("Leave through the unlocked service gate."),
-		TEXT("Exit Gate"),
+		TEXT("从已解锁的勤务闸门离开。"),
+		TEXT("出口闸门"),
 		true,
 		false,
+		nullptr,
 		nullptr,
 		nullptr,
 		nullptr,
@@ -215,6 +222,10 @@ void ADeepWaterStationRouteKit::ConfigureDefaultFirstLoopObjectiveNodes()
 		{
 			Node.NoteMetadata.NoteId = Spec.NoteId;
 			Node.NoteMetadata.Title = FText::FromString(Spec.NoteTitle);
+			if (Spec.NoteBody)
+			{
+				Node.NoteMetadata.Body = FText::FromString(Spec.NoteBody);
+			}
 		}
 
 		ObjectiveNodes.Add(MoveTemp(Node));
@@ -236,17 +247,17 @@ void ADeepWaterStationRouteKit::ValidateRouteKitClassSettings(TArray<FText>& Val
 {
 	if (!ObjectiveInteractableClass)
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("ObjectiveInteractableClass is not set.")));
+		ValidationErrors.Add(FText::FromString(TEXT("未设置 ObjectiveInteractableClass。")));
 	}
 
 	if (!EncounterDirectorClass)
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("EncounterDirectorClass is not set.")));
+		ValidationErrors.Add(FText::FromString(TEXT("未设置 EncounterDirectorClass。")));
 	}
 
 	if (EncounterId.IsNone())
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("EncounterId is not set.")));
+		ValidationErrors.Add(FText::FromString(TEXT("未设置 EncounterId。")));
 	}
 }
 
@@ -255,7 +266,7 @@ void ADeepWaterStationRouteKit::ValidateObjectiveRouteOrder(TArray<FText>& Valid
 	if (ObjectiveNodes.Num() != UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective route must contain exactly {0} first-loop nodes.")),
+			FText::FromString(TEXT("目标路线必须正好包含 {0} 个首轮节点。")),
 			FText::AsNumber(UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))));
 	}
 
@@ -264,7 +275,7 @@ void ADeepWaterStationRouteKit::ValidateObjectiveRouteOrder(TArray<FText>& Valid
 		if (!ObjectiveNodes.IsValidIndex(ObjectiveIndex) || ObjectiveNodes[ObjectiveIndex].Objective != DeepWaterExpectedObjectiveOrder[ObjectiveIndex])
 		{
 			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("Objective node {0} does not match the required first-loop order.")),
+				FText::FromString(TEXT("目标节点 {0} 不符合首轮顺序。")),
 				FText::AsNumber(ObjectiveIndex)));
 		}
 	}
@@ -294,13 +305,13 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeIdentity(
 	if (ObjectiveNode.SourceId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} has no SourceId.")),
+			FText::FromString(TEXT("目标节点 {0} 缺少 SourceId。")),
 			FText::AsNumber(NodeIndex)));
 	}
 	else if (SeenSourceIds.Contains(ObjectiveNode.SourceId))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} duplicates SourceId {1}.")),
+			FText::FromString(TEXT("目标节点 {0} 重复使用 SourceId {1}。")),
 			FText::AsNumber(NodeIndex),
 			FText::FromName(ObjectiveNode.SourceId)));
 	}
@@ -312,13 +323,13 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeIdentity(
 	if (ObjectiveNode.TrailerBeatId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} has no TrailerBeatId.")),
+			FText::FromString(TEXT("目标节点 {0} 缺少 TrailerBeatId。")),
 			FText::AsNumber(NodeIndex)));
 	}
 	else if (SeenTrailerBeatIds.Contains(ObjectiveNode.TrailerBeatId))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} duplicates TrailerBeatId {1}.")),
+			FText::FromString(TEXT("目标节点 {0} 重复使用 TrailerBeatId {1}。")),
 			FText::AsNumber(NodeIndex),
 			FText::FromName(ObjectiveNode.TrailerBeatId)));
 	}
@@ -336,14 +347,14 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeText(
 	if (ObjectiveNode.ObjectiveHint.IsEmpty())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} has no ObjectiveHint.")),
+			FText::FromString(TEXT("目标节点 {0} 缺少 ObjectiveHint。")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (ObjectiveNode.DebugLabel.IsEmpty())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} has no DebugLabel.")),
+			FText::FromString(TEXT("目标节点 {0} 缺少 DebugLabel。")),
 			FText::AsNumber(NodeIndex)));
 	}
 }
@@ -357,21 +368,21 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeRequirements(
 		!= (ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} has an invalid first-anomaly recording flag.")),
+			FText::FromString(TEXT("目标节点 {0} 的首个异常录制标记无效。")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (DeepWaterObjectiveRequiresEvidenceMetadata(ObjectiveNode.Objective) && ObjectiveNode.EvidenceMetadata.EvidenceId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} needs evidence metadata.")),
+			FText::FromString(TEXT("目标节点 {0} 需要证据元数据。")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (DeepWaterObjectiveRequiresNoteMetadata(ObjectiveNode.Objective) && ObjectiveNode.NoteMetadata.NoteId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("Objective node {0} needs note metadata.")),
+			FText::FromString(TEXT("目标节点 {0} 需要笔记元数据。")),
 			FText::AsNumber(NodeIndex)));
 	}
 }
@@ -419,6 +430,7 @@ int32 ADeepWaterStationRouteKit::SpawnObjectiveNodes()
 		Interactable->TrailerBeatId = ObjectiveNode.TrailerBeatId;
 		Interactable->ObjectiveHint = ObjectiveNode.ObjectiveHint;
 		Interactable->DebugLabel = ObjectiveNode.DebugLabel;
+		Interactable->RefreshVisualDefaults();
 		SpawnedObjectiveInteractables.Add(Interactable);
 		SpawnedObjectiveInteractableViews.Add(Interactable);
 		++SpawnCount;
@@ -541,4 +553,27 @@ TArray<FName> ADeepWaterStationRouteKit::GetTrailerBeatIds() const
 	}
 
 	return TrailerBeatIds;
+}
+
+bool ADeepWaterStationRouteKit::TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective Objective, FVector& OutWorldLocation) const
+{
+	for (const TObjectPtr<AFoundFootageObjectiveInteractable>& Interactable : SpawnedObjectiveInteractables)
+	{
+		if (Interactable && Interactable->Objective == Objective)
+		{
+			OutWorldLocation = Interactable->GetActorLocation();
+			return true;
+		}
+	}
+
+	for (const FDeepWaterStationObjectiveNode& ObjectiveNode : ObjectiveNodes)
+	{
+		if (ObjectiveNode.Objective == Objective)
+		{
+			OutWorldLocation = (ObjectiveNode.RelativeTransform * GetActorTransform()).GetLocation();
+			return true;
+		}
+	}
+
+	return false;
 }

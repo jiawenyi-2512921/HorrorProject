@@ -8,6 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ControlSettings.h"
+#include "GameSettingsSubsystem.h"
 #include "HorrorProject.h"
 
 namespace
@@ -19,6 +21,8 @@ namespace
 	constexpr float FirstPersonCameraRoll = -90.0f;
 	constexpr float FirstPersonFieldOfView = 70.0f;
 	constexpr float FallingBrakeDeceleration = 1500.0f;
+	constexpr float MinimumJumpZVelocity = 520.0f;
+	constexpr float MinimumMaxStepHeight = 55.0f;
 }
 
 AHorrorProjectCharacter::AHorrorProjectCharacter()
@@ -57,6 +61,23 @@ AHorrorProjectCharacter::AHorrorProjectCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakeDeceleration;
 	GetCharacterMovement()->AirControl = 0.5f;
+	ConfigureJumpMovementDefaults();
+}
+
+void AHorrorProjectCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	ConfigureJumpMovementDefaults();
+}
+
+void AHorrorProjectCharacter::ConfigureJumpMovementDefaults()
+{
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->NavAgentProps.bCanJump = true;
+		MovementComponent->JumpZVelocity = FMath::Max(MovementComponent->JumpZVelocity, MinimumJumpZVelocity);
+		MovementComponent->MaxStepHeight = FMath::Max(MovementComponent->MaxStepHeight, MinimumMaxStepHeight);
+	}
 }
 
 void AHorrorProjectCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -106,9 +127,28 @@ void AHorrorProjectCharacter::DoAim(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
+		float MouseSensitivity = 1.0f;
+		bool bInvertMouseX = false;
+		bool bInvertMouseY = false;
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			if (const UGameSettingsSubsystem* SettingsSubsystem = GameInstance->GetSubsystem<UGameSettingsSubsystem>())
+			{
+				if (const UControlSettings* ControlSettings = SettingsSubsystem->GetControlSettings())
+				{
+					MouseSensitivity = FMath::Clamp(ControlSettings->MouseSensitivity, 0.1f, 5.0f);
+					bInvertMouseX = ControlSettings->bInvertMouseX;
+					bInvertMouseY = ControlSettings->bInvertMouseY;
+				}
+			}
+		}
+
+		const float AdjustedYaw = Yaw * MouseSensitivity * (bInvertMouseX ? -1.0f : 1.0f);
+		const float AdjustedPitch = Pitch * MouseSensitivity * (bInvertMouseY ? -1.0f : 1.0f);
+
 		// pass the rotation inputs
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
+		AddControllerYawInput(AdjustedYaw);
+		AddControllerPitchInput(-AdjustedPitch);
 	}
 }
 

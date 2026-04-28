@@ -78,6 +78,17 @@ public:
 	FHorrorThreatDetectedTargetChangedSignature OnDetectedTargetChanged;
 
 private:
+	void ApplyThreatAnimation(class UAnimationAsset* AnimationAsset);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Horror|Threat", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<class UHorrorGolemBehaviorComponent> GolemBehavior;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Horror|Threat|Animation", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<class UAnimationAsset> IdleAnimation;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Horror|Threat|Animation", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<class UAnimationAsset> RunAnimation;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Horror|Threat", meta=(AllowPrivateAccess="true"))
 	bool bThreatActive = false;
 

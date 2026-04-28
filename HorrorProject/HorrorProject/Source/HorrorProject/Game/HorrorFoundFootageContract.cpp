@@ -28,6 +28,34 @@ namespace HorrorFoundFootageTags
 	FGameplayTag ExitUnlockedState() { return ExitUnlockedStateTag; }
 }
 
+namespace HorrorDay1Tags
+{
+	UE_DEFINE_GAMEPLAY_TAG(Day1CompletedEventTag, "Event.Day1.Completed");
+	UE_DEFINE_GAMEPLAY_TAG(PlayerFailureEventTag, "Event.Day1.PlayerFailure");
+	UE_DEFINE_GAMEPLAY_TAG(Day1CompletedStateTag, "State.Day1.Completed");
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointRestoredStateTag, "State.Day1.CheckpointRestored");
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointMissingStateTag, "State.Day1.CheckpointMissing");
+
+	FGameplayTag Day1CompletedEvent() { return Day1CompletedEventTag; }
+	FGameplayTag PlayerFailureEvent() { return PlayerFailureEventTag; }
+	FGameplayTag Day1CompletedState() { return Day1CompletedStateTag; }
+	FGameplayTag CheckpointRestoredState() { return CheckpointRestoredStateTag; }
+	FGameplayTag CheckpointMissingState() { return CheckpointMissingStateTag; }
+}
+
+namespace HorrorSaveTags
+{
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointSavedEventTag, "Event.Save.CheckpointSaved");
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointSaveFailedEventTag, "Event.Save.CheckpointSaveFailed");
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointSavedStateTag, "State.Save.CheckpointSaved");
+	UE_DEFINE_GAMEPLAY_TAG(CheckpointSaveFailedStateTag, "State.Save.CheckpointSaveFailed");
+
+	FGameplayTag CheckpointSavedEvent() { return CheckpointSavedEventTag; }
+	FGameplayTag CheckpointSaveFailedEvent() { return CheckpointSaveFailedEventTag; }
+	FGameplayTag CheckpointSavedState() { return CheckpointSavedStateTag; }
+	FGameplayTag CheckpointSaveFailedState() { return CheckpointSaveFailedStateTag; }
+}
+
 bool FHorrorFoundFootageContract::RecordEvent(FGameplayTag EventTag, FName SourceId, TArray<FHorrorFoundFootageRecordedEvent>* OutRecordedEvents, TArray<FHorrorFoundFootageStateChange>* OutStateChanges)
 {
 	if (!EventTag.IsValid() || EventTag == HorrorFoundFootageTags::ExitUnlockedEvent() || RecordedEvents.Contains(EventTag))

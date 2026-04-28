@@ -27,7 +27,7 @@ APickupInteractable::APickupInteractable()
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Default settings
-	InteractionPrompt = FText::FromString("Pick Up");
+	InteractionPrompt = FText::FromString(TEXT("拾取"));
 	bCanInteractMultipleTimes = false;
 }
 

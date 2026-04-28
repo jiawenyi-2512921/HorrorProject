@@ -9,12 +9,12 @@
 UENUM(BlueprintType)
 enum class EBreathingState : uint8
 {
-	Calm UMETA(DisplayName="Calm"),
-	Normal UMETA(DisplayName="Normal"),
-	Tired UMETA(DisplayName="Tired"),
-	Exhausted UMETA(DisplayName="Exhausted"),
-	Panicked UMETA(DisplayName="Panicked"),
-	Holding UMETA(DisplayName="Holding Breath")
+	Calm UMETA(DisplayName="平静"),
+	Normal UMETA(DisplayName="正常"),
+	Tired UMETA(DisplayName="疲惫"),
+	Exhausted UMETA(DisplayName="力竭"),
+	Panicked UMETA(DisplayName="恐慌"),
+	Holding UMETA(DisplayName="屏息")
 };
 
 USTRUCT(BlueprintType)

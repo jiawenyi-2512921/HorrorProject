@@ -80,6 +80,34 @@ namespace HorrorFoundFootageTags
 	HORRORPROJECT_API FGameplayTag ExitUnlockedState();
 }
 
+namespace HorrorDay1Tags
+{
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Day1CompletedEventTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(PlayerFailureEventTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Day1CompletedStateTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointRestoredStateTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointMissingStateTag);
+
+	HORRORPROJECT_API FGameplayTag Day1CompletedEvent();
+	HORRORPROJECT_API FGameplayTag PlayerFailureEvent();
+	HORRORPROJECT_API FGameplayTag Day1CompletedState();
+	HORRORPROJECT_API FGameplayTag CheckpointRestoredState();
+	HORRORPROJECT_API FGameplayTag CheckpointMissingState();
+}
+
+namespace HorrorSaveTags
+{
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointSavedEventTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointSaveFailedEventTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointSavedStateTag);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckpointSaveFailedStateTag);
+
+	HORRORPROJECT_API FGameplayTag CheckpointSavedEvent();
+	HORRORPROJECT_API FGameplayTag CheckpointSaveFailedEvent();
+	HORRORPROJECT_API FGameplayTag CheckpointSavedState();
+	HORRORPROJECT_API FGameplayTag CheckpointSaveFailedState();
+}
+
 class HORRORPROJECT_API FHorrorFoundFootageContract
 {
 public:

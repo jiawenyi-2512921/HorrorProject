@@ -29,19 +29,19 @@ public:
 	bool IsToastVisible() const { return bToastVisible; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Show Toast"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="显示提示"))
 	void BP_ShowToast(FGameplayTag EventTag, const FText& ObjectiveText, const FText& HintText);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Dismiss Toast"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="关闭提示"))
 	void BP_DismissToast();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Play Typewriter Effect"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="播放打字机效果"))
 	void BP_PlayTypewriterEffect(const FText& Text, float Duration);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Play Slide In"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="播放滑入"))
 	void BP_PlaySlideIn();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="Play Slide Out"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Objective|UI", meta=(DisplayName="播放滑出"))
 	void BP_PlaySlideOut();
 
 	UPROPERTY(EditDefaultsOnly, Category="Objective|UI")

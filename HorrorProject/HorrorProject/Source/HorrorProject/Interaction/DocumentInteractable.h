@@ -15,9 +15,9 @@ class UMaterialInterface;
 UENUM(BlueprintType)
 enum class EDocumentType : uint8
 {
-	Text UMETA(DisplayName="Text Document"),
-	Image UMETA(DisplayName="Image"),
-	Mixed UMETA(DisplayName="Mixed Content")
+	Text UMETA(DisplayName="文本文档"),
+	Image UMETA(DisplayName="图片"),
+	Mixed UMETA(DisplayName="混合内容")
 };
 
 /**

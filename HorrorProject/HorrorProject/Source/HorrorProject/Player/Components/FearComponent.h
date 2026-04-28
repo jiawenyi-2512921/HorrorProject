@@ -9,11 +9,11 @@
 UENUM(BlueprintType)
 enum class EFearLevel : uint8
 {
-	Calm UMETA(DisplayName="Calm"),
-	Uneasy UMETA(DisplayName="Uneasy"),
-	Afraid UMETA(DisplayName="Afraid"),
-	Terrified UMETA(DisplayName="Terrified"),
-	Panicked UMETA(DisplayName="Panicked")
+	Calm UMETA(DisplayName="平静"),
+	Uneasy UMETA(DisplayName="不安"),
+	Afraid UMETA(DisplayName="害怕"),
+	Terrified UMETA(DisplayName="恐惧"),
+	Panicked UMETA(DisplayName="恐慌")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFearLevelChangedSignature, EFearLevel, NewLevel, float, FearPercent);

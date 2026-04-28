@@ -15,14 +15,14 @@ namespace HorrorFootstepAudioDefaults
 UENUM(BlueprintType)
 enum class EFootstepSurfaceType : uint8
 {
-	Concrete UMETA(DisplayName="Concrete"),
-	Wood UMETA(DisplayName="Wood"),
-	Metal UMETA(DisplayName="Metal"),
-	Grass UMETA(DisplayName="Grass"),
-	Water UMETA(DisplayName="Water"),
-	Gravel UMETA(DisplayName="Gravel"),
-	Carpet UMETA(DisplayName="Carpet"),
-	Mud UMETA(DisplayName="Mud")
+	Concrete UMETA(DisplayName="混凝土"),
+	Wood UMETA(DisplayName="木地板"),
+	Metal UMETA(DisplayName="金属"),
+	Grass UMETA(DisplayName="草地"),
+	Water UMETA(DisplayName="水面"),
+	Gravel UMETA(DisplayName="碎石"),
+	Carpet UMETA(DisplayName="地毯"),
+	Mud UMETA(DisplayName="泥地")
 };
 
 USTRUCT(BlueprintType)

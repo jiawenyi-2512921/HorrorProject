@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Game/HorrorEventBusSubsystem.h"
+#include "Game/HorrorGameModeBase.h"
+#include "GameplayTagContainer.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "NavigationPath.h"
@@ -24,6 +27,7 @@ namespace HorrorGolemBehavior
 	constexpr float PatrolRotationInterpSpeed = 3.0f;
 	constexpr float NavigationAcceptanceRadiusCm = 75.0f;
 	constexpr float PatrolNavigationStepCm = 300.0f;
+	constexpr float MinimumPatrolInputSizeSquared = 0.01f;
 	constexpr float FinalImpactTriggerGraceSeconds = 0.1f;
 	constexpr float EnvironmentDestructionForwardOffsetCm = 200.0f;
 	constexpr float DebugStateHeightOffsetCm = 200.0f;
@@ -32,6 +36,12 @@ namespace HorrorGolemBehavior
 	constexpr int32 DebugSphereSegments = 16;
 	constexpr float DebugLifetimeSeconds = 1.0f;
 	constexpr float DebugLineThickness = 2.0f;
+	const FName FinalImpactDeathCause(TEXT("Death.Golem.FinalImpact"));
+
+	FGameplayTag FullChaseEventTag()
+	{
+		return FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Golem.FullChase")), false);
+	}
 }
 
 UHorrorGolemBehaviorComponent::UHorrorGolemBehaviorComponent()
@@ -53,7 +63,12 @@ void UHorrorGolemBehaviorComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bBehaviorActive || !TargetActor.IsValid() || !OwnerThreat.IsValid())
+	if (!bBehaviorActive || !OwnerThreat.IsValid())
+	{
+		return;
+	}
+
+	if (HandleInvalidTarget())
 	{
 		return;
 	}
@@ -74,8 +89,14 @@ void UHorrorGolemBehaviorComponent::ActivateBehavior(AActor* InTargetActor)
 		return;
 	}
 
+	if (!OwnerThreat.IsValid())
+	{
+		OwnerThreat = Cast<AHorrorThreatCharacter>(GetOwner());
+	}
+
 	TargetActor = InTargetActor;
 	bBehaviorActive = true;
+	bFinalImpactFailureRequested = false;
 	StateTimer = 0.0f;
 	LostTargetTimer = 0.0f;
 
@@ -96,7 +117,13 @@ void UHorrorGolemBehaviorComponent::DeactivateBehavior()
 		return;
 	}
 
+	if (!OwnerThreat.IsValid())
+	{
+		OwnerThreat = Cast<AHorrorThreatCharacter>(GetOwner());
+	}
+
 	bBehaviorActive = false;
+	bFinalImpactFailureRequested = false;
 	SetComponentTickEnabled(false);
 	StopNavigationMove();
 	TransitionToState(EGolemEncounterState::Dormant);
@@ -236,6 +263,24 @@ void UHorrorGolemBehaviorComponent::TransitionToState(EGolemEncounterState NewSt
 
 	OnStateChanged.Broadcast(OldState, NewState);
 	BP_OnStateChanged(OldState, NewState);
+
+	if (NewState == EGolemEncounterState::FullChase)
+	{
+		if (!OwnerThreat.IsValid())
+		{
+			OwnerThreat = Cast<AHorrorThreatCharacter>(GetOwner());
+		}
+
+		if (UWorld* World = GetWorld())
+		{
+			if (UHorrorEventBusSubsystem* EventBus = World->GetSubsystem<UHorrorEventBusSubsystem>())
+			{
+				const FGameplayTag EventTag = HorrorGolemBehavior::FullChaseEventTag();
+				const FName SourceId = OwnerThreat.IsValid() ? OwnerThreat->GetFName() : GetFName();
+				EventBus->Publish(EventTag, SourceId, EventTag, OwnerThreat.Get());
+			}
+		}
+	}
 }
 
 void UHorrorGolemBehaviorComponent::UpdateDistantSighting(float DeltaTime)
@@ -329,6 +374,7 @@ void UHorrorGolemBehaviorComponent::UpdateFinalImpact(float DeltaTime)
 	if (StateTimer < HorrorGolemBehavior::FinalImpactTriggerGraceSeconds)
 	{
 		BP_OnFinalImpactTriggered();
+		TriggerFinalImpactFailure();
 	}
 
 	// Stop movement, trigger attack animation/cutscene
@@ -363,7 +409,19 @@ bool UHorrorGolemBehaviorComponent::HandleLostTarget(float DistanceToTarget, flo
 	return true;
 }
 
-bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius)
+bool UHorrorGolemBehaviorComponent::HandleInvalidTarget()
+{
+	if (TargetActor.IsValid())
+	{
+		return false;
+	}
+
+	StopNavigationMove();
+	DeactivateBehavior();
+	return true;
+}
+
+bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius, float DeltaTime)
 {
 	if (!OwnerThreat.IsValid())
 	{
@@ -403,7 +461,7 @@ bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Desti
 	if (!NavigationPath || !NavigationPath->IsValid() || NavigationPath->PathPoints.Num() == 0)
 	{
 		AIController->StopMovement();
-		return false;
+		return MoveDirectlyTowardLocation(Destination, Speed, DeltaTime);
 	}
 
 	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
@@ -418,7 +476,53 @@ bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Desti
 		nullptr,
 		true);
 
-	return MoveResult != EPathFollowingRequestResult::Failed;
+	if (MoveResult == EPathFollowingRequestResult::Failed)
+	{
+		return MoveDirectlyTowardLocation(Destination, Speed, DeltaTime);
+	}
+
+	return true;
+}
+
+bool UHorrorGolemBehaviorComponent::MoveDirectlyTowardLocation(const FVector& Destination, float Speed, float DeltaTime)
+{
+	if (!OwnerThreat.IsValid())
+	{
+		return false;
+	}
+
+	ACharacter* ThreatCharacter = Cast<ACharacter>(OwnerThreat.Get());
+	if (!ThreatCharacter || !ThreatCharacter->GetCharacterMovement())
+	{
+		return false;
+	}
+
+	const FVector CurrentLocation = ThreatCharacter->GetActorLocation();
+	FVector Direction = Destination - CurrentLocation;
+	Direction.Z = 0.0f;
+	if (Direction.IsNearlyZero())
+	{
+		return false;
+	}
+
+	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
+	const FVector MoveDirection = Direction.GetSafeNormal();
+	ThreatCharacter->AddMovementInput(MoveDirection, 1.0f, true);
+
+	const float StepDistance = FMath::Min(Direction.Size(), Speed * FMath::Max(0.0f, DeltaTime));
+	if (StepDistance <= KINDA_SMALL_NUMBER)
+	{
+		return true;
+	}
+
+	FHitResult SweepHit;
+	const FVector NextLocation = CurrentLocation + MoveDirection * StepDistance;
+	ThreatCharacter->SetActorLocation(NextLocation, true, &SweepHit);
+	if (SweepHit.bStartPenetrating && FVector::DistSquared2D(ThreatCharacter->GetActorLocation(), CurrentLocation) <= KINDA_SMALL_NUMBER)
+	{
+		ThreatCharacter->SetActorLocation(NextLocation, false);
+	}
+	return true;
 }
 
 void UHorrorGolemBehaviorComponent::MoveTowardsTarget(float Speed, float DeltaTime)
@@ -438,7 +542,7 @@ void UHorrorGolemBehaviorComponent::MoveTowardsTarget(float Speed, float DeltaTi
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	const FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
 
-	MoveToNavigableLocation(TargetLocation, Speed, HorrorGolemBehavior::NavigationAcceptanceRadiusCm);
+	MoveToNavigableLocation(TargetLocation, Speed, HorrorGolemBehavior::NavigationAcceptanceRadiusCm, DeltaTime);
 
 	// Face target
 	const FRotator TargetRotation = Direction.Rotation();
@@ -464,28 +568,46 @@ void UHorrorGolemBehaviorComponent::PatrolAroundTarget(float DeltaTime)
 
 	// Circle around target at stalking distance
 	const float DesiredDistance = (CloseStalking_MinDistance + CloseStalking_MaxDistance) * 0.5f;
-	const FVector ToTarget = TargetLocation - CurrentLocation;
+	FVector ToTarget = TargetLocation - CurrentLocation;
+	ToTarget.Z = 0.0f;
 	const float CurrentDistance = ToTarget.Size();
+	const FVector DirectionToTarget = ToTarget.GetSafeNormal();
 
 	// Tangent direction for circling
-	const FVector CircleDirection = FVector::CrossProduct(ToTarget.GetSafeNormal(), FVector::UpVector);
+	FVector CircleDirection = FVector::CrossProduct(DirectionToTarget, FVector::UpVector);
+	if (CircleDirection.SizeSquared() <= HorrorGolemBehavior::MinimumPatrolInputSizeSquared)
+	{
+		CircleDirection = OwnerThreat->GetActorRightVector();
+		CircleDirection.Z = 0.0f;
+	}
 
 	// Blend between moving closer/away and circling
 	FVector MoveDirection = CircleDirection;
-	if (CurrentDistance > DesiredDistance + HorrorGolemBehavior::PatrolDistanceToleranceCm)
+	if (!DirectionToTarget.IsNearlyZero() && CurrentDistance > DesiredDistance + HorrorGolemBehavior::PatrolDistanceToleranceCm)
 	{
-		MoveDirection += ToTarget.GetSafeNormal() * HorrorGolemBehavior::DirectionalBlendWeight;
+		MoveDirection += DirectionToTarget * HorrorGolemBehavior::DirectionalBlendWeight;
 	}
-	else if (CurrentDistance < DesiredDistance - HorrorGolemBehavior::PatrolDistanceToleranceCm)
+	else if (!DirectionToTarget.IsNearlyZero() && CurrentDistance < DesiredDistance - HorrorGolemBehavior::PatrolDistanceToleranceCm)
 	{
-		MoveDirection -= ToTarget.GetSafeNormal() * HorrorGolemBehavior::DirectionalBlendWeight;
+		MoveDirection -= DirectionToTarget * HorrorGolemBehavior::DirectionalBlendWeight;
 	}
 
-	MoveDirection.Normalize();
+	if (!MoveDirection.Normalize())
+	{
+		MoveDirection = FVector::RightVector;
+	}
 
 	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = CloseStalking_PatrolSpeed;
 	const FVector PatrolDestination = CurrentLocation + MoveDirection * HorrorGolemBehavior::PatrolNavigationStepCm;
-	MoveToNavigableLocation(PatrolDestination, CloseStalking_PatrolSpeed, HorrorGolemBehavior::NavigationAcceptanceRadiusCm);
+	const bool bMoveRequested = MoveToNavigableLocation(
+		PatrolDestination,
+		CloseStalking_PatrolSpeed,
+		HorrorGolemBehavior::NavigationAcceptanceRadiusCm,
+		DeltaTime);
+	if (!bMoveRequested || FVector::DistSquared2D(OwnerThreat->GetActorLocation(), CurrentLocation) <= KINDA_SMALL_NUMBER)
+	{
+		MoveDirectlyTowardLocation(PatrolDestination, CloseStalking_PatrolSpeed, DeltaTime);
+	}
 
 	// Face movement direction
 	const FRotator TargetRotation = MoveDirection.Rotation();
@@ -519,6 +641,26 @@ void UHorrorGolemBehaviorComponent::CheckEnvironmentDestruction()
 	const FVector DestructionLocation =
 		OwnerThreat->GetActorLocation() + OwnerThreat->GetActorForwardVector() * HorrorGolemBehavior::EnvironmentDestructionForwardOffsetCm;
 	BP_OnEnvironmentDestruction(DestructionLocation);
+}
+
+void UHorrorGolemBehaviorComponent::TriggerFinalImpactFailure()
+{
+	if (bFinalImpactFailureRequested)
+	{
+		return;
+	}
+
+	bFinalImpactFailureRequested = true;
+
+	if (UWorld* World = GetWorld())
+	{
+		if (AHorrorGameModeBase* GameMode = World->GetAuthGameMode<AHorrorGameModeBase>())
+		{
+			GameMode->RequestPlayerDeath(HorrorGolemBehavior::FinalImpactDeathCause);
+		}
+	}
+
+	DeactivateBehavior();
 }
 
 void UHorrorGolemBehaviorComponent::DrawDebugState()

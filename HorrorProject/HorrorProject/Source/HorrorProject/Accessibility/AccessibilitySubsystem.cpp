@@ -185,7 +185,7 @@ void UAccessibilitySubsystem::TriggerFlashWarning(const FText& WarningMessage)
 {
     if (ShouldShowFlashWarning())
     {
-        DisplaySubtitle(WarningMessage, 5.0f, TEXT("Warning"));
+        DisplaySubtitle(WarningMessage, 5.0f, TEXT("警告"));
         AnnounceToScreenReader(WarningMessage, true);
     }
 }

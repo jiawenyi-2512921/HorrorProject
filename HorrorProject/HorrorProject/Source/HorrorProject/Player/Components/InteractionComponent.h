@@ -21,7 +21,7 @@ class HORRORPROJECT_API UInteractionComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	static constexpr float DefaultTraceDistance = 250.0f;
+	static constexpr float DefaultTraceDistance = 450.0f;
 	static constexpr float DefaultNarrowTargetTraceRadius = 12.0f;
 
 	UInteractionComponent();
@@ -34,6 +34,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Interaction")
 	bool TryInteract();
 
+	UFUNCTION(BlueprintCallable, Category="Interaction")
+	bool GetFocusedInteractionPrompt(FText& OutPrompt) const;
+
+	bool FindFocusedInteractable(FHitResult& OutHit, UObject*& OutTargetObject) const;
 	bool TryInteractWithHit(const FHitResult& Hit) const;
 	void SetLegacyDoorTimelineFallbackEnabledForTests(bool bEnabled) { bEnableLegacyDoorTimelineFallback = bEnabled; }
 	UObject* ResolveInterfaceTargetForTests(const FHitResult& Hit) const { return ResolveInterfaceTarget(Hit); }
@@ -73,6 +77,9 @@ private:
 	bool FindInteractionHitBySweep(const FVector& Start, const FVector& End, const FCollisionQueryParams& QueryParams, FHitResult& OutHit) const;
 	bool IsInteractionCandidate(const FHitResult& Hit) const;
 	UObject* ResolveInterfaceTarget(const FHitResult& Hit) const;
+	bool CanInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const;
+	FText BuildInteractionPrompt(UObject* TargetObject, const FHitResult& Hit) const;
+	void ShowBlockedInteractionFeedback(UObject* TargetObject, const FHitResult& Hit) const;
 	bool TryInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const;
 	bool HasLegacyInteractionFunction(AActor* TargetActor) const;
 	bool TryInvokeLegacyInteractionFunction(AActor* TargetActor) const;

@@ -36,13 +36,13 @@ public:
 	bool IsOpen() const { return bIsOpen; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="Pause Menu Opened"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="暂停菜单已打开"))
 	void BP_PauseMenuOpened();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="Pause Menu Closed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="暂停菜单已关闭"))
 	void BP_PauseMenuClosed();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="Settings Opened"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Pause|UI", meta=(DisplayName="设置已打开"))
 	void BP_SettingsOpened();
 
 	UPROPERTY(BlueprintReadOnly, Category="Pause|UI")

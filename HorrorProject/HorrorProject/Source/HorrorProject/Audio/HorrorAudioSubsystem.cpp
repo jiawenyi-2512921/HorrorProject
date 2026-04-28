@@ -2,19 +2,69 @@
 
 #include "Audio/HorrorAudioSubsystem.h"
 #include "Game/HorrorEventBusSubsystem.h"
+#include "Game/HorrorFoundFootageContract.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 #include "Sound/SoundAttenuation.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 
+namespace
+{
+struct FHorrorDay1AudioStageSettings
+{
+	EHorrorAudioCategory Category;
+	float VolumeMultiplier;
+};
+
+FHorrorDay1AudioStageSettings GetDay1AudioStageSettings(EHorrorDay1AudioStage Stage)
+{
+	switch (Stage)
+	{
+	case EHorrorDay1AudioStage::Objective:
+		return { EHorrorAudioCategory::Interaction, 0.75f };
+	case EHorrorDay1AudioStage::Anomaly:
+		return { EHorrorAudioCategory::Anomaly, 0.85f };
+	case EHorrorDay1AudioStage::Chase:
+		return { EHorrorAudioCategory::Escape, 1.0f };
+	case EHorrorDay1AudioStage::Resolved:
+		return { EHorrorAudioCategory::Ambient, 0.65f };
+	case EHorrorDay1AudioStage::Escape:
+		return { EHorrorAudioCategory::Escape, 0.9f };
+	case EHorrorDay1AudioStage::Complete:
+		return { EHorrorAudioCategory::Music, 0.7f };
+	case EHorrorDay1AudioStage::Failure:
+		return { EHorrorAudioCategory::Anomaly, 0.8f };
+	case EHorrorDay1AudioStage::Exploration:
+	default:
+		return { EHorrorAudioCategory::Ambient, 0.6f };
+	}
+}
+
+bool NameContainsAny(const FString& NormalizedName, std::initializer_list<const TCHAR*> Tokens)
+{
+	for (const TCHAR* Token : Tokens)
+	{
+		if (NormalizedName.Contains(Token))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+}
+
 void UHorrorAudioSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+	Collection.InitializeDependency<UHorrorEventBusSubsystem>();
 	Super::Initialize(Collection);
 
 	InitializeDefaultVolumes();
+	RegisterDefaultDay1AudioMappings();
 
 	UWorld* World = GetWorld();
 	if (World)
@@ -23,11 +73,23 @@ void UHorrorAudioSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			EventBus->GetOnEventPublishedNative().AddUObject(this, &UHorrorAudioSubsystem::OnEventPublished);
 		}
+
+		World->GetTimerManager().SetTimer(
+			ActiveSoundUpdateTimerHandle,
+			this,
+			&UHorrorAudioSubsystem::TickActiveAudioSystems,
+			ActiveSoundUpdateInterval,
+			true);
 	}
 }
 
 void UHorrorAudioSubsystem::Deinitialize()
 {
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(ActiveSoundUpdateTimerHandle);
+	}
+
 	StopAllAmbient(0.0f);
 
 	for (USoundBase* Sound : PreloadedSounds)
@@ -72,6 +134,178 @@ void UHorrorAudioSubsystem::InitializeDefaultVolumes()
 	CategoryVolumes.Add(EHorrorAudioCategory::Interaction, DefaultInteractionVolume);
 	CategoryVolumes.Add(EHorrorAudioCategory::Escape, DefaultEscapeVolume);
 	CategoryVolumes.Add(EHorrorAudioCategory::Music, DefaultMusicVolume);
+}
+
+void UHorrorAudioSubsystem::RegisterDefaultDay1AudioMappings()
+{
+	struct FDefaultDay1AudioMapping
+	{
+		FGameplayTag EventTag;
+		EHorrorAudioCategory Category;
+		const TCHAR* SoundPath;
+		float VolumeMultiplier;
+		bool bUse3DAttenuation;
+		int32 Priority;
+	};
+
+	const FDefaultDay1AudioMapping Defaults[] = {
+		{ HorrorFoundFootageTags::BodycamAcquiredEvent(), EHorrorAudioCategory::Interaction, TEXT("/Game/Bodycam_VHS_Effect/Sounds/S_CamZoomOut.S_CamZoomOut"), 0.85f, false, 75 },
+		{ HorrorFoundFootageTags::FirstNoteCollectedEvent(), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Clues/CUE/CUE_SOH_Clue_01.CUE_SOH_Clue_01"), 0.75f, false, 60 },
+		{ HorrorFoundFootageTags::FirstAnomalyRecordedEvent(), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/BuildUps/CUE/CUE_SOH_BU_01.CUE_SOH_BU_01"), 0.8f, false, 80 },
+		{ HorrorFoundFootageTags::ArchiveReviewedEvent(), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Clues/CUE/CUE_SOH_Clue_02.CUE_SOH_Clue_02"), 0.75f, false, 60 },
+		{ HorrorFoundFootageTags::ExitUnlockedEvent(), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_01.CUE_SOH_IP_01"), 0.9f, false, 90 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Interaction.Door.Opened")), false), EHorrorAudioCategory::Site, TEXT("/Game/SoundsOfHorror/Puzzles/CUE/CUE_SOH_PZ_01.CUE_SOH_PZ_01"), 0.7f, true, 65 },
+		{ HorrorDay1Tags::Day1CompletedEvent(), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/XMelodies/CUE/CUE_SOH_MD_01.CUE_SOH_MD_01"), 0.85f, false, 95 },
+		{ HorrorDay1Tags::PlayerFailureEvent(), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_02.CUE_SOH_IP_02"), 0.8f, false, 90 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Primed")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_01.CUE_SOH_TS_01"), 0.55f, false, 70 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Revealed")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Jumpscares/CUE/CUE_SOH_JS_01.CUE_SOH_JS_01"), 0.95f, false, 100 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Golem.FullChase")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_02.CUE_SOH_TS_02"), 0.9f, false, 95 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Resolved")), false), EHorrorAudioCategory::Ambient, TEXT("/Game/SoundsOfHorror/Atmosphere/CUE/CUE_SOH_ATM_01.CUE_SOH_ATM_01"), 0.45f, false, 45 }
+	};
+
+	for (const FDefaultDay1AudioMapping& DefaultMapping : Defaults)
+	{
+		if (!DefaultMapping.EventTag.IsValid() || EventMappings.Contains(DefaultMapping.EventTag))
+		{
+			continue;
+		}
+
+		USoundBase* Sound = LoadObject<USoundBase>(nullptr, DefaultMapping.SoundPath);
+		if (!Sound)
+		{
+			continue;
+		}
+
+		FHorrorAudioEventMapping Mapping;
+		Mapping.EventTag = DefaultMapping.EventTag;
+		Mapping.Category = DefaultMapping.Category;
+		Mapping.Sound = Sound;
+		Mapping.VolumeMultiplier = DefaultMapping.VolumeMultiplier;
+		Mapping.bUse3DAttenuation = DefaultMapping.bUse3DAttenuation;
+		Mapping.Priority = DefaultMapping.Priority;
+
+		RegisterEventMapping(Mapping);
+		PreloadSound(Sound);
+	}
+}
+
+bool UHorrorAudioSubsystem::HandleDay1Event(FGameplayTag EventTag, FName SourceId)
+{
+	EHorrorDay1AudioStage ResolvedStage = CurrentDay1AudioStage;
+	if (!TryResolveDay1StageFromEvent(EventTag, EventTag.IsValid() ? FName(*EventTag.ToString()) : NAME_None, ResolvedStage))
+	{
+		return false;
+	}
+
+	SetDay1AudioStage(ResolvedStage, EventTag, SourceId);
+	return true;
+}
+
+bool UHorrorAudioSubsystem::HandleDay1EventName(FName EventName, FName SourceId)
+{
+	EHorrorDay1AudioStage ResolvedStage = CurrentDay1AudioStage;
+	if (!TryResolveDay1StageFromEvent(FGameplayTag(), EventName, ResolvedStage))
+	{
+		return false;
+	}
+
+	SetDay1AudioStage(ResolvedStage, FGameplayTag(), SourceId);
+	return true;
+}
+
+void UHorrorAudioSubsystem::SetDay1AudioStage(EHorrorDay1AudioStage NewStage, FGameplayTag EventTag, FName SourceId)
+{
+	CurrentDay1AudioStage = NewStage;
+	LastDay1AudioEventTag = EventTag;
+	LastDay1AudioSourceId = SourceId;
+}
+
+float UHorrorAudioSubsystem::GetDay1AudioStageVolumeMultiplier() const
+{
+	return GetDay1AudioStageSettings(CurrentDay1AudioStage).VolumeMultiplier;
+}
+
+EHorrorAudioCategory UHorrorAudioSubsystem::GetDay1AudioStageCategory() const
+{
+	return GetDay1AudioStageSettings(CurrentDay1AudioStage).Category;
+}
+
+bool UHorrorAudioSubsystem::TryResolveDay1StageFromEvent(FGameplayTag EventTag, FName EventName, EHorrorDay1AudioStage& OutStage) const
+{
+	if (EventTag == HorrorFoundFootageTags::FirstNoteCollectedEvent()
+		|| EventTag == HorrorFoundFootageTags::ArchiveReviewedEvent()
+		|| EventTag == HorrorFoundFootageTags::BodycamAcquiredEvent())
+	{
+		OutStage = EHorrorDay1AudioStage::Objective;
+		return true;
+	}
+
+	if (EventTag == HorrorFoundFootageTags::FirstAnomalyRecordedEvent())
+	{
+		OutStage = EHorrorDay1AudioStage::Anomaly;
+		return true;
+	}
+
+	if (EventTag == HorrorFoundFootageTags::ExitUnlockedEvent())
+	{
+		OutStage = EHorrorDay1AudioStage::Escape;
+		return true;
+	}
+
+	if (EventTag == HorrorDay1Tags::Day1CompletedEvent())
+	{
+		OutStage = EHorrorDay1AudioStage::Complete;
+		return true;
+	}
+
+	FString NormalizedName = EventName.IsNone()
+		? (EventTag.IsValid() ? EventTag.ToString() : FString())
+		: EventName.ToString();
+	NormalizedName.ToLowerInline();
+
+	if (NameContainsAny(NormalizedName, { TEXT("failure"), TEXT("failed"), TEXT("fail") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Failure;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("complete"), TEXT("completed") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Complete;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("encounter.revealed"), TEXT("encounter_revealed"), TEXT("chase") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Chase;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("encounter.resolved"), TEXT("encounter_resolved"), TEXT("resolved") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Resolved;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("exit.unlocked"), TEXT("escape") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Escape;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("anomaly"), TEXT("encounter.primed"), TEXT("encounter_primed") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Anomaly;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("note"), TEXT("objective"), TEXT("archive"), TEXT("bodycam") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Objective;
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -160,16 +394,17 @@ bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* Sourc
 	}
 
 	UAudioComponent* AudioComp = nullptr;
+	const float CategoryAdjustedVolume = Mapping->VolumeMultiplier * GetCategoryVolume(Mapping->Category);
 
 	if (Mapping->bAttachToSource && SourceObject)
 	{
 		if (AActor* SourceActor = Cast<AActor>(SourceObject))
 		{
-			AudioComp = PlaySoundAttached(Mapping->Sound, SourceActor->GetRootComponent(), NAME_None, Mapping->VolumeMultiplier);
+			AudioComp = PlaySoundAttached(Mapping->Sound, SourceActor->GetRootComponent(), NAME_None, CategoryAdjustedVolume);
 		}
 		else if (USceneComponent* SceneComp = Cast<USceneComponent>(SourceObject))
 		{
-			AudioComp = PlaySoundAttached(Mapping->Sound, SceneComp, NAME_None, Mapping->VolumeMultiplier);
+			AudioComp = PlaySoundAttached(Mapping->Sound, SceneComp, NAME_None, CategoryAdjustedVolume);
 		}
 	}
 	else if (Mapping->bUse3DAttenuation && SourceObject)
@@ -184,11 +419,11 @@ bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* Sourc
 			Location = SceneComp->GetComponentLocation();
 		}
 
-		AudioComp = PlaySoundAtLocation(Mapping->Sound, Location, Mapping->VolumeMultiplier);
+		AudioComp = PlaySoundAtLocation(Mapping->Sound, Location, CategoryAdjustedVolume);
 	}
 	else
 	{
-		AudioComp = PlaySound2D(Mapping->Sound, Mapping->VolumeMultiplier);
+		AudioComp = PlaySound2D(Mapping->Sound, CategoryAdjustedVolume);
 	}
 
 	return AudioComp != nullptr;
@@ -316,6 +551,7 @@ void UHorrorAudioSubsystem::UnregisterZoneConfig(FName ZoneId)
 
 void UHorrorAudioSubsystem::OnEventPublished(const FHorrorEventMessage& Message)
 {
+	HandleDay1Event(Message.EventTag, Message.SourceId);
 	PlayEventSound(Message.EventTag, Message.SourceObject);
 }
 
@@ -400,12 +636,13 @@ void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 	LastOcclusionUpdateTime = 0.0f;
 
 	APlayerController* PC = World->GetFirstPlayerController();
-	if (!PC || !PC->GetPawn())
+	APawn* ListenerPawn = PC ? PC->GetPawn() : nullptr;
+	if (!ListenerPawn)
 	{
 		return;
 	}
 
-	FVector ListenerLocation = PC->GetPawn()->GetActorLocation();
+	FVector ListenerLocation = ListenerPawn->GetActorLocation();
 
 	for (UAudioComponent* Component : ActiveComponents)
 	{
@@ -417,7 +654,7 @@ void UHorrorAudioSubsystem::UpdateOcclusion(float DeltaTime)
 		FVector SoundLocation = Component->GetComponentLocation();
 		FHitResult HitResult;
 		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(PC->GetPawn());
+		QueryParams.AddIgnoredActor(ListenerPawn);
 
 		bool bHit = World->LineTraceSingleByChannel(
 			HitResult,
@@ -464,6 +701,25 @@ void UHorrorAudioSubsystem::UnloadSound(USoundBase* Sound)
 		PreloadedSounds.Remove(Sound);
 	}
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+bool UHorrorAudioSubsystem::HasEventMappingForTests(FGameplayTag EventTag) const
+{
+	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(EventTag);
+	return Mapping && Mapping->Sound;
+}
+
+EHorrorAudioCategory UHorrorAudioSubsystem::GetEventMappingCategoryForTests(FGameplayTag EventTag) const
+{
+	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(EventTag);
+	return Mapping ? Mapping->Category : EHorrorAudioCategory::Site;
+}
+
+int32 UHorrorAudioSubsystem::GetEventMappingCountForTests() const
+{
+	return EventMappings.Num();
+}
+#endif
 
 void UHorrorAudioSubsystem::ProcessAudioQueue()
 {
@@ -578,6 +834,11 @@ void UHorrorAudioSubsystem::ReturnComponentToPool(UAudioComponent* Component)
 bool UHorrorAudioSubsystem::CanPlaySound() const
 {
 	return ActiveComponents.Num() < MaxConcurrentSounds;
+}
+
+void UHorrorAudioSubsystem::TickActiveAudioSystems()
+{
+	UpdateActiveSounds(ActiveSoundUpdateInterval);
 }
 
 void UHorrorAudioSubsystem::UpdateActiveSounds(float DeltaTime)

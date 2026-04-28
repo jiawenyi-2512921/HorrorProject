@@ -1,16 +1,31 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "LocalizationSubsystem.h"
-#include "Internationalization/Internationalization.h"
+#include "Dom/JsonObject.h"
 #include "Internationalization/Culture.h"
-#include "Kismet/GameplayStatics.h"
+#include "Internationalization/Internationalization.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+
+namespace
+{
+	void AddFallbackMainMenuTexts(TMap<FString, FText>& LocalizedTexts)
+	{
+		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("开始游戏")));
+		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("选项")));
+		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("退出")));
+	}
+}
 
 void ULocalizationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	CurrentLanguage = ELanguage::English;
+	CurrentLanguage = ELanguage::Chinese;
 	LoadLanguageData(CurrentLanguage);
+	ApplyLanguageSettings();
 }
 
 void ULocalizationSubsystem::Deinitialize()
@@ -63,7 +78,6 @@ FText ULocalizationSubsystem::GetLocalizedText(const FString& Key) const
 
 bool ULocalizationSubsystem::IsRTLLanguage() const
 {
-	// None of our supported languages are RTL
 	return false;
 }
 
@@ -71,45 +85,44 @@ void ULocalizationSubsystem::LoadLanguageData(ELanguage Language)
 {
 	LocalizedTexts.Empty();
 
-	FString LanguageCode = GetLanguageCode(Language);
-	FString LocalizationPath = FPaths::ProjectContentDir() / TEXT("Localization") / LanguageCode;
+	const FString LanguageCode = GetLanguageCode(Language);
+	const FString LocalizationPath = FPaths::ProjectContentDir() / TEXT("Localization") / LanguageCode / TEXT("Game.json");
 
-	// Load localization data from files
-	// This is a simplified version - in production, load from data tables or JSON
-
-	// Example entries
-	switch (Language)
+	FString JsonText;
+	if (!FFileHelper::LoadFileToString(JsonText, *LocalizationPath))
 	{
-	case ELanguage::English:
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("Start Game")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("Options")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("Quit")));
-		break;
-	case ELanguage::Chinese:
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("开始游戏")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("选项")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("退出")));
-		break;
-	case ELanguage::Japanese:
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("ゲーム開始")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("オプション")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("終了")));
-		break;
-	case ELanguage::Korean:
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("게임 시작")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("옵션")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("종료")));
-		break;
-	case ELanguage::Spanish:
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("Iniciar Juego")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Options"), FText::FromString(TEXT("Opciones")));
-		LocalizedTexts.Add(TEXT("UI.MainMenu.Quit"), FText::FromString(TEXT("Salir")));
-		break;
+		UE_LOG(LogTemp, Warning, TEXT("Localization file missing for language '%s': %s"), *LanguageCode, *LocalizationPath);
+		AddFallbackMainMenuTexts(LocalizedTexts);
+		return;
+	}
+
+	TSharedPtr<FJsonObject> JsonObject;
+	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(JsonText);
+	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Localization file could not be parsed for language '%s': %s"), *LanguageCode, *LocalizationPath);
+		AddFallbackMainMenuTexts(LocalizedTexts);
+		return;
+	}
+
+	for (const TPair<FString, TSharedPtr<FJsonValue>>& Entry : JsonObject->Values)
+	{
+		FString LocalizedString;
+		if (!Entry.Key.IsEmpty() && Entry.Value.IsValid() && Entry.Value->TryGetString(LocalizedString))
+		{
+			LocalizedTexts.Add(Entry.Key, FText::FromString(LocalizedString));
+		}
+	}
+
+	if (LocalizedTexts.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Localization file had no string entries for language '%s': %s"), *LanguageCode, *LocalizationPath);
+		AddFallbackMainMenuTexts(LocalizedTexts);
 	}
 }
 
 void ULocalizationSubsystem::ApplyLanguageSettings()
 {
-	FString LanguageCode = GetLanguageCode(CurrentLanguage);
+	const FString LanguageCode = GetLanguageCode(CurrentLanguage);
 	FInternationalization::Get().SetCurrentCulture(LanguageCode);
 }

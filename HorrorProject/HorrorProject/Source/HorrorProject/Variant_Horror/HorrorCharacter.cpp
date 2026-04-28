@@ -161,3 +161,8 @@ void AHorrorCharacter::SprintFixedTick()
 	OnSprintMeterUpdated.Broadcast(SprintPercent);
 
 }
+
+float AHorrorCharacter::GetSprintPercent() const
+{
+	return SprintTime > 0.0f ? FMath::Clamp(SprintMeter / SprintTime, 0.0f, 1.0f) : 0.0f;
+}

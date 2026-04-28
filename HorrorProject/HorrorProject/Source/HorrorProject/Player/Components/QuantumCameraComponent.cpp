@@ -151,6 +151,10 @@ void UQuantumCameraComponent::BeginPlay()
 
 UCameraBatteryComponent* UQuantumCameraComponent::GetBatteryComponent() const
 {
+	if (!CachedBatteryComponent)
+	{
+		const_cast<UQuantumCameraComponent*>(this)->FindOrCreateBatteryComponent();
+	}
 	return CachedBatteryComponent;
 }
 
@@ -163,6 +167,22 @@ void UQuantumCameraComponent::FindOrCreateBatteryComponent()
 	}
 
 	CachedBatteryComponent = Owner->FindComponentByClass<UCameraBatteryComponent>();
+	if (CachedBatteryComponent)
+	{
+		return;
+	}
+
+	CachedBatteryComponent = NewObject<UCameraBatteryComponent>(
+		Owner,
+		UCameraBatteryComponent::StaticClass(),
+		MakeUniqueObjectName(Owner, UCameraBatteryComponent::StaticClass(), TEXT("CameraBattery")));
+	if (!CachedBatteryComponent)
+	{
+		return;
+	}
+
+	Owner->AddInstanceComponent(CachedBatteryComponent);
+	CachedBatteryComponent->RegisterComponent();
 }
 
 void UQuantumCameraComponent::OnBatteryDepleted()

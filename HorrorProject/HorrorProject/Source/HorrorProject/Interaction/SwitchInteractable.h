@@ -12,9 +12,9 @@ class UBoxComponent;
 UENUM(BlueprintType)
 enum class ESwitchType : uint8
 {
-	Toggle UMETA(DisplayName="Toggle Switch"),
-	Momentary UMETA(DisplayName="Momentary Button"),
-	OneTime UMETA(DisplayName="One-Time Trigger")
+	Toggle UMETA(DisplayName="切换开关"),
+	Momentary UMETA(DisplayName="点动按钮"),
+	OneTime UMETA(DisplayName="一次性触发器")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSwitchActivatedSignature, ABaseInteractable*, Switch, bool, bIsOn);

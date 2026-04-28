@@ -14,9 +14,9 @@ class UCameraComponent;
 UENUM(BlueprintType)
 enum class EExamineState : uint8
 {
-	Idle UMETA(DisplayName="Idle"),
-	Examining UMETA(DisplayName="Examining"),
-	Returning UMETA(DisplayName="Returning")
+	Idle UMETA(DisplayName="空闲"),
+	Examining UMETA(DisplayName="查看中"),
+	Returning UMETA(DisplayName="归位中")
 };
 
 /**

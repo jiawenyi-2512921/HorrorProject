@@ -29,12 +29,12 @@ namespace HorrorGolemDefaults
 UENUM(BlueprintType)
 enum class EGolemEncounterState : uint8
 {
-	Dormant UMETA(DisplayName="Dormant"),
-	DistantSighting UMETA(DisplayName="Distant Sighting (30m+)"),
-	CloseStalking UMETA(DisplayName="Close Stalking (10-15m)"),
-	ChaseTriggered UMETA(DisplayName="Chase Triggered (20m, 70% speed)"),
-	FullChase UMETA(DisplayName="Full Chase (10-25m, 100% speed)"),
-	FinalImpact UMETA(DisplayName="Final Impact (5m, attack)")
+	Dormant UMETA(DisplayName="休眠"),
+	DistantSighting UMETA(DisplayName="远距离目击（30 米以上）"),
+	CloseStalking UMETA(DisplayName="近距离跟踪（10-15 米）"),
+	ChaseTriggered UMETA(DisplayName="追逐触发（20 米，70% 速度）"),
+	FullChase UMETA(DisplayName="全速追逐（10-25 米，100% 速度）"),
+	FinalImpact UMETA(DisplayName="最终冲击（5 米，攻击）")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGolemStateChangedSignature, EGolemEncounterState, OldState, EGolemEncounterState, NewState);
@@ -169,6 +169,7 @@ private:
 
 	EGolemEncounterState CurrentState = EGolemEncounterState::Dormant;
 	bool bBehaviorActive = false;
+	bool bFinalImpactFailureRequested = false;
 
 	float StateTimer = 0.0f;
 	float LostTargetTimer = 0.0f;
@@ -191,11 +192,14 @@ private:
 	void UpdateFinalImpact(float DeltaTime);
 
 	bool HandleLostTarget(float DistanceToTarget, float DeltaTime);
-	bool MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius);
+	bool HandleInvalidTarget();
+	bool MoveToNavigableLocation(const FVector& Destination, float Speed, float AcceptanceRadius, float DeltaTime);
+	bool MoveDirectlyTowardLocation(const FVector& Destination, float Speed, float DeltaTime);
 	void MoveTowardsTarget(float Speed, float DeltaTime);
 	void PatrolAroundTarget(float DeltaTime);
 	void StopNavigationMove();
 	void CheckEnvironmentDestruction();
+	void TriggerFinalImpactFailure();
 
 	void DrawDebugState();
 	FColor GetDebugStateColor() const;

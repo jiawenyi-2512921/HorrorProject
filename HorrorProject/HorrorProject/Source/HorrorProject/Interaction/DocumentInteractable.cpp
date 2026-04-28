@@ -34,7 +34,7 @@ ADocumentInteractable::ADocumentInteractable()
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Default settings
-	InteractionPrompt = FText::FromString("Read Document");
+	InteractionPrompt = FText::FromString(TEXT("阅读文档"));
 	bCanInteractMultipleTimes = true;
 }
 
@@ -47,7 +47,7 @@ void ADocumentInteractable::BeginPlay()
 	{
 		EvidenceMetadata.EvidenceId = InteractableId;
 		EvidenceMetadata.DisplayName = DocumentTitle;
-		EvidenceMetadata.Description = FText::FromString("A document containing important information.");
+		EvidenceMetadata.Description = FText::FromString(TEXT("这是一份包含重要信息的文档。"));
 	}
 }
 

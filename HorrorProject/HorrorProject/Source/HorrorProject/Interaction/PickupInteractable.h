@@ -14,12 +14,12 @@ class UInventoryComponent;
 UENUM(BlueprintType)
 enum class EPickupType : uint8
 {
-	Evidence UMETA(DisplayName="Evidence"),
-	Key UMETA(DisplayName="Key"),
-	Tool UMETA(DisplayName="Tool"),
-	Document UMETA(DisplayName="Document"),
-	Battery UMETA(DisplayName="Battery"),
-	Generic UMETA(DisplayName="Generic Item")
+	Evidence UMETA(DisplayName="证据"),
+	Key UMETA(DisplayName="钥匙"),
+	Tool UMETA(DisplayName="工具"),
+	Document UMETA(DisplayName="文档"),
+	Battery UMETA(DisplayName="电池"),
+	Generic UMETA(DisplayName="普通物品")
 };
 
 /**

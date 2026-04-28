@@ -15,10 +15,10 @@ class UAudioComponent;
 UENUM(BlueprintType)
 enum class ERecorderState : uint8
 {
-	Idle UMETA(DisplayName="Idle"),
-	Playing UMETA(DisplayName="Playing"),
-	Paused UMETA(DisplayName="Paused"),
-	Stopped UMETA(DisplayName="Stopped")
+	Idle UMETA(DisplayName="空闲"),
+	Playing UMETA(DisplayName="播放中"),
+	Paused UMETA(DisplayName="已暂停"),
+	Stopped UMETA(DisplayName="已停止")
 };
 
 /**

@@ -6,7 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "AccessibilitySubsystem.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="ColorBlindModeEnum"))
 enum class EColorBlindMode : uint8
 {
     None UMETA(DisplayName = "None"),

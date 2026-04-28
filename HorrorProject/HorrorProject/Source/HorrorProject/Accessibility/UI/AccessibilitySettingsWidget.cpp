@@ -121,7 +121,7 @@ void UAccessibilitySettingsWidget::ApplySettings()
     {
         AccessibilitySubsystem->ApplyAccessibilitySettings(CurrentSettings);
         AccessibilitySubsystem->SaveAccessibilitySettings();
-        AnnounceChange(FText::FromString(TEXT("Settings applied successfully")));
+        AnnounceChange(FText::FromString(TEXT("设置已应用。")));
     }
 }
 
@@ -129,13 +129,13 @@ void UAccessibilitySettingsWidget::ResetToDefaults()
 {
     CurrentSettings = FAccessibilitySettings();
     LoadCurrentSettings();
-    AnnounceChange(FText::FromString(TEXT("Settings reset to defaults")));
+    AnnounceChange(FText::FromString(TEXT("设置已恢复默认值。")));
 }
 
 void UAccessibilitySettingsWidget::OnSubtitlesEnabledChanged(bool bIsChecked)
 {
     CurrentSettings.bSubtitlesEnabled = bIsChecked;
-    AnnounceChange(FText::FromString(bIsChecked ? TEXT("Subtitles enabled") : TEXT("Subtitles disabled")));
+    AnnounceChange(FText::FromString(bIsChecked ? TEXT("字幕已开启。") : TEXT("字幕已关闭。")));
 }
 
 void UAccessibilitySettingsWidget::OnSubtitleSizeChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
@@ -144,7 +144,7 @@ void UAccessibilitySettingsWidget::OnSubtitleSizeChanged(FString SelectedItem, E
     {
         int32 Index = SubtitleSizeComboBox->GetSelectedIndex();
         CurrentSettings.SubtitleSize = static_cast<ESubtitleSize>(Index);
-        AnnounceChange(FText::Format(FText::FromString(TEXT("Subtitle size changed to {0}")), FText::FromString(SelectedItem)));
+        AnnounceChange(FText::Format(FText::FromString(TEXT("字幕大小已改为 {0}。")), FText::FromString(SelectedItem)));
     }
 }
 
@@ -154,42 +154,42 @@ void UAccessibilitySettingsWidget::OnColorBlindModeChanged(FString SelectedItem,
     {
         int32 Index = ColorBlindModeComboBox->GetSelectedIndex();
         CurrentSettings.ColorBlindMode = static_cast<EColorBlindMode>(Index);
-        AnnounceChange(FText::Format(FText::FromString(TEXT("Color blind mode changed to {0}")), FText::FromString(SelectedItem)));
+        AnnounceChange(FText::Format(FText::FromString(TEXT("色觉辅助模式已改为 {0}。")), FText::FromString(SelectedItem)));
     }
 }
 
 void UAccessibilitySettingsWidget::OnMotionBlurChanged(bool bIsChecked)
 {
     CurrentSettings.bMotionBlurEnabled = bIsChecked;
-    AnnounceChange(FText::FromString(bIsChecked ? TEXT("Motion blur enabled") : TEXT("Motion blur disabled")));
+    AnnounceChange(FText::FromString(bIsChecked ? TEXT("动态模糊已开启。") : TEXT("动态模糊已关闭。")));
 }
 
 void UAccessibilitySettingsWidget::OnCameraShakeChanged(float Value)
 {
     CurrentSettings.CameraShakeIntensity = Value;
     UpdateValueDisplays();
-    AnnounceChange(FText::Format(FText::FromString(TEXT("Camera shake intensity set to {0}%")),
+    AnnounceChange(FText::Format(FText::FromString(TEXT("镜头晃动强度已设为 {0}%。")),
         FText::AsNumber(FMath::RoundToInt(Value * 100))));
 }
 
 void UAccessibilitySettingsWidget::OnVisualAudioCuesChanged(bool bIsChecked)
 {
     CurrentSettings.bVisualAudioCuesEnabled = bIsChecked;
-    AnnounceChange(FText::FromString(bIsChecked ? TEXT("Visual audio cues enabled") : TEXT("Visual audio cues disabled")));
+    AnnounceChange(FText::FromString(bIsChecked ? TEXT("可视化声音提示已开启。") : TEXT("可视化声音提示已关闭。")));
 }
 
 void UAccessibilitySettingsWidget::OnUIScaleChanged(float Value)
 {
     CurrentSettings.UIScale = Value;
     UpdateValueDisplays();
-    AnnounceChange(FText::Format(FText::FromString(TEXT("UI scale set to {0}%")),
+    AnnounceChange(FText::Format(FText::FromString(TEXT("界面缩放已设为 {0}%。")),
         FText::AsNumber(FMath::RoundToInt(Value * 100))));
 }
 
 void UAccessibilitySettingsWidget::OnHighContrastChanged(bool bIsChecked)
 {
     CurrentSettings.bHighContrastMode = bIsChecked;
-    AnnounceChange(FText::FromString(bIsChecked ? TEXT("High contrast mode enabled") : TEXT("High contrast mode disabled")));
+    AnnounceChange(FText::FromString(bIsChecked ? TEXT("高对比度模式已开启。") : TEXT("高对比度模式已关闭。")));
 }
 
 void UAccessibilitySettingsWidget::OnApplyClicked()
@@ -212,19 +212,19 @@ void UAccessibilitySettingsWidget::InitializeComboBoxes()
     if (SubtitleSizeComboBox)
     {
         SubtitleSizeComboBox->ClearOptions();
-        SubtitleSizeComboBox->AddOption(TEXT("Small"));
-        SubtitleSizeComboBox->AddOption(TEXT("Medium"));
-        SubtitleSizeComboBox->AddOption(TEXT("Large"));
-        SubtitleSizeComboBox->AddOption(TEXT("Extra Large"));
+        SubtitleSizeComboBox->AddOption(TEXT("小"));
+        SubtitleSizeComboBox->AddOption(TEXT("中"));
+        SubtitleSizeComboBox->AddOption(TEXT("大"));
+        SubtitleSizeComboBox->AddOption(TEXT("特大"));
     }
 
     if (ColorBlindModeComboBox)
     {
         ColorBlindModeComboBox->ClearOptions();
-        ColorBlindModeComboBox->AddOption(TEXT("None"));
-        ColorBlindModeComboBox->AddOption(TEXT("Protanopia (Red-Blind)"));
-        ColorBlindModeComboBox->AddOption(TEXT("Deuteranopia (Green-Blind)"));
-        ColorBlindModeComboBox->AddOption(TEXT("Tritanopia (Blue-Blind)"));
+        ColorBlindModeComboBox->AddOption(TEXT("无"));
+        ColorBlindModeComboBox->AddOption(TEXT("红色弱辅助"));
+        ColorBlindModeComboBox->AddOption(TEXT("绿色弱辅助"));
+        ColorBlindModeComboBox->AddOption(TEXT("蓝色弱辅助"));
     }
 }
 

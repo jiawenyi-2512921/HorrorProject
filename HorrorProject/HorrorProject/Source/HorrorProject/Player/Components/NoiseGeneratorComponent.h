@@ -9,12 +9,12 @@
 UENUM(BlueprintType)
 enum class ENoiseType : uint8
 {
-	Footstep UMETA(DisplayName="Footstep"),
-	Sprint UMETA(DisplayName="Sprint"),
-	Jump UMETA(DisplayName="Jump"),
-	Land UMETA(DisplayName="Land"),
-	Interaction UMETA(DisplayName="Interaction"),
-	Custom UMETA(DisplayName="Custom")
+	Footstep UMETA(DisplayName="脚步"),
+	Sprint UMETA(DisplayName="奔跑"),
+	Jump UMETA(DisplayName="跳跃"),
+	Land UMETA(DisplayName="落地"),
+	Interaction UMETA(DisplayName="互动"),
+	Custom UMETA(DisplayName="自定义")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FNoiseGeneratedSignature, ENoiseType, NoiseType, float, Loudness, FVector, Location);

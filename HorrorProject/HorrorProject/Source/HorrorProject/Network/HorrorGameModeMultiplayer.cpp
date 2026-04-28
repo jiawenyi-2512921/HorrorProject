@@ -177,7 +177,7 @@ void AHorrorGameModeMultiplayer::KickPlayer(APlayerController* PlayerToKick, con
 	if (PlayerToKick && HasAuthority())
 	{
 		APlayerState* TargetPlayerState = PlayerToKick->GetPlayerState<APlayerState>();
-		const FString PlayerName = TargetPlayerState ? TargetPlayerState->GetPlayerName() : TEXT("Unknown");
+		const FString PlayerName = TargetPlayerState ? TargetPlayerState->GetPlayerName() : TEXT("未知玩家");
 
 		UE_LOG(LogTemp, Warning, TEXT("Kicking player: %s - Reason: %s"),
 			*PlayerName, *Reason);

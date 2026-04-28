@@ -57,11 +57,11 @@ protected:
 	float SprintTime = 3.0f;
 
 	/** Walk speed while sprinting */
-	UPROPERTY(EditAnywhere, Category="Sprint", meta = (ClampMin = 0, ClampMax = 10, Units = "cm/s"))
+	UPROPERTY(EditAnywhere, Category="Sprint", meta = (ClampMin = 0, ClampMax = 2000, Units = "cm/s"))
 	float SprintSpeed = DefaultSprintSpeed;
 
 	/** Walk speed while recovering stamina */
-	UPROPERTY(EditAnywhere, Category="Recovery", meta = (ClampMin = 0, ClampMax = 10, Units = "cm/s"))
+	UPROPERTY(EditAnywhere, Category="Recovery", meta = (ClampMin = 0, ClampMax = 2000, Units = "cm/s"))
 	float RecoveringWalkSpeed = DefaultRecoveringWalkSpeed;
 
 	/** Time it takes for the sprint meter to recover */
@@ -111,4 +111,10 @@ protected:
 public:
 	/** Returns the spot light component */
 	USpotLightComponent* GetSpotLight() const { return SpotLight; }
+
+	UFUNCTION(BlueprintPure, Category="Sprint")
+	float GetSprintPercent() const;
+
+	UFUNCTION(BlueprintPure, Category="Sprint")
+	bool IsSprinting() const { return bSprinting && !bRecovering; }
 };

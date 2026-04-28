@@ -20,8 +20,8 @@ namespace HorrorAudioZoneTriggerDefaults
 UENUM(BlueprintType)
 enum class EHorrorAudioZoneTriggerShape : uint8
 {
-	Box UMETA(DisplayName="Box"),
-	Sphere UMETA(DisplayName="Sphere")
+	Box UMETA(DisplayName="盒体"),
+	Sphere UMETA(DisplayName="球体")
 };
 
 /**

@@ -9,23 +9,23 @@
 UENUM(BlueprintType)
 enum class EEvidenceType : uint8
 {
-	Physical UMETA(DisplayName="Physical Item"),
-	Photo UMETA(DisplayName="Photograph"),
-	Video UMETA(DisplayName="Video Recording"),
-	Audio UMETA(DisplayName="Audio Recording"),
-	Note UMETA(DisplayName="Written Note"),
-	Document UMETA(DisplayName="Document")
+	Physical UMETA(DisplayName="实物"),
+	Photo UMETA(DisplayName="照片"),
+	Video UMETA(DisplayName="录像"),
+	Audio UMETA(DisplayName="录音"),
+	Note UMETA(DisplayName="笔记"),
+	Document UMETA(DisplayName="文档")
 };
 
 UENUM(BlueprintType)
 enum class EEvidenceCategory : uint8
 {
-	Clue UMETA(DisplayName="Clue"),
-	Witness UMETA(DisplayName="Witness Account"),
-	Location UMETA(DisplayName="Location Evidence"),
-	Temporal UMETA(DisplayName="Temporal Anomaly"),
-	Personal UMETA(DisplayName="Personal Item"),
-	Environmental UMETA(DisplayName="Environmental")
+	Clue UMETA(DisplayName="线索"),
+	Witness UMETA(DisplayName="证言"),
+	Location UMETA(DisplayName="地点证据"),
+	Temporal UMETA(DisplayName="时间异常"),
+	Personal UMETA(DisplayName="个人物品"),
+	Environmental UMETA(DisplayName="环境证据")
 };
 
 USTRUCT(BlueprintType)

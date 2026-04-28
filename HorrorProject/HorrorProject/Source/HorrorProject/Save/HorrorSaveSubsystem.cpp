@@ -4,7 +4,9 @@
 
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Game/HorrorEncounterDirector.h"
 #include "Game/HorrorGameModeBase.h"
+#include "Interaction/BaseInteractable.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/HorrorPlayerCharacter.h"
 #include "Player/HorrorPlayerController.h"
@@ -31,6 +33,35 @@ namespace
 	{
 		OutSaveState.RecordedObjectiveEvents.Remove(EventTag);
 		OutSaveState.CompletedObjectiveStates.Remove(StateTag);
+	}
+
+	void AddNameIfMissing(TArray<FName>& Values, FName Value)
+	{
+		if (!Value.IsNone())
+		{
+			Values.AddUnique(Value);
+		}
+	}
+
+	void EnsureDay1RestoreDependencyIds(
+		const FHorrorFoundFootageSaveState& SaveState,
+		TArray<FName>& CollectedEvidenceIds,
+		TArray<FName>& RecordedNoteIds)
+	{
+		if (SaveState.CompletedObjectiveStates.Contains(HorrorFoundFootageTags::BodycamAcquiredState()))
+		{
+			AddNameIfMissing(CollectedEvidenceIds, TEXT("Evidence.Bodycam"));
+		}
+
+		if (SaveState.CompletedObjectiveStates.Contains(HorrorFoundFootageTags::FirstNoteCollectedState()))
+		{
+			AddNameIfMissing(RecordedNoteIds, TEXT("Note.Intro"));
+		}
+
+		if (SaveState.CompletedObjectiveStates.Contains(HorrorFoundFootageTags::FirstAnomalyRecordedState()))
+		{
+			AddNameIfMissing(CollectedEvidenceIds, TEXT("Evidence.Anomaly01"));
+		}
 	}
 
 	void SanitizeFoundFootageSaveStateForDay1Restore(
@@ -82,6 +113,45 @@ namespace
 		OutInventory = OutPlayerCharacter ? OutPlayerCharacter->GetInventoryComponent() : nullptr;
 		OutNoteRecorder = OutPlayerCharacter ? OutPlayerCharacter->GetNoteRecorderComponent() : nullptr;
 		return OutHorrorGameMode && OutPlayerCharacter && OutInventory && OutNoteRecorder;
+	}
+
+	TMap<FName, bool> CaptureInteractableStateFlags(UWorld* World)
+	{
+		TMap<FName, bool> StateFlags;
+		if (!World)
+		{
+			return StateFlags;
+		}
+
+		TArray<AActor*> InteractableActors;
+		UGameplayStatics::GetAllActorsOfClass(World, ABaseInteractable::StaticClass(), InteractableActors);
+		for (AActor* Actor : InteractableActors)
+		{
+			if (ABaseInteractable* Interactable = Cast<ABaseInteractable>(Actor))
+			{
+				Interactable->SaveState(StateFlags);
+			}
+		}
+
+		return StateFlags;
+	}
+
+	void ApplyInteractableStateFlags(UWorld* World, const TMap<FName, bool>& StateFlags)
+	{
+		if (!World || StateFlags.IsEmpty())
+		{
+			return;
+		}
+
+		TArray<AActor*> InteractableActors;
+		UGameplayStatics::GetAllActorsOfClass(World, ABaseInteractable::StaticClass(), InteractableActors);
+		for (AActor* Actor : InteractableActors)
+		{
+			if (ABaseInteractable* Interactable = Cast<ABaseInteractable>(Actor))
+			{
+				Interactable->LoadState(StateFlags);
+			}
+		}
 	}
 }
 
@@ -165,6 +235,19 @@ UHorrorSaveGame* UHorrorSaveSubsystem::CreateCheckpointSnapshot(UObject* WorldCo
 	SaveGame->PendingFirstAnomalySourceId = HorrorGameMode->GetPendingFirstAnomalySourceId();
 	SaveGame->CollectedEvidenceIds = Inventory->ExportCollectedEvidenceIds();
 	SaveGame->RecordedNoteIds = NoteRecorder->ExportRecordedNoteIds();
+	EnsureDay1RestoreDependencyIds(FoundFootageSaveState, SaveGame->CollectedEvidenceIds, SaveGame->RecordedNoteIds);
+	SaveGame->CollectedEvidenceMetadata = Inventory->GetCollectedEvidenceMetadata();
+	SaveGame->RecordedNoteMetadata = NoteRecorder->GetRecordedNoteMetadata();
+	SaveGame->InteractableStateFlags = CaptureInteractableStateFlags(World);
+	SaveGame->bDay1Complete = HorrorGameMode->IsDay1Complete();
+	if (const AHorrorEncounterDirector* EncounterDirector = HorrorGameMode->GetRuntimeEncounterDirector())
+	{
+		SaveGame->bHasEncounterState = true;
+		SaveGame->EncounterPhase = SaveGame->bDay1Complete
+			? EHorrorEncounterPhase::Resolved
+			: EncounterDirector->GetEncounterPhase();
+		SaveGame->EncounterId = EncounterDirector->GetEncounterId();
+	}
 	SaveGame->PlayerTransform = PlayerCharacter->GetActorTransform();
 	if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
 	{
@@ -196,9 +279,33 @@ bool UHorrorSaveSubsystem::ApplyCheckpointSnapshot(UObject* WorldContextObject, 
 	SanitizeFoundFootageSaveStateForDay1Restore(FoundFootageSaveState, SaveGame->CollectedEvidenceIds, SaveGame->RecordedNoteIds);
 	HorrorGameMode->ImportFoundFootageSaveState(FoundFootageSaveState);
 	HorrorGameMode->ImportPendingFirstAnomalyCandidate(SaveGame->PendingFirstAnomalySourceId);
+	const bool bRestoredDay1Complete = SaveGame->bDay1Complete && HorrorGameMode->IsExitUnlocked();
+	HorrorGameMode->ImportDay1CompleteState(bRestoredDay1Complete);
+	if (SaveGame->bHasEncounterState)
+	{
+		if (AHorrorEncounterDirector* EncounterDirector = HorrorGameMode->GetRuntimeEncounterDirector())
+		{
+			const EHorrorEncounterPhase RestoredEncounterPhase = bRestoredDay1Complete
+				? EHorrorEncounterPhase::Resolved
+				: SaveGame->EncounterPhase;
+			EncounterDirector->RestoreForCheckpoint(
+				RestoredEncounterPhase,
+				SaveGame->EncounterId,
+				RestoredEncounterPhase == EHorrorEncounterPhase::Revealed ? PlayerCharacter : nullptr);
+		}
+	}
 
 	Inventory->ImportCollectedEvidenceIds(SaveGame->CollectedEvidenceIds);
+	for (const FHorrorEvidenceMetadata& EvidenceMetadata : SaveGame->CollectedEvidenceMetadata)
+	{
+		Inventory->RegisterEvidenceMetadata(EvidenceMetadata);
+	}
 	NoteRecorder->ImportRecordedNoteIds(SaveGame->RecordedNoteIds);
+	for (const FHorrorNoteMetadata& NoteMetadata : SaveGame->RecordedNoteMetadata)
+	{
+		NoteRecorder->RegisterNoteMetadata(NoteMetadata);
+	}
+	ApplyInteractableStateFlags(World, SaveGame->InteractableStateFlags);
 
 	PlayerCharacter->SetActorTransform(SaveGame->PlayerTransform);
 	if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))

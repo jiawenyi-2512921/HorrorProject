@@ -6,6 +6,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "GameplayTagContainer.h"
 #include "Sound/SoundAttenuation.h"
+#include "TimerManager.h"
 #include "HorrorAudioSubsystem.generated.h"
 
 class USoundBase;
@@ -24,12 +25,25 @@ namespace HorrorAudioDefaults
 UENUM(BlueprintType)
 enum class EHorrorAudioCategory : uint8
 {
-	Ambient UMETA(DisplayName="Ambient"),
-	Anomaly UMETA(DisplayName="Anomaly"),
-	Site UMETA(DisplayName="Site"),
-	Interaction UMETA(DisplayName="Interaction"),
-	Escape UMETA(DisplayName="Escape"),
-	Music UMETA(DisplayName="Music")
+	Ambient UMETA(DisplayName="环境"),
+	Anomaly UMETA(DisplayName="异常"),
+	Site UMETA(DisplayName="站点"),
+	Interaction UMETA(DisplayName="交互"),
+	Escape UMETA(DisplayName="逃离"),
+	Music UMETA(DisplayName="音乐")
+};
+
+UENUM(BlueprintType)
+enum class EHorrorDay1AudioStage : uint8
+{
+	Exploration UMETA(DisplayName="探索"),
+	Objective UMETA(DisplayName="目标"),
+	Anomaly UMETA(DisplayName="异常"),
+	Chase UMETA(DisplayName="追逐"),
+	Resolved UMETA(DisplayName="已解决"),
+	Escape UMETA(DisplayName="逃离"),
+	Complete UMETA(DisplayName="完成"),
+	Failure UMETA(DisplayName="失败")
 };
 
 USTRUCT(BlueprintType)
@@ -63,6 +77,9 @@ struct HORRORPROJECT_API FHorrorAudioEventMapping
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
 	FGameplayTag EventTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+	EHorrorAudioCategory Category = EHorrorAudioCategory::Site;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
 	TObjectPtr<USoundBase> Sound;
@@ -170,6 +187,30 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Audio")
 	FName GetCurrentZoneId() const { return CurrentZoneId; }
 
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio|Day1")
+	bool HandleDay1Event(FGameplayTag EventTag, FName SourceId);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio|Day1")
+	bool HandleDay1EventName(FName EventName, FName SourceId);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio|Day1")
+	void SetDay1AudioStage(EHorrorDay1AudioStage NewStage, FGameplayTag EventTag, FName SourceId);
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio|Day1")
+	EHorrorDay1AudioStage GetDay1AudioStage() const { return CurrentDay1AudioStage; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio|Day1")
+	FGameplayTag GetLastDay1AudioEventTag() const { return LastDay1AudioEventTag; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio|Day1")
+	FName GetLastDay1AudioSourceId() const { return LastDay1AudioSourceId; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio|Day1")
+	float GetDay1AudioStageVolumeMultiplier() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Audio|Day1")
+	EHorrorAudioCategory GetDay1AudioStageCategory() const;
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	void RegisterEventMapping(const FHorrorAudioEventMapping& Mapping);
 
@@ -203,6 +244,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	void UnloadSound(USoundBase* Sound);
 
+#if WITH_DEV_AUTOMATION_TESTS
+	bool HasEventMappingForTests(FGameplayTag EventTag) const;
+	EHorrorAudioCategory GetEventMappingCategoryForTests(FGameplayTag EventTag) const;
+	int32 GetEventMappingCountForTests() const;
+#endif
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio")
 	TMap<EHorrorAudioCategory, float> CategoryVolumes;
@@ -218,6 +265,15 @@ protected:
 
 	UPROPERTY(Transient)
 	FName CurrentZoneId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category="Horror|Audio|Day1", meta=(AllowPrivateAccess="true"))
+	EHorrorDay1AudioStage CurrentDay1AudioStage = EHorrorDay1AudioStage::Exploration;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category="Horror|Audio|Day1", meta=(AllowPrivateAccess="true"))
+	FGameplayTag LastDay1AudioEventTag;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category="Horror|Audio|Day1", meta=(AllowPrivateAccess="true"))
+	FName LastDay1AudioSourceId = NAME_None;
 
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Pool")
 	int32 MaxPooledComponents = HorrorAudioDefaults::MaxPooledComponents;
@@ -256,15 +312,21 @@ private:
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UAudioComponent>, float> ComponentBaseVolumes;
 
+	FTimerHandle ActiveSoundUpdateTimerHandle;
+
 	float LastPoolCleanupTime = 0.0f;
 	float LastOcclusionUpdateTime = 0.0f;
+	float ActiveSoundUpdateInterval = 0.1f;
 
 	void OnEventPublished(const struct FHorrorEventMessage& Message);
 	void InitializeDefaultVolumes();
+	void RegisterDefaultDay1AudioMappings();
+	bool TryResolveDay1StageFromEvent(FGameplayTag EventTag, FName EventName, EHorrorDay1AudioStage& OutStage) const;
 	void ProcessAudioQueue();
 	void CleanupAudioPool();
 	UAudioComponent* GetPooledComponent(USoundBase* Sound);
 	void ReturnComponentToPool(UAudioComponent* Component);
 	bool CanPlaySound() const;
+	void TickActiveAudioSystems();
 	void UpdateActiveSounds(float DeltaTime);
 };

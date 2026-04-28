@@ -55,36 +55,36 @@ namespace
 
 	const FAchievementDefinitionSpec AchievementSpecs[] =
 	{
-		{ TEXT("ACH_FirstSteps"), TEXT("First Steps"), TEXT("Enter the haunted mansion for the first time"), EAchievementCategory::Exploration, AchievementPoints::Intro, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Explorer"), TEXT("Explorer"), TEXT("Discover 10 different rooms"), EAchievementCategory::Exploration, AchievementPoints::Standard, AchievementProgress::ExplorationSet, false, true },
-		{ TEXT("ACH_MasterExplorer"), TEXT("Master Explorer"), TEXT("Discover all rooms in the mansion"), EAchievementCategory::Exploration, AchievementPoints::Major, AchievementProgress::FullRoomSet, false, true },
-		{ TEXT("ACH_SecretPassage"), TEXT("Secret Passage"), TEXT("Find a hidden passage"), EAchievementCategory::Exploration, AchievementPoints::Notable, AchievementProgress::SingleStep, true, false },
+		{ TEXT("ACH_FirstSteps"), TEXT("第一步"), TEXT("第一次进入深水站"), EAchievementCategory::Exploration, AchievementPoints::Intro, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Explorer"), TEXT("探索者"), TEXT("发现 10 个不同房间"), EAchievementCategory::Exploration, AchievementPoints::Standard, AchievementProgress::ExplorationSet, false, true },
+		{ TEXT("ACH_MasterExplorer"), TEXT("站点制图员"), TEXT("发现站内所有房间"), EAchievementCategory::Exploration, AchievementPoints::Major, AchievementProgress::FullRoomSet, false, true },
+		{ TEXT("ACH_SecretPassage"), TEXT("隐蔽通道"), TEXT("找到一条隐藏通路"), EAchievementCategory::Exploration, AchievementPoints::Notable, AchievementProgress::SingleStep, true, false },
 
-		{ TEXT("ACH_FirstClue"), TEXT("First Clue"), TEXT("Collect your first evidence"), EAchievementCategory::Collection, AchievementPoints::Intro, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Detective"), TEXT("Detective"), TEXT("Collect 10 pieces of evidence"), EAchievementCategory::Collection, AchievementPoints::Standard, AchievementProgress::EvidenceSet, false, true },
-		{ TEXT("ACH_MasterDetective"), TEXT("Master Detective"), TEXT("Collect all evidence in the game"), EAchievementCategory::Collection, AchievementPoints::Major, AchievementProgress::FullEvidenceSet, false, true },
-		{ TEXT("ACH_Archivist"), TEXT("Archivist"), TEXT("Read all documents and notes"), EAchievementCategory::Collection, AchievementPoints::Notable, AchievementProgress::DocumentSet, false, true },
+		{ TEXT("ACH_FirstClue"), TEXT("第一条线索"), TEXT("收集第一份证据"), EAchievementCategory::Collection, AchievementPoints::Intro, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Detective"), TEXT("调查员"), TEXT("收集 10 份证据"), EAchievementCategory::Collection, AchievementPoints::Standard, AchievementProgress::EvidenceSet, false, true },
+		{ TEXT("ACH_MasterDetective"), TEXT("首席调查员"), TEXT("收集游戏中的全部证据"), EAchievementCategory::Collection, AchievementPoints::Major, AchievementProgress::FullEvidenceSet, false, true },
+		{ TEXT("ACH_Archivist"), TEXT("档案管理员"), TEXT("阅读所有文件和笔记"), EAchievementCategory::Collection, AchievementPoints::Notable, AchievementProgress::DocumentSet, false, true },
 
-		{ TEXT("ACH_FirstEncounter"), TEXT("First Encounter"), TEXT("Survive your first ghost encounter"), EAchievementCategory::Survival, AchievementPoints::StoryBeat, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Survivor"), TEXT("Survivor"), TEXT("Survive 5 ghost encounters"), EAchievementCategory::Survival, AchievementPoints::Advanced, AchievementProgress::SurvivalEncounterSet, false, true },
-		{ TEXT("ACH_Fearless"), TEXT("Fearless"), TEXT("Complete the game without dying"), EAchievementCategory::Survival, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_NervesOfSteel"), TEXT("Nerves of Steel"), TEXT("Keep sanity above 50% throughout the game"), EAchievementCategory::Survival, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_FirstEncounter"), TEXT("第一次遭遇"), TEXT("从第一次异常遭遇中幸存"), EAchievementCategory::Survival, AchievementPoints::StoryBeat, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Survivor"), TEXT("幸存者"), TEXT("从 5 次异常遭遇中幸存"), EAchievementCategory::Survival, AchievementPoints::Advanced, AchievementProgress::SurvivalEncounterSet, false, true },
+		{ TEXT("ACH_Fearless"), TEXT("无惧"), TEXT("不死亡完成游戏"), EAchievementCategory::Survival, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_NervesOfSteel"), TEXT("钢铁神经"), TEXT("全程保持理智值高于 50%"), EAchievementCategory::Survival, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
 
-		{ TEXT("ACH_SpeedRunner"), TEXT("Speed Runner"), TEXT("Complete the game in under 2 hours"), EAchievementCategory::Speedrun, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_LightningFast"), TEXT("Lightning Fast"), TEXT("Complete the game in under 1 hour"), EAchievementCategory::Speedrun, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_SpeedRunner"), TEXT("快速通关"), TEXT("2 小时内完成游戏"), EAchievementCategory::Speedrun, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_LightningFast"), TEXT("闪电行动"), TEXT("1 小时内完成游戏"), EAchievementCategory::Speedrun, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
 
-		{ TEXT("ACH_TheBeginning"), TEXT("The Beginning"), TEXT("Complete Chapter 1"), EAchievementCategory::Story, AchievementPoints::StoryBeat, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_DeeperIntoMadness"), TEXT("Deeper Into Madness"), TEXT("Complete Chapter 2"), EAchievementCategory::Story, AchievementPoints::Standard, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_TheTruth"), TEXT("The Truth"), TEXT("Uncover the mansion's dark secret"), EAchievementCategory::Story, AchievementPoints::Notable, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Escape"), TEXT("Escape"), TEXT("Complete the game"), EAchievementCategory::Story, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_TheBeginning"), TEXT("开端"), TEXT("完成第 1 章"), EAchievementCategory::Story, AchievementPoints::StoryBeat, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_DeeperIntoMadness"), TEXT("更深处"), TEXT("完成第 2 章"), EAchievementCategory::Story, AchievementPoints::Standard, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_TheTruth"), TEXT("真相"), TEXT("揭开深水站的黑暗秘密"), EAchievementCategory::Story, AchievementPoints::Notable, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Escape"), TEXT("逃离"), TEXT("完成游戏"), EAchievementCategory::Story, AchievementPoints::Major, AchievementProgress::SingleStep, false, false },
 
-		{ TEXT("ACH_TheWatcher"), TEXT("The Watcher"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Major, AchievementProgress::SingleStep, true, false },
-		{ TEXT("ACH_BrokenMirror"), TEXT("Broken Mirror"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Notable, AchievementProgress::SingleStep, true, false },
-		{ TEXT("ACH_MidnightVisitor"), TEXT("Midnight Visitor"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Secret, AchievementProgress::SingleStep, true, false },
+		{ TEXT("ACH_TheWatcher"), TEXT("观察者"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Major, AchievementProgress::SingleStep, true, false },
+		{ TEXT("ACH_BrokenMirror"), TEXT("破碎之镜"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Notable, AchievementProgress::SingleStep, true, false },
+		{ TEXT("ACH_MidnightVisitor"), TEXT("午夜访客"), TEXT("???"), EAchievementCategory::Secret, AchievementPoints::Secret, AchievementProgress::SingleStep, true, false },
 
-		{ TEXT("ACH_NoFlashlight"), TEXT("Darkness Embraced"), TEXT("Complete a chapter without using flashlight"), EAchievementCategory::Challenge, AchievementPoints::Challenge, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Minimalist"), TEXT("Minimalist"), TEXT("Complete the game using only essential items"), EAchievementCategory::Challenge, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
-		{ TEXT("ACH_Perfectionist"), TEXT("Perfectionist"), TEXT("Unlock all other achievements"), EAchievementCategory::Challenge, AchievementPoints::Completionist, AchievementProgress::SingleStep, false, false }
+		{ TEXT("ACH_NoFlashlight"), TEXT("拥抱黑暗"), TEXT("不使用手电筒完成一个章节"), EAchievementCategory::Challenge, AchievementPoints::Challenge, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Minimalist"), TEXT("极简主义"), TEXT("只使用必要物品完成游戏"), EAchievementCategory::Challenge, AchievementPoints::Master, AchievementProgress::SingleStep, false, false },
+		{ TEXT("ACH_Perfectionist"), TEXT("完美主义者"), TEXT("解锁所有其他成就"), EAchievementCategory::Challenge, AchievementPoints::Completionist, AchievementProgress::SingleStep, false, false }
 	};
 }
 

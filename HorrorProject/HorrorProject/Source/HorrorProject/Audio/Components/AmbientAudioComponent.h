@@ -15,10 +15,10 @@ namespace HorrorAmbientAudioDefaults
 UENUM(BlueprintType)
 enum class EAmbientAudioType : uint8
 {
-	Static UMETA(DisplayName="Static"),
-	Dynamic UMETA(DisplayName="Dynamic"),
-	Layered UMETA(DisplayName="Layered"),
-	Randomized UMETA(DisplayName="Randomized")
+	Static UMETA(DisplayName="静态"),
+	Dynamic UMETA(DisplayName="动态"),
+	Layered UMETA(DisplayName="分层"),
+	Randomized UMETA(DisplayName="随机")
 };
 
 USTRUCT(BlueprintType)

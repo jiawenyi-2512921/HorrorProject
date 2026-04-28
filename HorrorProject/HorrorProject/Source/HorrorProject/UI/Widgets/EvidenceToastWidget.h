@@ -29,16 +29,16 @@ public:
 	bool IsToastVisible() const { return bToastVisible; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="Show Toast"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="显示提示"))
 	void BP_ShowToast(FName EvidenceId, const FText& DisplayName, const FText& Description);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="Dismiss Toast"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="关闭提示"))
 	void BP_DismissToast();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="Play Fade In"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="播放淡入"))
 	void BP_PlayFadeIn();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="Play Fade Out"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Evidence|UI", meta=(DisplayName="播放淡出"))
 	void BP_PlayFadeOut();
 
 	UPROPERTY(EditDefaultsOnly, Category="Evidence|UI")

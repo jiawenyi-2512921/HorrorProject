@@ -111,6 +111,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Route")
 	TArray<FName> GetTrailerBeatIds() const;
 
+	UFUNCTION(BlueprintPure, Category="Horror|Route")
+	bool TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective Objective, FVector& OutWorldLocation) const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Route")
 	TSubclassOf<AHorrorEncounterDirector> EncounterDirectorClass;
 

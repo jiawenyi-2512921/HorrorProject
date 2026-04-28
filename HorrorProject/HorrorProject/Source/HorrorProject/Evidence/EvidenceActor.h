@@ -62,7 +62,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="Evidence")
 	bool bIsCollected = false;
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Evidence", meta=(DisplayName="On Evidence Collected"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Evidence", meta=(DisplayName="证据已收集"))
 	void BP_OnEvidenceCollected(AActor* Collector);
 
 	UFUNCTION(BlueprintNativeEvent, Category="Evidence")

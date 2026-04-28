@@ -8,8 +8,12 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
+#include "Game/FoundFootageObjectiveInteractable.h"
 #include "HorrorProject.h"
+#include "Interaction/BaseInteractable.h"
+#include "Interaction/DoorInteractable.h"
 #include "Interaction/InteractableInterface.h"
+#include "Player/HorrorPlayerController.h"
 
 namespace
 {
@@ -55,6 +59,46 @@ bool UInteractionComponent::TryInteract()
 	}
 
 	return TryInteractWithHit(Hit);
+}
+
+bool UInteractionComponent::GetFocusedInteractionPrompt(FText& OutPrompt) const
+{
+	FHitResult Hit;
+	if (!FindInteractionHit(Hit))
+	{
+		OutPrompt = FText::GetEmpty();
+		return false;
+	}
+
+	UObject* TargetObject = ResolveInterfaceTarget(Hit);
+	if (!TargetObject)
+	{
+		OutPrompt = FText::GetEmpty();
+		return false;
+	}
+
+	OutPrompt = BuildInteractionPrompt(TargetObject, Hit);
+	return !OutPrompt.IsEmpty();
+}
+
+bool UInteractionComponent::FindFocusedInteractable(FHitResult& OutHit, UObject*& OutTargetObject) const
+{
+	OutTargetObject = nullptr;
+
+	if (!FindInteractionHit(OutHit))
+	{
+		return false;
+	}
+
+	UObject* InterfaceTarget = ResolveInterfaceTarget(OutHit);
+	if (!InterfaceTarget || !CanInvokeInteractableInterface(InterfaceTarget, OutHit))
+	{
+		OutHit = FHitResult();
+		return false;
+	}
+
+	OutTargetObject = InterfaceTarget;
+	return true;
 }
 
 /**
@@ -116,7 +160,8 @@ bool UInteractionComponent::FindInteractionHit(FHitResult& OutHit) const
 		return false;
 	}
 
-	const FVector End = Start + (ViewDirection * TraceDistance);
+	const float EffectiveTraceDistance = FMath::Max(TraceDistance, DefaultTraceDistance);
+	const FVector End = Start + (ViewDirection * EffectiveTraceDistance);
 
 	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(HorrorInteractionTrace), bTraceComplex, OwnerActor);
 	QueryParams.AddIgnoredActor(OwnerActor);
@@ -226,6 +271,109 @@ UObject* UInteractionComponent::ResolveInterfaceTarget(const FHitResult& Hit) co
 	return nullptr;
 }
 
+bool UInteractionComponent::CanInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const
+{
+	if (!TargetObject || !TargetObject->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+	{
+		return false;
+	}
+
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		return false;
+	}
+
+	IInteractableInterface* NativeInterface = Cast<IInteractableInterface>(TargetObject);
+	if (!NativeInterface)
+	{
+		return IInteractableInterface::Execute_CanInteract(TargetObject, OwnerActor, Hit);
+	}
+
+	UFunction* CanInteractFunction = TargetObject->FindFunction(TEXT("CanInteract"));
+	if (CanInteractFunction && CanInteractFunction->Script.Num() > 0)
+	{
+		return IInteractableInterface::Execute_CanInteract(TargetObject, OwnerActor, Hit);
+	}
+
+	return NativeInterface->CanInteract_Implementation(OwnerActor, Hit);
+}
+
+FText UInteractionComponent::BuildInteractionPrompt(UObject* TargetObject, const FHitResult& Hit) const
+{
+	AActor* TargetActor = Cast<AActor>(TargetObject);
+	if (!TargetActor)
+	{
+		TargetActor = Hit.GetActor();
+	}
+
+	if (const ADoorInteractable* Door = Cast<ADoorInteractable>(TargetActor))
+	{
+		if (Door->RequiresPassword() && !Door->IsPasswordUnlocked())
+		{
+			return FText::FromString(TEXT("E键  输入门禁密码"));
+		}
+
+		if (Door->IsOpen())
+		{
+			return FText::FromString(TEXT("E键  关门"));
+		}
+
+		return FText::FromString(TEXT("E键  开门"));
+	}
+
+	if (const AFoundFootageObjectiveInteractable* ObjectiveActor = Cast<AFoundFootageObjectiveInteractable>(TargetActor))
+	{
+		return ObjectiveActor->GetInteractionPromptText(GetOwner());
+	}
+
+	if (const ABaseInteractable* BaseInteractable = Cast<ABaseInteractable>(TargetActor))
+	{
+		const FText PromptText = BaseInteractable->GetInteractionPromptText();
+		return PromptText.IsEmpty()
+			? FText::FromString(TEXT("E键  互动"))
+			: FText::Format(FText::FromString(TEXT("E键  {0}")), PromptText);
+	}
+
+	return FText::FromString(TEXT("E键  互动"));
+}
+
+void UInteractionComponent::ShowBlockedInteractionFeedback(UObject* TargetObject, const FHitResult& Hit) const
+{
+	FText PromptText = BuildInteractionPrompt(TargetObject, Hit);
+	FString Message = PromptText.ToString();
+	if (Message.StartsWith(TEXT("E键  ")))
+	{
+		Message.RightChopInline(4, EAllowShrinking::No);
+		Message.TrimStartAndEndInline();
+	}
+	else if (Message.StartsWith(TEXT("E  ")))
+	{
+		Message.RightChopInline(3, EAllowShrinking::No);
+		Message.TrimStartAndEndInline();
+	}
+
+	if (Message.IsEmpty())
+	{
+		Message = TEXT("现在无法互动。");
+	}
+
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	AHorrorPlayerController* PlayerController = OwnerPawn ? Cast<AHorrorPlayerController>(OwnerPawn->GetController()) : nullptr;
+	if (!PlayerController)
+	{
+		PlayerController = Cast<AHorrorPlayerController>(GetOwner());
+	}
+
+	if (PlayerController)
+	{
+		PlayerController->ShowPlayerMessage(
+			FText::FromString(Message),
+			FLinearColor(1.0f, 0.72f, 0.22f),
+			2.5f);
+	}
+}
+
 bool UInteractionComponent::TryInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const
 {
 	if (!TargetObject)
@@ -249,6 +397,7 @@ bool UInteractionComponent::TryInvokeInteractableInterface(UObject* TargetObject
 	{
 		if (!IInteractableInterface::Execute_CanInteract(TargetObject, OwnerActor, Hit))
 		{
+			ShowBlockedInteractionFeedback(TargetObject, Hit);
 			return false;
 		}
 
@@ -260,11 +409,13 @@ bool UInteractionComponent::TryInvokeInteractableInterface(UObject* TargetObject
 	{
 		if (!IInteractableInterface::Execute_CanInteract(TargetObject, OwnerActor, Hit))
 		{
+			ShowBlockedInteractionFeedback(TargetObject, Hit);
 			return false;
 		}
 	}
 	else if (!NativeInterface->CanInteract_Implementation(OwnerActor, Hit))
 	{
+		ShowBlockedInteractionFeedback(TargetObject, Hit);
 		return false;
 	}
 

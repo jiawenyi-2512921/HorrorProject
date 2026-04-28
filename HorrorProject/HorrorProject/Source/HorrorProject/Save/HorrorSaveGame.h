@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "Game/HorrorEncounterDirector.h"
 #include "GameplayTagContainer.h"
+#include "Player/Components/InventoryComponent.h"
+#include "Player/Components/NoteRecorderComponent.h"
 #include "HorrorSaveGame.generated.h"
 
 /**
@@ -37,7 +40,28 @@ public:
 	TArray<FName> CollectedEvidenceIds;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	TArray<FHorrorEvidenceMetadata> CollectedEvidenceMetadata;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
 	TArray<FName> RecordedNoteIds;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	TArray<FHorrorNoteMetadata> RecordedNoteMetadata;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	TMap<FName, bool> InteractableStateFlags;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	bool bHasEncounterState = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	EHorrorEncounterPhase EncounterPhase = EHorrorEncounterPhase::Dormant;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	FName EncounterId;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	bool bDay1Complete = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
 	FTransform PlayerTransform;

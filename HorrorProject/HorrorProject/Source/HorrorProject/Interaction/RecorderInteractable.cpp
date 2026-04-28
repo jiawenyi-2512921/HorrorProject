@@ -36,7 +36,7 @@ ARecorderInteractable::ARecorderInteractable()
 	AudioComponent->bAutoActivate = false;
 
 	// Default settings
-	InteractionPrompt = FText::FromString("Play Audio Log");
+	InteractionPrompt = FText::FromString(TEXT("播放录音"));
 	bCanInteractMultipleTimes = true;
 }
 
@@ -63,7 +63,7 @@ void ARecorderInteractable::BeginPlay()
 	{
 		EvidenceMetadata.EvidenceId = InteractableId;
 		EvidenceMetadata.DisplayName = AudioLogTitle;
-		EvidenceMetadata.Description = FText::FromString("An audio recording containing important information.");
+		EvidenceMetadata.Description = FText::FromString(TEXT("这是一段包含重要信息的录音。"));
 	}
 }
 

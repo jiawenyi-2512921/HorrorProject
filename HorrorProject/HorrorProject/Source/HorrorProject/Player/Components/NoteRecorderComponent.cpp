@@ -24,6 +24,7 @@ bool UNoteRecorderComponent::AddRecordedNoteId(FName NoteId)
 	}
 
 	RecordedNoteIds.Add(NoteId);
+	OnNoteRecordedNative.Broadcast(NoteId, RecordedNoteIds.Num());
 	OnNoteRecorded.Broadcast(NoteId, RecordedNoteIds.Num());
 	return true;
 }
@@ -87,7 +88,14 @@ TArray<FHorrorNoteMetadata> UNoteRecorderComponent::GetRecordedNoteMetadata() co
 		if (const FHorrorNoteMetadata* Metadata = NoteMetadataById.Find(NoteId))
 		{
 			RecordedMetadata.Add(*Metadata);
+			continue;
 		}
+
+		FHorrorNoteMetadata FallbackMetadata;
+		FallbackMetadata.NoteId = NoteId;
+		FallbackMetadata.Title = FText::FromName(NoteId);
+		FallbackMetadata.Body = FText::FromString(TEXT("无法读取这份笔记的内容。"));
+		RecordedMetadata.Add(FallbackMetadata);
 	}
 	return RecordedMetadata;
 }

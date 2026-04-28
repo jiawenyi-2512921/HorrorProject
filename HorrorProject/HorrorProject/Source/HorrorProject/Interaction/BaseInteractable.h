@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Interaction")
 	FName GetInteractableId() const { return InteractableId; }
 
+	UFUNCTION(BlueprintPure, Category="Interaction")
+	FText GetInteractionPromptText() const { return InteractionPrompt; }
+
 protected:
 	// Called when interaction occurs (override in subclasses)
 	virtual void OnInteract(AActor* InstigatorActor, const FHitResult& Hit);
@@ -58,7 +61,7 @@ protected:
 	FName InteractableId = NAME_None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
-	FText InteractionPrompt = FText::FromString("Interact");
+	FText InteractionPrompt = FText::FromString(TEXT("互动"));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
 	bool bCanInteractMultipleTimes = false;

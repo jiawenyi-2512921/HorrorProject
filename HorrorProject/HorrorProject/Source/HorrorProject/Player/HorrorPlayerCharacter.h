@@ -88,7 +88,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoToggleFlashlight();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Input", meta=(DisplayName="Open Archive"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Input", meta=(DisplayName="打开档案"))
 	void BP_OpenArchive();
 
 private:

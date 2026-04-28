@@ -9,11 +9,11 @@
 UENUM(BlueprintType)
 enum class EQuantumCameraMode : uint8
 {
-	Disabled UMETA(DisplayName="Disabled"),
-	Viewfinder UMETA(DisplayName="Viewfinder"),
-	Recording UMETA(DisplayName="Recording"),
-	Photo UMETA(DisplayName="Photo"),
-	Rewind UMETA(DisplayName="Rewind")
+	Disabled UMETA(DisplayName="已禁用"),
+	Viewfinder UMETA(DisplayName="取景"),
+	Recording UMETA(DisplayName="录制"),
+	Photo UMETA(DisplayName="拍照"),
+	Rewind UMETA(DisplayName="倒带")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuantumCameraModeChangedSignature, EQuantumCameraMode, NewMode);
@@ -107,7 +107,10 @@ protected:
 
 private:
 	bool CanUseCamera() const;
+
+	UFUNCTION()
 	void OnBatteryDepleted();
+
 	void FindOrCreateBatteryComponent();
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="QuantumCamera|Runtime", meta=(AllowPrivateAccess="true"))

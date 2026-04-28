@@ -15,10 +15,10 @@ class UHorrorEventBusSubsystem;
 UENUM(BlueprintType)
 enum class EHorrorEncounterPhase : uint8
 {
-	Dormant UMETA(DisplayName="Dormant"),
-	Primed UMETA(DisplayName="Primed"),
-	Revealed UMETA(DisplayName="Revealed"),
-	Resolved UMETA(DisplayName="Resolved")
+	Dormant UMETA(DisplayName="休眠"),
+	Primed UMETA(DisplayName="待触发"),
+	Revealed UMETA(DisplayName="已现身"),
+	Resolved UMETA(DisplayName="已解决")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHorrorEncounterPhaseChangedSignature, EHorrorEncounterPhase, NewPhase, FName, EncounterId);
@@ -60,6 +60,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Encounter")
 	bool ResetEncounter();
+
+	bool RestoreForCheckpoint(EHorrorEncounterPhase RestoredPhase, FName RestoredEncounterId, AActor* RestoredRevealTarget);
 
 	UFUNCTION(BlueprintPure, Category="Horror|Encounter")
 	bool CanTriggerReveal(const AActor* PlayerActor) const;
@@ -177,5 +179,7 @@ private:
 	FTimerHandle RevealDelayTimerHandle;
 
 	void ExecuteDelayedReveal(AActor* PlayerActor);
-	void PublishEncounterEvent(FName EventName, FName PhaseTag);
+	void ApplyRevealPlayerFeedback(AActor* PlayerActor);
+	void ApplyResolvePlayerFeedback();
+	void PublishEncounterEvent(FName EventName, FName EncounterId);
 };

@@ -123,7 +123,7 @@ void AHorrorPlayerControllerMultiplayer::ServerSendChatMessage_Implementation(co
 	if (!Message.IsEmpty())
 	{
 		APlayerState* ChatPlayerState = GetPlayerState<APlayerState>();
-		const FString PlayerName = ChatPlayerState ? ChatPlayerState->GetPlayerName() : TEXT("Unknown");
+		const FString PlayerName = ChatPlayerState ? ChatPlayerState->GetPlayerName() : TEXT("未知玩家");
 		MulticastReceiveChatMessage(PlayerName, Message);
 	}
 }

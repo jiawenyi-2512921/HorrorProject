@@ -14,16 +14,17 @@ class ADeepWaterStationRouteKit;
 class AHorrorGameModeBase;
 class AHorrorPlayerCharacter;
 class UBoxComponent;
+class UStaticMeshComponent;
 
 UENUM(BlueprintType)
 enum class EFoundFootageInteractableObjective : uint8
 {
-	Bodycam UMETA(DisplayName="Bodycam"),
-	FirstNote UMETA(DisplayName="First Note"),
-	FirstAnomalyCandidate UMETA(DisplayName="First Anomaly Candidate"),
-	FirstAnomalyRecord UMETA(DisplayName="First Anomaly Record"),
-	ArchiveReview UMETA(DisplayName="Archive Review"),
-	ExitRouteGate UMETA(DisplayName="Exit Route Gate")
+	Bodycam UMETA(DisplayName="随身摄像机"),
+	FirstNote UMETA(DisplayName="第一份笔记"),
+	FirstAnomalyCandidate UMETA(DisplayName="第一个异常候选点"),
+	FirstAnomalyRecord UMETA(DisplayName="记录第一个异常"),
+	ArchiveReview UMETA(DisplayName="档案审查"),
+	ExitRouteGate UMETA(DisplayName="出口闸门")
 };
 
 /**
@@ -39,11 +40,15 @@ public:
 
 	virtual bool CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const override;
 	virtual bool Interact_Implementation(AActor* InstigatorActor, const FHitResult& Hit) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 	bool CanCompleteObjective(AHorrorGameModeBase* GameMode) const;
 	bool CanCompleteObjectiveForInstigator(AHorrorGameModeBase* GameMode, AActor* InstigatorActor) const;
 	bool TryCompleteObjective(AHorrorGameModeBase* GameMode) const;
 	bool TryCompleteObjectiveForInstigator(AHorrorGameModeBase* GameMode, AActor* InstigatorActor) const;
+	FText GetInteractionPromptText(AActor* InstigatorActor) const;
+	void RefreshVisualDefaults();
+	UStaticMeshComponent* GetVisualMeshComponentForTests() const { return VisualMesh.Get(); }
 	void RecordInstigatorProgress(AActor* InstigatorActor, FName ProgressId) const;
 	void RegisterObjectiveEventMetadata(FName ProgressId) const;
 	void RegisterObjectiveEventMetadataForCompletedObjective(AHorrorGameModeBase* GameMode, FName ProgressId) const;
@@ -83,6 +88,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Horror|Objectives")
 	TObjectPtr<UBoxComponent> InteractionBounds;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Horror|Objectives")
+	TObjectPtr<UStaticMeshComponent> VisualMesh;
+
 private:
 	ADeepWaterStationRouteKit* ResolveOwningRouteKit() const;
 	bool CanCompleteArchiveReview(AHorrorGameModeBase& GameMode, AActor* InstigatorActor) const;
@@ -93,7 +101,11 @@ private:
 	bool TryCompleteFirstAnomalyRecordObjective(AHorrorGameModeBase& GameMode) const;
 	bool TryCompleteArchiveReviewObjective(AHorrorGameModeBase& GameMode) const;
 	bool TryCompleteExitRouteGateObjective(AHorrorGameModeBase& GameMode) const;
+	FText BuildBlockedObjectivePrompt(AHorrorGameModeBase* GameMode, AActor* InstigatorActor) const;
+	FText BuildObjectiveActionPrompt() const;
 	void RecordEvidenceProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId, bool bMarkCollected) const;
 	void RecordNoteProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId) const;
+	void RecordObjectiveHintNoteProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId) const;
+	void RecordArchiveSummaryProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ArchiveEvidenceId) const;
 	FGameplayTag ResolveCompletedObjectiveEventTag() const;
 };

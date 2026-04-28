@@ -70,13 +70,13 @@ FString UEvidenceBlueprintLibrary::GetEvidenceTypeName(EEvidenceType Type)
 {
 	switch (Type)
 	{
-	case EEvidenceType::Physical: return TEXT("Physical Item");
-	case EEvidenceType::Photo: return TEXT("Photograph");
-	case EEvidenceType::Video: return TEXT("Video Recording");
-	case EEvidenceType::Audio: return TEXT("Audio Recording");
-	case EEvidenceType::Note: return TEXT("Written Note");
-	case EEvidenceType::Document: return TEXT("Document");
-	default: return TEXT("Unknown");
+	case EEvidenceType::Physical: return TEXT("实物");
+	case EEvidenceType::Photo: return TEXT("照片");
+	case EEvidenceType::Video: return TEXT("录像");
+	case EEvidenceType::Audio: return TEXT("录音");
+	case EEvidenceType::Note: return TEXT("笔记");
+	case EEvidenceType::Document: return TEXT("文档");
+	default: return TEXT("未知");
 	}
 }
 
@@ -84,13 +84,13 @@ FString UEvidenceBlueprintLibrary::GetEvidenceCategoryName(EEvidenceCategory Cat
 {
 	switch (Category)
 	{
-	case EEvidenceCategory::Clue: return TEXT("Clue");
-	case EEvidenceCategory::Witness: return TEXT("Witness Account");
-	case EEvidenceCategory::Location: return TEXT("Location Evidence");
-	case EEvidenceCategory::Temporal: return TEXT("Temporal Anomaly");
-	case EEvidenceCategory::Personal: return TEXT("Personal Item");
-	case EEvidenceCategory::Environmental: return TEXT("Environmental");
-	default: return TEXT("Unknown");
+	case EEvidenceCategory::Clue: return TEXT("线索");
+	case EEvidenceCategory::Witness: return TEXT("证言");
+	case EEvidenceCategory::Location: return TEXT("地点证据");
+	case EEvidenceCategory::Temporal: return TEXT("时间异常");
+	case EEvidenceCategory::Personal: return TEXT("个人物品");
+	case EEvidenceCategory::Environmental: return TEXT("环境证据");
+	default: return TEXT("未知");
 	}
 }
 

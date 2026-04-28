@@ -13,18 +13,18 @@ class UHorrorEventBusSubsystem;
 UENUM(BlueprintType)
 enum class EHorrorObjectiveNodeType : uint8
 {
-	Navigation UMETA(DisplayName="Navigation Node"),
-	Interaction UMETA(DisplayName="Interaction Node"),
-	Encounter UMETA(DisplayName="Encounter Node")
+	Navigation UMETA(DisplayName="导航节点"),
+	Interaction UMETA(DisplayName="交互节点"),
+	Encounter UMETA(DisplayName="遭遇节点")
 };
 
 UENUM(BlueprintType)
 enum class EHorrorObjectiveNodeState : uint8
 {
-	Inactive UMETA(DisplayName="Inactive"),
-	Active UMETA(DisplayName="Active"),
-	Completed UMETA(DisplayName="Completed"),
-	Failed UMETA(DisplayName="Failed")
+	Inactive UMETA(DisplayName="未激活"),
+	Active UMETA(DisplayName="已激活"),
+	Completed UMETA(DisplayName="已完成"),
+	Failed UMETA(DisplayName="已失败")
 };
 
 /**

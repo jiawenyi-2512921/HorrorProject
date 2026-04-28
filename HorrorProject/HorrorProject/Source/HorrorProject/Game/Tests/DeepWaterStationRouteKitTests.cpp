@@ -7,6 +7,7 @@
 #include "Game/DeepWaterStationRouteKit.h"
 
 #include "AI/HorrorThreatCharacter.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Game/HorrorEncounterDirector.h"
 #include "Game/HorrorEventBusSubsystem.h"
@@ -61,7 +62,7 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 
 	TestEqual(TEXT("Default bodycam node should preserve its source id."), RouteKit->ObjectiveNodes[0].SourceId, FName(TEXT("Evidence.Bodycam")));
 	TestEqual(TEXT("Default bodycam node should have the first corridor placement."), RouteKit->ObjectiveNodes[0].RelativeTransform.GetLocation(), FVector(200.0f, 0.0f, 80.0f));
-	TestEqual(TEXT("Default first note node should preserve note metadata."), RouteKit->ObjectiveNodes[1].NoteMetadata.Title.ToString(), FString(TEXT("Intro")));
+	TestEqual(TEXT("Default first note node should preserve note metadata."), RouteKit->ObjectiveNodes[1].NoteMetadata.Title.ToString(), FString(TEXT("维护记录")));
 	TestEqual(TEXT("Default first note node should expose a trailer beat id."), RouteKit->ObjectiveNodes[1].TrailerBeatId, FName(TEXT("Beat.FirstNote")));
 	TestEqual(TEXT("Route kit should resolve trailer beats by source id."), RouteKit->GetTrailerBeatIdForSourceId(TEXT("Note.Intro")), FName(TEXT("Beat.FirstNote")));
 	TestEqual(TEXT("Route kit should return no trailer beat for unknown source ids."), RouteKit->GetTrailerBeatIdForSourceId(TEXT("Missing.Source")), NAME_None);
@@ -79,11 +80,11 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 	TestEqual(TEXT("Route kit should collapse duplicate trailer beat ids for cue scheduling."), UniqueTrailerBeatIds.Num(), 5);
 	TestEqual(TEXT("Route kit should preserve the first occurrence when removing duplicate trailer beats."), UniqueTrailerBeatIds.Last(), FName(TEXT("Beat.ArchiveReview")));
 	RouteKit->ObjectiveNodes[5].TrailerBeatId = FName(TEXT("Beat.ExitGate"));
-	TestEqual(TEXT("Default first note node should expose an objective hint."), RouteKit->ObjectiveNodes[1].ObjectiveHint.ToString(), FString(TEXT("Read the first station note.")));
+	TestEqual(TEXT("Default first note node should expose an objective hint."), RouteKit->ObjectiveNodes[1].ObjectiveHint.ToString(), FString(TEXT("阅读第一份站内笔记。")));
 	TestEqual(TEXT("Default first note node should advance down the corridor."), RouteKit->ObjectiveNodes[1].RelativeTransform.GetLocation(), FVector(600.0f, 0.0f, 80.0f));
 	TestTrue(TEXT("Default first anomaly record node should require recording."), RouteKit->ObjectiveNodes[3].bIsRecordingForFirstAnomalyRecord);
 	TestEqual(TEXT("Default first anomaly record node should carry anomaly metadata."), RouteKit->ObjectiveNodes[3].EvidenceMetadata.EvidenceId, FName(TEXT("Evidence.Anomaly01")));
-	TestEqual(TEXT("Default first anomaly record metadata should preserve display name."), RouteKit->ObjectiveNodes[3].EvidenceMetadata.DisplayName.ToString(), FString(TEXT("First Anomaly")));
+	TestEqual(TEXT("Default first anomaly record metadata should preserve display name."), RouteKit->ObjectiveNodes[3].EvidenceMetadata.DisplayName.ToString(), FString(TEXT("第一个异常")));
 	TestEqual(TEXT("Default exit gate node should be the final corridor placement."), RouteKit->ObjectiveNodes[5].RelativeTransform.GetLocation(), FVector(2200.0f, 0.0f, 80.0f));
 	TArray<FText> ValidationErrors;
 	TestTrue(TEXT("Default route kit preset should validate cleanly."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
@@ -109,13 +110,13 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 	RouteKit->ObjectiveNodes[4].ObjectiveHint = FText();
 	TestFalse(TEXT("Route kit validation should reject archive nodes without objective hints."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
 	TestTrue(TEXT("Route kit validation should report missing archive objective hint."), ValidationErrors.Num() > 0);
-	RouteKit->ObjectiveNodes[4].ObjectiveHint = FText::FromString(TEXT("Review the tape at the archive terminal."));
+	RouteKit->ObjectiveNodes[4].ObjectiveHint = FText::FromString(TEXT("在档案终端查看录像。"));
 	ValidationErrors.Reset();
 
 	RouteKit->ObjectiveNodes[5].DebugLabel = FText();
 	TestFalse(TEXT("Route kit validation should reject exit nodes without debug labels."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
 	TestTrue(TEXT("Route kit validation should report missing exit debug label."), ValidationErrors.Num() > 0);
-	RouteKit->ObjectiveNodes[5].DebugLabel = FText::FromString(TEXT("Exit Gate"));
+	RouteKit->ObjectiveNodes[5].DebugLabel = FText::FromString(TEXT("出口闸门"));
 	ValidationErrors.Reset();
 
 	FDeepWaterStationObjectiveNode ExtraNode = RouteKit->ObjectiveNodes[5];
@@ -152,11 +153,16 @@ bool FDeepWaterStationRouteKitSpawnsObjectiveNodesTest::RunTest(const FString& P
 	TestEqual(TEXT("Bodycam node should preserve its objective."), SpawnedInteractables[0]->Objective, EFoundFootageInteractableObjective::Bodycam);
 	TestEqual(TEXT("Bodycam node should preserve its source id."), SpawnedInteractables[0]->SourceId, FName(TEXT("Evidence.Bodycam")));
 	TestEqual(TEXT("Bodycam node should spawn at its corridor placement."), SpawnedInteractables[0]->GetActorLocation(), FVector(200.0f, 0.0f, 80.0f));
-	TestEqual(TEXT("Bodycam node should preserve evidence metadata."), SpawnedInteractables[0]->EvidenceMetadata.DisplayName.ToString(), FString(TEXT("Bodycam")));
+	TestEqual(TEXT("Bodycam node should preserve evidence metadata."), SpawnedInteractables[0]->EvidenceMetadata.DisplayName.ToString(), FString(TEXT("随身摄像机")));
 	TestEqual(TEXT("Bodycam node should preserve its trailer beat id."), SpawnedInteractables[0]->TrailerBeatId, FName(TEXT("Beat.BodycamAcquire")));
-	TestEqual(TEXT("First note node should preserve note metadata."), SpawnedInteractables[1]->NoteMetadata.Title.ToString(), FString(TEXT("Intro")));
-	TestEqual(TEXT("First note node should preserve its objective hint."), SpawnedInteractables[1]->ObjectiveHint.ToString(), FString(TEXT("Read the first station note.")));
-	TestEqual(TEXT("First note node should preserve its debug label."), SpawnedInteractables[1]->DebugLabel.ToString(), FString(TEXT("Intro Note")));
+	TestNotNull(TEXT("Bodycam node should expose a visible pickup mesh."), SpawnedInteractables[0]->GetVisualMeshComponentForTests());
+	if (SpawnedInteractables[0]->GetVisualMeshComponentForTests())
+	{
+		TestNotNull(TEXT("Bodycam pickup mesh should resolve to a static mesh asset."), SpawnedInteractables[0]->GetVisualMeshComponentForTests()->GetStaticMesh());
+	}
+	TestEqual(TEXT("First note node should preserve note metadata."), SpawnedInteractables[1]->NoteMetadata.Title.ToString(), FString(TEXT("维护记录")));
+	TestEqual(TEXT("First note node should preserve its objective hint."), SpawnedInteractables[1]->ObjectiveHint.ToString(), FString(TEXT("阅读第一份站内笔记。")));
+	TestEqual(TEXT("First note node should preserve its debug label."), SpawnedInteractables[1]->DebugLabel.ToString(), FString(TEXT("站内笔记")));
 	TestEqual(TEXT("Exit gate should spawn at the final corridor placement."), SpawnedInteractables[5]->GetActorLocation(), FVector(2200.0f, 0.0f, 80.0f));
 	TestEqual(TEXT("Exit gate should preserve its trailer beat id."), SpawnedInteractables[5]->TrailerBeatId, FName(TEXT("Beat.ExitGate")));
 	TestTrue(TEXT("First anomaly record should preserve recording precondition."), SpawnedInteractables[3]->bIsRecordingForFirstAnomalyRecord);
@@ -307,8 +313,8 @@ bool FDeepWaterStationRouteKitObjectiveEncounterBridgeTest::RunTest(const FStrin
 	{
 		TestEqual(TEXT("Route bridge bodycam event should carry the bodycam source id."), BodycamHistory[0].SourceId, FName(TEXT("Evidence.Bodycam")));
 		TestEqual(TEXT("Route bridge bodycam event should carry its trailer beat id."), BodycamHistory[0].TrailerBeatId, FName(TEXT("Beat.BodycamAcquire")));
-		TestEqual(TEXT("Route bridge bodycam event should carry its objective hint."), BodycamHistory[0].ObjectiveHint.ToString(), FString(TEXT("Recover the bodycam.")));
-		TestEqual(TEXT("Route bridge bodycam event should carry its debug label."), BodycamHistory[0].DebugLabel.ToString(), FString(TEXT("Bodycam Pickup")));
+		TestEqual(TEXT("Route bridge bodycam event should carry its objective hint."), BodycamHistory[0].ObjectiveHint.ToString(), FString(TEXT("找回随身摄像机。")));
+		TestEqual(TEXT("Route bridge bodycam event should carry its debug label."), BodycamHistory[0].DebugLabel.ToString(), FString(TEXT("取得随身摄像机")));
 	}
 	TestTrue(TEXT("Route bridge first note interaction should complete."), SpawnedInteractables[1]->Interact_Implementation(PlayerCharacter, EmptyHit));
 	TestTrue(TEXT("Route bridge anomaly candidate interaction should complete."), SpawnedInteractables[2]->Interact_Implementation(PlayerCharacter, EmptyHit));
@@ -330,7 +336,7 @@ bool FDeepWaterStationRouteKitObjectiveEncounterBridgeTest::RunTest(const FStrin
 	{
 		TestEqual(TEXT("Route bridge anomaly record event should carry the pending anomaly source id."), AnomalyRecordHistory[2].SourceId, FName(TEXT("Evidence.Anomaly01")));
 		TestEqual(TEXT("Route bridge anomaly record event should carry record trailer beat id."), AnomalyRecordHistory[2].TrailerBeatId, FName(TEXT("Beat.FirstAnomalyRecord")));
-		TestEqual(TEXT("Route bridge anomaly record event should carry record objective hint."), AnomalyRecordHistory[2].ObjectiveHint.ToString(), FString(TEXT("Record while the anomaly is visible.")));
+		TestEqual(TEXT("Route bridge anomaly record event should carry record objective hint."), AnomalyRecordHistory[2].ObjectiveHint.ToString(), FString(TEXT("异常点可见时开始录制。")));
 	}
 
 	TestTrue(TEXT("Route bridge archive interaction should complete."), SpawnedInteractables[4]->Interact_Implementation(PlayerCharacter, EmptyHit));

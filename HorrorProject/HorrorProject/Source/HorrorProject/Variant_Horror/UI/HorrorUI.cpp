@@ -53,14 +53,14 @@ bool FHorrorUIArchiveSnapshotIncludesMetadataTest::RunTest(const FString& Parame
 
 	FHorrorEvidenceMetadata EvidenceMetadata;
 	EvidenceMetadata.EvidenceId = EvidenceId;
-	EvidenceMetadata.DisplayName = FText::FromString(TEXT("Bodycam"));
+	EvidenceMetadata.DisplayName = FText::FromString(TEXT("随身摄像机"));
 	InventoryComponent->RegisterEvidenceMetadata(EvidenceMetadata);
 	InventoryComponent->AddCollectedEvidenceId(EvidenceId);
 	InventoryComponent->AddCollectedEvidenceId(TEXT("Evidence.Unregistered"));
 
 	FHorrorNoteMetadata NoteMetadata;
 	NoteMetadata.NoteId = NoteId;
-	NoteMetadata.Title = FText::FromString(TEXT("Intro"));
+	NoteMetadata.Title = FText::FromString(TEXT("入站记录"));
 	NoteRecorderComponent->RegisterNoteMetadata(NoteMetadata);
 	NoteRecorderComponent->AddRecordedNoteId(NoteId);
 	NoteRecorderComponent->AddRecordedNoteId(TEXT("Note.Unregistered"));
@@ -71,14 +71,18 @@ bool FHorrorUIArchiveSnapshotIncludesMetadataTest::RunTest(const FString& Parame
 	TestEqual(TEXT("Archive snapshot should expose registered evidence metadata only."), Snapshot.CollectedEvidenceMetadata.Num(), 1);
 	if (Snapshot.CollectedEvidenceMetadata.Num() > 0)
 	{
-		TestEqual(TEXT("Archive snapshot should preserve evidence metadata display name."), Snapshot.CollectedEvidenceMetadata[0].DisplayName.ToString(), FString(TEXT("Bodycam")));
+		TestEqual(TEXT("Archive snapshot should preserve evidence metadata display name."), Snapshot.CollectedEvidenceMetadata[0].DisplayName.ToString(), FString(TEXT("随身摄像机")));
 	}
 	TestEqual(TEXT("Archive snapshot should preserve note ID count."), Snapshot.RecordedNoteIds.Num(), 2);
 	TestEqual(TEXT("Archive snapshot should preserve note total count."), Snapshot.TotalRecordedNotes, 2);
-	TestEqual(TEXT("Archive snapshot should expose registered note metadata only."), Snapshot.RecordedNoteMetadata.Num(), 1);
+	TestEqual(TEXT("Archive snapshot should expose registered and fallback note metadata rows."), Snapshot.RecordedNoteMetadata.Num(), 2);
 	if (Snapshot.RecordedNoteMetadata.Num() > 0)
 	{
-		TestEqual(TEXT("Archive snapshot should preserve note metadata title."), Snapshot.RecordedNoteMetadata[0].Title.ToString(), FString(TEXT("Intro")));
+		TestEqual(TEXT("Archive snapshot should preserve note metadata title."), Snapshot.RecordedNoteMetadata[0].Title.ToString(), FString(TEXT("入站记录")));
+	}
+	if (Snapshot.RecordedNoteMetadata.Num() > 1)
+	{
+		TestEqual(TEXT("Archive snapshot should provide fallback note metadata for unregistered notes."), Snapshot.RecordedNoteMetadata[1].NoteId, FName(TEXT("Note.Unregistered")));
 	}
 
 	return true;

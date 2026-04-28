@@ -147,8 +147,8 @@ void UDefaultConfigs::ApplyDefaultGameplaySettings(UGameplaySettings* Settings)
 	Settings->CameraShakeIntensity = 1.0f;
 	Settings->bEnableHeadBob = true;
 
-	Settings->Language = TEXT("en");
-	Settings->VoiceLanguage = TEXT("en");
+	Settings->Language = TEXT("zh-Hans");
+	Settings->VoiceLanguage = TEXT("zh-Hans");
 
 	Settings->bColorBlindMode = false;
 	Settings->ColorBlindType = 0;

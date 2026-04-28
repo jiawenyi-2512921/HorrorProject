@@ -35,8 +35,8 @@ UGameplaySettings::UGameplaySettings()
 	CameraShakeIntensity = 1.0f;
 	bEnableHeadBob = true;
 
-	Language = TEXT("en");
-	VoiceLanguage = TEXT("en");
+	Language = TEXT("zh-Hans");
+	VoiceLanguage = TEXT("zh-Hans");
 
 	bColorBlindMode = false;
 	ColorBlindType = 0;
@@ -86,14 +86,7 @@ void UGameplaySettings::SetDifficulty(EDifficultyLevel NewDifficulty)
 TArray<FString> UGameplaySettings::GetAvailableLanguages() const
 {
 	TArray<FString> Languages;
-	Languages.Add(TEXT("en"));
-	Languages.Add(TEXT("zh"));
-	Languages.Add(TEXT("ja"));
-	Languages.Add(TEXT("ko"));
-	Languages.Add(TEXT("es"));
-	Languages.Add(TEXT("fr"));
-	Languages.Add(TEXT("de"));
-	Languages.Add(TEXT("ru"));
+	Languages.Add(TEXT("zh-Hans"));
 	return Languages;
 }
 
@@ -120,5 +113,5 @@ void UGameplaySettings::ApplyCameraSettings()
 
 void UGameplaySettings::ApplyLanguageSettings()
 {
-	FInternationalization::Get().SetCurrentCulture(Language);
+	FInternationalization::Get().SetCurrentCulture(TEXT("zh-Hans"));
 }

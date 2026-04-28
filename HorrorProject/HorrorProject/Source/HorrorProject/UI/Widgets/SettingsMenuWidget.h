@@ -49,16 +49,16 @@ public:
 	bool HasUnsavedChanges() const { return bHasUnsavedChanges; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="Settings Opened"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="设置已打开"))
 	void BP_SettingsOpened();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="Settings Closed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="设置已关闭"))
 	void BP_SettingsClosed();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="Settings Applied"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="设置已应用"))
 	void BP_SettingsApplied();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="Category Selected"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Settings|UI", meta=(DisplayName="分类已选择"))
 	void BP_CategorySelected(ESettingsCategory Category);
 
 	UPROPERTY(BlueprintReadOnly, Category="Settings|UI")

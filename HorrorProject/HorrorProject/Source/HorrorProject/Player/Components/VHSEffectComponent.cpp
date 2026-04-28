@@ -7,11 +7,13 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Player/Components/VHSNoiseGenerator.h"
+#include "UObject/ConstructorHelpers.h"
 #include "UObject/Package.h"
 
 namespace HorrorVHSDefaults
 {
-	constexpr TCHAR MissingDefaultPostProcessMaterialReason[] = TEXT("Default VHS post-process material is not assigned; set VHSPostProcessMaterial on the component or Blueprint.");
+	constexpr TCHAR DefaultPostProcessMaterialPath[] = TEXT("/Game/Bodycam_VHS_Effect/Materials/Instances/PostProcess/MI_OldVHS.MI_OldVHS");
+	constexpr TCHAR MissingDefaultPostProcessMaterialReason[] = TEXT("Default VHS post-process material is not available; set VHSPostProcessMaterial on the component or Blueprint.");
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -67,8 +69,8 @@ bool FVHSEffectComponentPostProcessBindingTest::RunTest(const FString& Parameter
 	UCameraComponent* CameraComponent = NewObject<UCameraComponent>();
 	UMaterialInterface* TestMaterial = NewObject<UMaterial>(GetTransientPackage());
 
-	TestFalse(TEXT("Missing default VHS material should fail gracefully without startup load warnings."), VHSEffectComponent->ResolveDefaultPostProcessMaterial());
-	TestNull(TEXT("Missing default VHS material should leave explicit material assignment empty."), VHSEffectComponent->VHSPostProcessMaterial.Get());
+	TestNotNull(TEXT("VHS component should have the bodycam post-process material as a native default."), VHSEffectComponent->VHSPostProcessMaterial.Get());
+	TestFalse(TEXT("Already assigned default VHS material should not resolve duplicate defaults."), VHSEffectComponent->ResolveDefaultPostProcessMaterial());
 	VHSEffectComponent->VHSPostProcessMaterial = TestMaterial;
 	TestFalse(TEXT("Already assigned VHS material should not resolve duplicate defaults."), VHSEffectComponent->ResolveDefaultPostProcessMaterial());
 	VHSEffectComponent->VHSPostProcessBlendWeight = 0.75f;
@@ -102,6 +104,13 @@ bool FVHSEffectComponentPostProcessBindingTest::RunTest(const FString& Parameter
 UVHSEffectComponent::UVHSEffectComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultPostProcessMaterial(
+		HorrorVHSDefaults::DefaultPostProcessMaterialPath);
+	if (DefaultPostProcessMaterial.Succeeded())
+	{
+		VHSPostProcessMaterial = DefaultPostProcessMaterial.Object;
+	}
 }
 
 void UVHSEffectComponent::InitializeNoiseGenerator()
@@ -229,6 +238,14 @@ bool UVHSEffectComponent::ResolveDefaultPostProcessMaterial()
 	if (VHSPostProcessMaterial)
 	{
 		return false;
+	}
+
+	if (UMaterialInterface* ResolvedMaterial = LoadObject<UMaterialInterface>(nullptr, HorrorVHSDefaults::DefaultPostProcessMaterialPath))
+	{
+		VHSPostProcessMaterial = ResolvedMaterial;
+		CreateDynamicMaterialInstance();
+		ApplyPostProcessBlendWeight();
+		return true;
 	}
 
 	UE_LOG(LogTemp, Verbose, TEXT("%s"), HorrorVHSDefaults::MissingDefaultPostProcessMaterialReason);

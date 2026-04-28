@@ -3,12 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
+#include "UI/Day1SliceHUD.h"
 #include "HorrorPlayerController.generated.h"
 
 class UInputMappingContext;
 class UHorrorUI;
 class UUserWidget;
+class ADoorInteractable;
+class UHorrorEventBusSubsystem;
+class ADay1SliceHUD;
+class UGameSettingsSubsystem;
+class UControlSettings;
+class UHorrorAudioSettings;
+class UGraphicsSettings;
+class UNoteRecorderComponent;
+struct FKey;
+struct FInputKeyEventArgs;
+struct FHorrorEventMessage;
 
 /**
  *  Player Controller for a first person horror game
@@ -41,6 +54,34 @@ public:
 	/** Restamps state-derived UI after checkpoint restore without creating new widgets. */
 	void RestampCheckpointLoadedUIState();
 
+	/** Ensures the Day 1 slice uses the native Chinese HUD instead of older prototype widgets. */
+	void EnsureDay1NativeHUD();
+
+	/** Starts lightweight numeric password entry for a locked door. */
+	void BeginDoorPasswordEntry(ADoorInteractable* Door);
+
+	/** Clears transient Day1 modal/input state after failure or checkpoint restore. */
+	void ResetDay1ModalInputState();
+
+	void ShowPlayerMessage(const FText& MessageText, const FLinearColor& MessageColor = FLinearColor::White, float DisplaySeconds = 2.5f);
+
+	bool IsAwaitingDoorPassword() const { return PendingPasswordDoor.IsValid(); }
+	FString GetDoorPasswordBufferForTests() const { return DoorPasswordBuffer; }
+	bool IsDay1PauseMenuOpenForTests() const { return bDay1PauseMenuOpen; }
+	bool IsDay1NotesJournalOpenForTests() const { return bDay1NotesJournalOpen; }
+	bool IsDay1CompletionInputLockedForTests() const { return bDay1CompletionInputLocked; }
+	EDay1PauseMenuSelection GetDay1PauseMenuSelectionForTests() const { return Day1PauseMenuSelection; }
+#if WITH_DEV_AUTOMATION_TESTS
+	bool HandleInputKeyForTests(const FKey& Key, EInputEvent Event = IE_Pressed);
+	void BindObjectiveEventBusForTests();
+	void RefreshDay1HUDStateForTests();
+	bool IsBoundToNoteRecorderForTests(const UNoteRecorderComponent* NoteRecorder) const;
+	bool HasNoteRecordedDelegateForTests(const UNoteRecorderComponent* NoteRecorder);
+	int32 GetNoteRecordedFeedbackCountForTests() const { return NoteRecordedFeedbackCountForTests; }
+	int32 GetDefaultMappingContextCountForTests() const { return DefaultMappingContexts.Num(); }
+	int32 GetMobileExcludedMappingContextCountForTests() const { return MobileExcludedMappingContexts.Num(); }
+#endif
+
 protected:
 
 	/** Input Mapping Contexts */
@@ -61,18 +102,75 @@ protected:
 	/** Gameplay Initialization */
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	/** Possessed pawn initialization */
 	virtual void OnPossess(APawn* aPawn) override;
+	virtual void OnUnPossess() override;
 
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
+
+	/** Captures numeric password input while a locked door is awaiting a code. */
+	virtual bool InputKey(const FInputKeyEventArgs& Params) override;
 
 	/** Adds the configured mapping contexts to the local enhanced input subsystem once. */
 	void ApplyInputMappingContexts();
 
 private:
 
+	ADay1SliceHUD* GetDay1SliceHUD() const;
+	bool ShouldUseDay1NativeHUD() const;
+	void BindObjectiveEventBus();
+	void UnbindObjectiveEventBus();
+	void HandleObjectiveEventPublished(const FHorrorEventMessage& Message);
+	void BindPawnNoteRecorder(APawn* PawnOverride = nullptr);
+	void UnbindPawnNoteRecorder();
+	UFUNCTION()
+	void HandlePawnNoteRecorded(FName NoteId, int32 TotalRecordedNotes);
+	void RefreshDay1HUDState();
+	void RefreshInteractionPrompt();
+	FText BuildObjectivePrompt() const;
+	void ClearDoorPasswordEntry();
+	void CancelDoorPasswordEntry();
+	void ShowDoorPasswordPrompt() const;
+	bool HandleDoorPasswordKey(const FKey& Key);
+	void ApplyDay1CompletionInputLock();
+	void OpenDay1PauseMenu();
+	void CloseDay1PauseMenu();
+	void OpenDay1NotesJournal();
+	void CloseDay1NotesJournal();
+	bool ToggleDay1NotesJournal();
+	void RefreshDay1NotesJournalHUD();
+	UNoteRecorderComponent* GetPawnNoteRecorder() const;
+	bool HandleDay1PauseMenuKey(const FKey& Key);
+	void MoveDay1PauseMenuSelection(int32 Direction);
+	void AdjustDay1PauseMenuValue(float Direction);
+	void RefreshDay1PauseMenuHUD();
+	UGameSettingsSubsystem* GetGameSettingsSubsystem() const;
+	UControlSettings* GetControlSettings() const;
+	UHorrorAudioSettings* GetAudioSettings() const;
+	UGraphicsSettings* GetGraphicsSettings() const;
+	static bool IsDay1AutosaveMilestoneState(FGameplayTag StateTag);
+	static bool TryGetDigitForKey(const FKey& Key, TCHAR& OutDigit);
+
 	/** Prevents duplicate IMC registration across BeginPlay / SetupInputComponent. */
 	bool bInputContextsApplied = false;
+
+	TWeakObjectPtr<ADoorInteractable> PendingPasswordDoor;
+	FString DoorPasswordBuffer;
+	bool bDay1PauseMenuOpen = false;
+	bool bDay1NotesJournalOpen = false;
+	bool bDay1CompletionInputLocked = false;
+	EDay1PauseMenuSelection Day1PauseMenuSelection = EDay1PauseMenuSelection::Resume;
+	TWeakObjectPtr<UHorrorEventBusSubsystem> BoundObjectiveEventBus;
+	FDelegateHandle ObjectiveEventHandle;
+	TWeakObjectPtr<UNoteRecorderComponent> BoundNoteRecorder;
+	FDelegateHandle NoteRecordedHandle;
+#if WITH_DEV_AUTOMATION_TESTS
+	int32 NoteRecordedFeedbackCountForTests = 0;
+#endif
 
 };

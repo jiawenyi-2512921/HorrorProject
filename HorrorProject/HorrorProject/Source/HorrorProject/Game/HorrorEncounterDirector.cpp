@@ -11,10 +11,25 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraShakeBase.h"
+#include "Player/HorrorPlayerCharacter.h"
+#include "Player/HorrorPlayerController.h"
+#include "Player/Components/FearComponent.h"
+#include "Player/Components/NoiseGeneratorComponent.h"
+#include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/VHSEffectComponent.h"
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
 #include "GameplayTagContainer.h"
 #include "HorrorProject.h"
+
+namespace HorrorEncounterFeedback
+{
+	constexpr float RevealFearAmount = 45.0f;
+	constexpr float ResolveFearRelief = 25.0f;
+	constexpr float RevealNoiseMultiplier = 1.0f;
+	constexpr float RevealVHSStress = 1.0f;
+	constexpr float ResolveVHSStress = 0.25f;
+}
 
 void UHorrorEncounterPhaseDelegateProbe::HandleEncounterPhaseChanged(EHorrorEncounterPhase NewPhase, FName EncounterId)
 {
@@ -83,6 +98,7 @@ bool AHorrorEncounterDirector::ResolveEncounter()
 	EncounterPhase = EHorrorEncounterPhase::Resolved;
 	if (ThreatActor)
 	{
+		DeactivateGolemBehavior();
 		ThreatActor->DeactivateThreat();
 	}
 
@@ -91,6 +107,7 @@ bool AHorrorEncounterDirector::ResolveEncounter()
 		PlayEncounterSound(ResolveSound);
 	}
 
+	ApplyResolvePlayerFeedback();
 	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
 	PublishEncounterEvent(TEXT("Encounter.Resolved"), ActiveEncounterId);
 	BP_OnEncounterResolved(ActiveEncounterId);
@@ -110,11 +127,50 @@ bool AHorrorEncounterDirector::ResetEncounter()
 	LastRevealTarget = nullptr;
 	if (ThreatActor)
 	{
+		DeactivateGolemBehavior();
 		ThreatActor->DeactivateThreat();
 	}
 	OnEncounterPhaseChanged.Broadcast(EncounterPhase, ResetEncounterId);
 	BP_OnEncounterReset(ResetEncounterId);
 	return true;
+}
+
+bool AHorrorEncounterDirector::RestoreForCheckpoint(EHorrorEncounterPhase RestoredPhase, FName RestoredEncounterId, AActor* RestoredRevealTarget)
+{
+	const bool bStateChanged = EncounterPhase != RestoredPhase
+		|| ActiveEncounterId != RestoredEncounterId
+		|| LastRevealTarget.Get() != RestoredRevealTarget;
+
+	GetWorldTimerManager().ClearTimer(RevealDelayTimerHandle);
+
+	if (ThreatActor)
+	{
+		DeactivateGolemBehavior();
+		ThreatActor->DeactivateThreat();
+	}
+
+	EncounterPhase = RestoredPhase;
+	ActiveEncounterId = RestoredPhase == EHorrorEncounterPhase::Dormant
+		? NAME_None
+		: (RestoredEncounterId.IsNone() ? DefaultEncounterId : RestoredEncounterId);
+	LastRevealTarget = RestoredPhase == EHorrorEncounterPhase::Revealed ? RestoredRevealTarget : nullptr;
+
+	if (EncounterPhase == EHorrorEncounterPhase::Revealed && IsValid(RestoredRevealTarget))
+	{
+		if (AHorrorThreatCharacter* RestoredThreat = SpawnThreatActor())
+		{
+			RestoredThreat->ActivateThreat();
+			RestoredThreat->UpdateDetectedTarget(RestoredRevealTarget);
+			ActivateGolemBehavior(RestoredRevealTarget);
+		}
+	}
+
+	if (bStateChanged)
+	{
+		OnEncounterPhaseChanged.Broadcast(EncounterPhase, ActiveEncounterId);
+	}
+
+	return bStateChanged;
 }
 
 bool AHorrorEncounterDirector::CanTriggerReveal(const AActor* PlayerActor) const
@@ -198,6 +254,8 @@ void AHorrorEncounterDirector::ExecuteDelayedReveal(AActor* PlayerActor)
 	EncounterPhase = EHorrorEncounterPhase::Revealed;
 	LastRevealTarget = PlayerActor;
 
+	ApplyRevealPlayerFeedback(PlayerActor);
+
 	if (RevealSound)
 	{
 		PlayEncounterSound(RevealSound);
@@ -215,13 +273,73 @@ void AHorrorEncounterDirector::ExecuteDelayedReveal(AActor* PlayerActor)
 	{
 		RevealThreat->ActivateThreat();
 		RevealThreat->UpdateDetectedTarget(PlayerActor);
+		ActivateGolemBehavior(PlayerActor);
 	}
 
 	BP_OnRevealSequenceComplete(PlayerActor, RevealThreat);
 	BP_OnEncounterRevealed(ActiveEncounterId, PlayerActor, RevealThreat);
 }
 
-void AHorrorEncounterDirector::PublishEncounterEvent(FName EventName, FName PhaseTag)
+void AHorrorEncounterDirector::ApplyRevealPlayerFeedback(AActor* PlayerActor)
+{
+	AHorrorPlayerCharacter* PlayerCharacter = Cast<AHorrorPlayerCharacter>(PlayerActor);
+	if (!PlayerCharacter)
+	{
+		return;
+	}
+
+	if (UFearComponent* Fear = PlayerCharacter->GetFearComponent())
+	{
+		Fear->AddFear(HorrorEncounterFeedback::RevealFearAmount, ActiveEncounterId);
+	}
+
+	if (UVHSEffectComponent* VHSEffect = PlayerCharacter->GetVHSEffectComponent())
+	{
+		VHSEffect->UpdateNoiseGenerator(1.0f, HorrorEncounterFeedback::RevealVHSStress, 1.0f);
+	}
+
+	if (UNoiseGeneratorComponent* NoiseGenerator = PlayerCharacter->GetNoiseGeneratorComponent())
+	{
+		NoiseGenerator->GenerateNoise(ENoiseType::Custom, HorrorEncounterFeedback::RevealNoiseMultiplier, PlayerCharacter->GetActorLocation());
+	}
+
+	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(PlayerCharacter->GetController()))
+	{
+		HorrorPlayerController->ShowPlayerMessage(
+			FText::FromString(TEXT("有什么东西动了。保持随身摄像机抬起。")),
+			FLinearColor(1.0f, 0.24f, 0.16f),
+			4.0f);
+	}
+}
+
+void AHorrorEncounterDirector::ApplyResolvePlayerFeedback()
+{
+	AHorrorPlayerCharacter* PlayerCharacter = Cast<AHorrorPlayerCharacter>(LastRevealTarget.Get());
+	if (!PlayerCharacter)
+	{
+		return;
+	}
+
+	if (UFearComponent* Fear = PlayerCharacter->GetFearComponent())
+	{
+		Fear->RemoveFear(HorrorEncounterFeedback::ResolveFearRelief);
+	}
+
+	if (UVHSEffectComponent* VHSEffect = PlayerCharacter->GetVHSEffectComponent())
+	{
+		VHSEffect->UpdateNoiseGenerator(1.0f, HorrorEncounterFeedback::ResolveVHSStress, 1.0f);
+	}
+
+	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(PlayerCharacter->GetController()))
+	{
+		HorrorPlayerController->ShowPlayerMessage(
+			FText::FromString(TEXT("压力正在下降。立刻去出口。")),
+			FLinearColor(0.32f, 0.95f, 0.78f),
+			3.0f);
+	}
+}
+
+void AHorrorEncounterDirector::PublishEncounterEvent(FName EventName, FName EncounterId)
 {
 	if (!bPublishToEventBus)
 	{
@@ -241,14 +359,16 @@ void AHorrorEncounterDirector::PublishEncounterEvent(FName EventName, FName Phas
 	}
 
 	const FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(EventName, false);
-	const FGameplayTag StateTag = FGameplayTag::RequestGameplayTag(PhaseTag, false);
-	if (!EventTag.IsValid() || !StateTag.IsValid())
+	if (!EventTag.IsValid())
 	{
-		UE_LOG(LogHorrorProject, Warning, TEXT("Skipping encounter event publish because tag registration is missing. Event=%s Phase=%s"),
-			*EventName.ToString(),
-			*PhaseTag.ToString());
+		UE_LOG(LogHorrorProject, Warning, TEXT("Skipping encounter event publish because event tag registration is missing. Event=%s"),
+			*EventName.ToString());
 		return;
 	}
+
+	const FGameplayTag StateTag = EncounterId.IsNone()
+		? FGameplayTag::EmptyTag
+		: FGameplayTag::RequestGameplayTag(EncounterId, false);
 
 	EventBus->Publish(EventTag, EventBusSourceId, StateTag, this);
 }

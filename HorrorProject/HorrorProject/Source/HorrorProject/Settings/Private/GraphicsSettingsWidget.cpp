@@ -205,23 +205,23 @@ void UGraphicsSettingsWidget::OnQualityPresetChanged(FString SelectedItem, ESele
 
 	int32 PresetIndex = 2; // Default to High
 
-	if (SelectedItem == TEXT("Low"))
+	if (SelectedItem == TEXT("低"))
 	{
 		PresetIndex = 0;
 	}
-	else if (SelectedItem == TEXT("Medium"))
+	else if (SelectedItem == TEXT("中"))
 	{
 		PresetIndex = 1;
 	}
-	else if (SelectedItem == TEXT("High"))
+	else if (SelectedItem == TEXT("高"))
 	{
 		PresetIndex = 2;
 	}
-	else if (SelectedItem == TEXT("Ultra"))
+	else if (SelectedItem == TEXT("超高"))
 	{
 		PresetIndex = 3;
 	}
-	else if (SelectedItem == TEXT("Cinematic"))
+	else if (SelectedItem == TEXT("电影级"))
 	{
 		PresetIndex = 4;
 	}
@@ -313,9 +313,9 @@ void UGraphicsSettingsWidget::PopulateQualityPresets()
 	}
 
 	QualityPresetComboBox->ClearOptions();
-	QualityPresetComboBox->AddOption(TEXT("Low"));
-	QualityPresetComboBox->AddOption(TEXT("Medium"));
-	QualityPresetComboBox->AddOption(TEXT("High"));
-	QualityPresetComboBox->AddOption(TEXT("Ultra"));
-	QualityPresetComboBox->AddOption(TEXT("Cinematic"));
+	QualityPresetComboBox->AddOption(TEXT("低"));
+	QualityPresetComboBox->AddOption(TEXT("中"));
+	QualityPresetComboBox->AddOption(TEXT("高"));
+	QualityPresetComboBox->AddOption(TEXT("超高"));
+	QualityPresetComboBox->AddOption(TEXT("电影级"));
 }

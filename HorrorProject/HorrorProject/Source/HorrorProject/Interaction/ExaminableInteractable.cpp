@@ -36,7 +36,7 @@ AExaminableInteractable::AExaminableInteractable()
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Default settings
-	InteractionPrompt = FText::FromString("Examine");
+	InteractionPrompt = FText::FromString(TEXT("查看"));
 	bCanInteractMultipleTimes = true;
 }
 

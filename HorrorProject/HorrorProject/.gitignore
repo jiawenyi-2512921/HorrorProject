@@ -29,8 +29,20 @@ Build/Packages/
 # Keep only the project-owned/lightweight runtime content in source control.
 Content/*
 !Content/Blueprints/
+!Content/Characters/
+!Content/Characters/**
+!Content/Bodycam_VHS_Effect/
+!Content/Bodycam_VHS_Effect/**
 !Content/Horror/
 !Content/Input/
+!Content/DeepWaterStation/
+!Content/DeepWaterStation/**
+!Content/Localization/
+!Content/Localization/**
+!Content/SoundsOfHorror/
+!Content/SoundsOfHorror/**
+!Content/Stone_Golem/
+!Content/Stone_Golem/**
 !Content/Variant_Horror/
 !Content/_SM13/
 !Content/__ExternalActors__/

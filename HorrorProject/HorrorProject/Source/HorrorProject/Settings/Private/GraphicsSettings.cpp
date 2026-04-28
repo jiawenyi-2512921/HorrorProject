@@ -219,6 +219,16 @@ void UGraphicsSettings::ApplyAdvancedSettings()
 	{
 		MotionBlurAmountCVar->Set(bMotionBlur ? MotionBlurAmount : 0.0f, ECVF_SetByGameSetting);
 	}
+
+	if (IConsoleVariable* ColorMidCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Color.Mid")))
+	{
+		ColorMidCVar->Set(FMath::Clamp(Brightness, 0.2f, 2.0f) * 0.5f, ECVF_SetByGameSetting);
+	}
+
+	if (IConsoleVariable* TonemapperGammaCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.TonemapperGamma")))
+	{
+		TonemapperGammaCVar->Set(FMath::Clamp(Gamma, 1.0f, 3.0f), ECVF_SetByGameSetting);
+	}
 }
 
 void UGraphicsSettings::DetectHardwareCapabilities()

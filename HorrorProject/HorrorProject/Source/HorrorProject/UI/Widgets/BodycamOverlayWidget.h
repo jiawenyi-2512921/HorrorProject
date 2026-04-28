@@ -44,22 +44,22 @@ public:
 	float GetBatteryLevel() const { return BatteryLevel; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="Recording State Changed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="录制状态已变化"))
 	void BP_RecordingStateChanged(bool bRecording);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="Battery Level Changed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="电量已变化"))
 	void BP_BatteryLevelChanged(float Percent);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="Camera Mode Changed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="摄像机模式已变化"))
 	void BP_CameraModeChanged(EQuantumCameraMode Mode);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="Timestamp Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="时间戳已更新"))
 	void BP_TimestampUpdated(const FString& FormattedTime);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="VHS Intensity Changed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="VHS 强度已变化"))
 	void BP_VHSIntensityChanged(float Intensity);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="Glitch Effect Triggered"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="故障效果已触发"))
 	void BP_GlitchEffectTriggered(float Duration);
 
 	UPROPERTY(BlueprintReadOnly, Category="Bodycam|UI")

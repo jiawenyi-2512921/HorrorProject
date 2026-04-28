@@ -10,9 +10,9 @@
 UENUM(BlueprintType)
 enum class EArchiveEntryType : uint8
 {
-	All UMETA(DisplayName="All"),
-	Evidence UMETA(DisplayName="Evidence"),
-	Notes UMETA(DisplayName="Notes")
+	All UMETA(DisplayName="全部"),
+	Evidence UMETA(DisplayName="证据"),
+	Notes UMETA(DisplayName="笔记")
 };
 
 /**
@@ -48,19 +48,19 @@ public:
 	bool IsOpen() const { return bIsOpen; }
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Archive Opened"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="档案已打开"))
 	void BP_ArchiveOpened();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Archive Closed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="档案已关闭"))
 	void BP_ArchiveClosed();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Archive Data Refreshed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="档案数据已刷新"))
 	void BP_ArchiveDataRefreshed(const TArray<FHorrorEvidenceMetadata>& Evidence, const TArray<FHorrorNoteMetadata>& Notes);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Entry Selected"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="条目已选择"))
 	void BP_EntrySelected(FName EntryId);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Filter Applied"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="筛选已应用"))
 	void BP_FilterApplied(EArchiveEntryType Type);
 
 	UPROPERTY(BlueprintReadOnly, Category="Archive|UI")

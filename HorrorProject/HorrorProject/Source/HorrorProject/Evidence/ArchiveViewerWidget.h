@@ -48,13 +48,13 @@ public:
 	void SortByType();
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Archive Entries Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="档案条目已更新"))
 	void BP_ArchiveEntriesUpdated(const TArray<FArchiveEntry>& Entries);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="Entry Viewed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="条目已查看"))
 	void BP_EntryViewed(FName EntryId);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="New Entry Added"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Archive|UI", meta=(DisplayName="新条目已添加"))
 	void BP_NewEntryAdded(const FArchiveEntry& Entry);
 
 	UFUNCTION()

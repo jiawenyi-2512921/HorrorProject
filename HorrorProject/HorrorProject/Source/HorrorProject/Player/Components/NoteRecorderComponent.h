@@ -7,6 +7,7 @@
 #include "NoteRecorderComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FNoteRecordedSignature, FName, NoteId, int32, TotalRecordedNotes);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FNoteRecordedNativeSignature, FName, int32);
 
 UCLASS(MinimalAPI, Hidden, NotBlueprintable, NotPlaceable)
 class UNoteRecorderDelegateProbe : public UObject
@@ -79,6 +80,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category="Notes|Archive")
 	FNoteRecordedSignature OnNoteRecorded;
+
+	FNoteRecordedNativeSignature OnNoteRecordedNative;
 
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, SaveGame, Category="Notes|Archive", meta=(AllowPrivateAccess="true"))

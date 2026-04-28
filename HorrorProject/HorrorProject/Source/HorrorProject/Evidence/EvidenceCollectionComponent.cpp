@@ -125,7 +125,7 @@ bool UEvidenceCollectionComponent::StopVideoCapture(FName& OutEvidenceId, float&
 	VideoMetadata.EvidenceId = CurrentVideoEvidenceId;
 	VideoMetadata.Type = EEvidenceType::Video;
 	VideoMetadata.CollectionTimestamp = FDateTime::Now();
-	VideoMetadata.DisplayName = FText::FromString(FString::Printf(TEXT("Video Recording %d"), VideoCount + 1));
+	VideoMetadata.DisplayName = FText::FromString(FString::Printf(TEXT("录像记录 %d"), VideoCount + 1));
 
 	if (AActor* Owner = GetOwner())
 	{

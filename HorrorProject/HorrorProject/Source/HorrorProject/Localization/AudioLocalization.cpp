@@ -9,7 +9,7 @@ namespace
 {
 	const TCHAR* AudioLocalizationConfigSection = TEXT("/Script/HorrorProject.AudioLocalization");
 	const TCHAR* AudioLocalizationConfigKey = TEXT("AudioLocalizationDataAsset");
-	const TCHAR* DefaultAudioLocalizationDataPath = TEXT("/Game/Localization/DA_AudioLocalization.DA_AudioLocalization");
+	const TCHAR* DefaultAudioLocalizationDataPath = TEXT("");
 
 	UAudioLocalizationData* LoadAudioLocalizationData()
 	{
@@ -22,6 +22,11 @@ namespace
 		if (DataAssetPath.IsEmpty())
 		{
 			DataAssetPath = DefaultAudioLocalizationDataPath;
+		}
+
+		if (DataAssetPath.IsEmpty())
+		{
+			return nullptr;
 		}
 
 		const FSoftObjectPath AssetPath(DataAssetPath);

@@ -23,17 +23,18 @@ bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Param
 	TestTrue(TEXT("First note ID should be accepted."), NoteRecorderComponent->AddRecordedNoteId(FirstNoteId));
 	TestFalse(TEXT("Duplicate note IDs should be ignored."), NoteRecorderComponent->AddRecordedNoteId(FirstNoteId));
 	TestTrue(TEXT("Second note ID should be accepted."), NoteRecorderComponent->AddRecordedNoteId(SecondNoteId));
-	TestEqual(TEXT("Runtime note recording should broadcast unique additions only."), DelegateProbe->BroadcastCount, 2);
-	TestEqual(TEXT("Note delegate should publish last recorded id."), DelegateProbe->LastNoteId, SecondNoteId);
-	TestEqual(TEXT("Note delegate should publish last total count."), DelegateProbe->LastTotalRecordedNotes, 2);
-	TestEqual(TEXT("Note delegate should preserve id payload order."), DelegateProbe->NoteIds, TArray<FName>({ FirstNoteId, SecondNoteId }));
-	TestEqual(TEXT("Note delegate should preserve total payload order."), DelegateProbe->TotalRecordedNoteCounts, TArray<int32>({ 1, 2 }));
+	TestTrue(TEXT("Unregistered note IDs should still be recorded for native journal fallback."), NoteRecorderComponent->AddRecordedNoteId(TEXT("Note.Unregistered")));
+	TestEqual(TEXT("Runtime note recording should broadcast unique additions only."), DelegateProbe->BroadcastCount, 3);
+	TestEqual(TEXT("Note delegate should publish last recorded id."), DelegateProbe->LastNoteId, FName(TEXT("Note.Unregistered")));
+	TestEqual(TEXT("Note delegate should publish last total count."), DelegateProbe->LastTotalRecordedNotes, 3);
+	TestEqual(TEXT("Note delegate should preserve id payload order."), DelegateProbe->NoteIds, TArray<FName>({ FirstNoteId, SecondNoteId, FName(TEXT("Note.Unregistered")) }));
+	TestEqual(TEXT("Note delegate should preserve total payload order."), DelegateProbe->TotalRecordedNoteCounts, TArray<int32>({ 1, 2, 3 }));
 	TestTrue(TEXT("Known note IDs should be queryable."), NoteRecorderComponent->HasRecordedNoteId(FirstNoteId));
 	TestFalse(TEXT("Unknown note IDs should not be queryable."), NoteRecorderComponent->HasRecordedNoteId(TEXT("Note.Unknown")));
-	TestEqual(TEXT("Recorded note count should match unique IDs."), NoteRecorderComponent->GetRecordedNoteCount(), 2);
+	TestEqual(TEXT("Recorded note count should match unique IDs."), NoteRecorderComponent->GetRecordedNoteCount(), 3);
 
 	const TArray<FName>& RecordedNotes = NoteRecorderComponent->GetRecordedNoteIds();
-	TestEqual(TEXT("Recorded note IDs should preserve acquisition order."), RecordedNotes.Num(), 2);
+	TestEqual(TEXT("Recorded note IDs should preserve acquisition order."), RecordedNotes.Num(), 3);
 	TestEqual(TEXT("First recorded note should remain first."), RecordedNotes[0], FirstNoteId);
 	TestEqual(TEXT("Second recorded note should remain second."), RecordedNotes[1], SecondNoteId);
 
@@ -67,12 +68,14 @@ bool FNoteRecorderComponentStoresUniqueNoteIdsTest::RunTest(const FString& Param
 	NoteRecorderComponent->RegisterNoteMetadata(ArchiveMetadata);
 
 	const TArray<FHorrorNoteMetadata> RecordedMetadata = NoteRecorderComponent->GetRecordedNoteMetadata();
-	TestEqual(TEXT("Recorded note metadata should include registered recorded notes only."), RecordedMetadata.Num(), 2);
-	if (RecordedMetadata.Num() == 2)
+	TestEqual(TEXT("Recorded note metadata should include every recorded note with display fallback."), RecordedMetadata.Num(), 3);
+	if (RecordedMetadata.Num() == 3)
 	{
 		TestEqual(TEXT("Recorded note metadata should preserve recorded order for first id."), RecordedMetadata[0].NoteId, FirstNoteId);
 		TestEqual(TEXT("Recorded note metadata should preserve recorded order for second id."), RecordedMetadata[1].NoteId, SecondNoteId);
 		TestEqual(TEXT("Recorded note metadata should include overwritten first metadata."), RecordedMetadata[0].Title.ToString(), FString(TEXT("Recovered Intro")));
+		TestEqual(TEXT("Recorded note metadata should fallback to note id for missing titles."), RecordedMetadata[2].Title.ToString(), FString(TEXT("Note.Unregistered")));
+		TestEqual(TEXT("Recorded note metadata should fallback to a readable body for missing metadata."), RecordedMetadata[2].Body.ToString(), FString(TEXT("无法读取这份笔记的内容。")));
 	}
 
 	return true;
