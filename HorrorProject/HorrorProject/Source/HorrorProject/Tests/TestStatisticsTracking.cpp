@@ -10,7 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSubsystemTest, "HorrorProject.Statis
 bool FStatisticsSubsystemTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -53,7 +53,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsSessionTest, "HorrorProject.Statisti
 bool FStatisticsSessionTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -86,7 +86,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsReportTest, "HorrorProject.Statistic
 bool FStatisticsReportTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -109,7 +109,7 @@ bool FStatisticsReportTest::RunTest(const FString& Parameters)
 	// Test: Generate report
 	FString Report = StatisticsSubsystem->GenerateStatisticsReport();
 	TestTrue(TEXT("Report should not be empty"), !Report.IsEmpty());
-	TestTrue(TEXT("Report should contain statistics"), Report.Contains(TEXT("STATISTICS")));
+	TestTrue(TEXT("Report should contain statistics"), Report.Contains(TEXT("统计")));
 
 	return true;
 }
@@ -119,7 +119,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsEventsTest, "HorrorProject.Statistic
 bool FStatisticsEventsTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));

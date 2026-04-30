@@ -15,7 +15,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableConstructionTest, "HorrorProject.Interaction.Examinable.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
@@ -28,7 +28,7 @@ bool FExaminableInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStartExamineTest, "HorrorProject.Interaction.Examinable.StartExamine", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableStartExamineTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 
@@ -41,7 +41,7 @@ bool FExaminableInteractableStartExamineTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableStopExamineTest, "HorrorProject.Interaction.Examinable.StopExamine", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableStopExamineTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 
@@ -57,7 +57,7 @@ bool FExaminableInteractableStopExamineTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableRotationTest, "HorrorProject.Interaction.Examinable.Rotation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableRotationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 
@@ -73,7 +73,7 @@ bool FExaminableInteractableRotationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableZoomTest, "HorrorProject.Interaction.Examinable.Zoom", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableZoomTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 
@@ -89,7 +89,7 @@ bool FExaminableInteractableZoomTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Examinable.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -103,7 +103,7 @@ bool FExaminableInteractableMultipleInteractionsTest::RunTest(const FString& Par
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableCannotExamineWhileExaminingTest, "HorrorProject.Interaction.Examinable.CannotExamineWhileExamining", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableCannotExamineWhileExaminingTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 	AActor* Player = World->SpawnActor<AActor>();
@@ -119,7 +119,7 @@ bool FExaminableInteractableCannotExamineWhileExaminingTest::RunTest(const FStri
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableComponentsTest, "HorrorProject.Interaction.Examinable.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -136,7 +136,7 @@ bool FExaminableInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableNullControllerTest, "HorrorProject.Interaction.Examinable.NullController", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableNullControllerTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 
 	Examinable->StartExamining(nullptr);
@@ -148,7 +148,7 @@ bool FExaminableInteractableNullControllerTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExaminableInteractableTickTest, "HorrorProject.Interaction.Examinable.Tick", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExaminableInteractableTickTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	APlayerController* PC = World->SpawnActor<APlayerController>();
 

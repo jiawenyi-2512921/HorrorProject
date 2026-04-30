@@ -11,14 +11,14 @@
 UENUM(BlueprintType)
 enum class EParticleEffectType : uint8
 {
-	UnderwaterDebris UMETA(DisplayName = "Underwater Debris"),
-	DustParticles UMETA(DisplayName = "Dust Particles"),
-	BloodSplatter UMETA(DisplayName = "Blood Splatter"),
-	WaterDrips UMETA(DisplayName = "Water Drips"),
-	SteamVents UMETA(DisplayName = "Steam Vents"),
-	EmergencyLights UMETA(DisplayName = "Emergency Lights"),
-	BubbleTrail UMETA(DisplayName = "Bubble Trail"),
-	SparkShower UMETA(DisplayName = "Spark Shower")
+	UnderwaterDebris UMETA(DisplayName = "水下碎屑"),
+	DustParticles UMETA(DisplayName = "尘埃粒子"),
+	BloodSplatter UMETA(DisplayName = "血迹飞溅"),
+	WaterDrips UMETA(DisplayName = "滴水"),
+	SteamVents UMETA(DisplayName = "蒸汽喷口"),
+	EmergencyLights UMETA(DisplayName = "应急灯光"),
+	BubbleTrail UMETA(DisplayName = "气泡轨迹"),
+	SparkShower UMETA(DisplayName = "火花喷溅")
 };
 
 USTRUCT(BlueprintType)

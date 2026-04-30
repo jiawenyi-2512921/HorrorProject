@@ -15,6 +15,7 @@ struct FFirstLoopObjectiveSpec
 	EFoundFootageInteractableObjective Objective;
 	const TCHAR* SourceId;
 	float XOffsetCm;
+	float YOffsetCm;
 	const TCHAR* TrailerBeatId;
 	const TCHAR* ObjectiveHint;
 	const TCHAR* DebugLabel;
@@ -31,16 +32,19 @@ constexpr float BodycamXOffsetCm = 200.0f;
 constexpr float FirstNoteXOffsetCm = 600.0f;
 constexpr float FirstAnomalyCandidateXOffsetCm = 1000.0f;
 constexpr float FirstAnomalyRecordXOffsetCm = 1400.0f;
-constexpr float ArchiveReviewXOffsetCm = 1800.0f;
-constexpr float ExitRouteGateXOffsetCm = 2200.0f;
+constexpr float ArchiveReviewXOffsetCm = 1650.0f;
+constexpr float ExitRouteGateXOffsetCm = 2050.0f;
+constexpr float MainCorridorYOffsetCm = 0.0f;
+constexpr float ServiceRouteYOffsetCm = 300.0f;
 
 constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 	{
 		EFoundFootageInteractableObjective::Bodycam,
 		TEXT("Evidence.Bodycam"),
 		BodycamXOffsetCm,
+		MainCorridorYOffsetCm,
 		TEXT("Beat.BodycamAcquire"),
-		TEXT("找回随身摄像机。"),
+		TEXT("取回随身摄像机。"),
 		TEXT("取得随身摄像机"),
 		true,
 		false,
@@ -54,28 +58,30 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		EFoundFootageInteractableObjective::FirstNote,
 		TEXT("Note.Intro"),
 		FirstNoteXOffsetCm,
+		MainCorridorYOffsetCm,
 		TEXT("Beat.FirstNote"),
-		TEXT("阅读第一份站内笔记。"),
-		TEXT("站内笔记"),
+		TEXT("阅读第一份站内备忘录。"),
+		TEXT("站内备忘录"),
 		true,
 		false,
 		nullptr,
 		nullptr,
 		TEXT("Note.Intro"),
-		TEXT("维修记录：路线密码"),
-		TEXT("0417 可以打开第一道维修门。1831 可以打开异常室门。1799 是后续维修舱口密码。1697 是出口路线门禁密码。标记 1939 的上层维修舱口暂时封闭，不需要攀爬；第一个异常点就在舱口下方的地面层。")
+		TEXT("维修日志：路线门禁码"),
+		TEXT("0417 可以打开第一道维修门。1831 可以打开异常室门。1799 是后续维修舱门密码。1697 是出口通道门禁码。标记 1939 的上层维修舱暂时封死，不需要攀爬；第一个异常在舱门下方的地面层。")
 	},
 	{
 		EFoundFootageInteractableObjective::FirstAnomalyCandidate,
 		TEXT("Evidence.Anomaly01"),
 		FirstAnomalyCandidateXOffsetCm,
+		MainCorridorYOffsetCm,
 		TEXT("Beat.FirstAnomalyCandidate"),
-		TEXT("对准第一个异常点。"),
+		TEXT("对准第一个异常。"),
 		TEXT("异常目标"),
 		true,
 		false,
 		TEXT("Evidence.Anomaly01"),
-		TEXT("第一个异常"),
+		TEXT("第一异常"),
 		nullptr,
 		nullptr,
 		nullptr
@@ -84,13 +90,14 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		EFoundFootageInteractableObjective::FirstAnomalyRecord,
 		TEXT("Evidence.Recorder"),
 		FirstAnomalyRecordXOffsetCm,
+		MainCorridorYOffsetCm,
 		TEXT("Beat.FirstAnomalyRecord"),
-		TEXT("异常点可见时开始录制。"),
-		TEXT("异常录制窗口"),
+		TEXT("异常可见时开始录像。"),
+		TEXT("异常录像窗口"),
 		true,
 		true,
 		TEXT("Evidence.Anomaly01"),
-		TEXT("第一个异常"),
+		TEXT("第一异常"),
 		nullptr,
 		nullptr,
 		nullptr
@@ -99,8 +106,9 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		EFoundFootageInteractableObjective::ArchiveReview,
 		TEXT("Archive.Terminal"),
 		ArchiveReviewXOffsetCm,
+		ServiceRouteYOffsetCm,
 		TEXT("Beat.ArchiveReview"),
-		TEXT("在档案终端查看录像。"),
+		TEXT("在档案终端复查录像。"),
 		TEXT("档案终端"),
 		true,
 		false,
@@ -114,8 +122,9 @@ constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 		EFoundFootageInteractableObjective::ExitRouteGate,
 		TEXT("Exit.Gate"),
 		ExitRouteGateXOffsetCm,
+		ServiceRouteYOffsetCm,
 		TEXT("Beat.ExitGate"),
-		TEXT("从已解锁的勤务闸门离开。"),
+		TEXT("穿过已解锁的维修出口。"),
 		TEXT("出口闸门"),
 		true,
 		false,
@@ -136,9 +145,9 @@ constexpr EFoundFootageInteractableObjective DeepWaterExpectedObjectiveOrder[] =
 	EFoundFootageInteractableObjective::ExitRouteGate
 };
 
-FVector MakeFirstLoopRelativeLocation(float XOffsetCm)
+FVector MakeFirstLoopRelativeLocation(float XOffsetCm, float YOffsetCm)
 {
-	return FVector(XOffsetCm, 0.0f, HorrorRouteKitDefaults::ObjectiveHeightCm);
+	return FVector(XOffsetCm, YOffsetCm, HorrorRouteKitDefaults::ObjectiveHeightCm);
 }
 
 FDeepWaterStationObjectiveNode MakeFirstLoopNode(
@@ -163,6 +172,37 @@ FDeepWaterStationObjectiveNode MakeFirstLoopNode(
 	return Node;
 }
 
+FDeepWaterStationObjectiveNode MakeFirstLoopNode(const FFirstLoopObjectiveSpec& Spec)
+{
+	FDeepWaterStationObjectiveNode Node = MakeFirstLoopNode(
+		Spec.Objective,
+		Spec.SourceId,
+		MakeFirstLoopRelativeLocation(Spec.XOffsetCm, Spec.YOffsetCm),
+		Spec.TrailerBeatId,
+		Spec.ObjectiveHint,
+		Spec.DebugLabel,
+		Spec.bEnableBodycamOnInteract,
+		Spec.bIsRecordingForFirstAnomalyRecord);
+
+	if (Spec.EvidenceId && Spec.EvidenceDisplayName)
+	{
+		Node.EvidenceMetadata.EvidenceId = Spec.EvidenceId;
+		Node.EvidenceMetadata.DisplayName = FText::FromString(Spec.EvidenceDisplayName);
+	}
+
+	if (Spec.NoteId && Spec.NoteTitle)
+	{
+		Node.NoteMetadata.NoteId = Spec.NoteId;
+		Node.NoteMetadata.Title = FText::FromString(Spec.NoteTitle);
+		if (Spec.NoteBody)
+		{
+			Node.NoteMetadata.Body = FText::FromString(Spec.NoteBody);
+		}
+	}
+
+	return Node;
+}
+
 bool DeepWaterObjectiveRequiresEvidenceMetadata(EFoundFootageInteractableObjective Objective)
 {
 	return Objective == EFoundFootageInteractableObjective::Bodycam
@@ -173,6 +213,20 @@ bool DeepWaterObjectiveRequiresEvidenceMetadata(EFoundFootageInteractableObjecti
 bool DeepWaterObjectiveRequiresNoteMetadata(EFoundFootageInteractableObjective Objective)
 {
 	return Objective == EFoundFootageInteractableObjective::FirstNote;
+}
+
+bool IsLegacyStraightLineLateObjectivePlacement(const FDeepWaterStationObjectiveNode& Node)
+{
+	const FVector Location = Node.RelativeTransform.GetLocation();
+	if (Node.Objective == EFoundFootageInteractableObjective::ArchiveReview)
+	{
+		return Location.Equals(FVector(1800.0, 0.0, HorrorRouteKitDefaults::ObjectiveHeightCm), KINDA_SMALL_NUMBER);
+	}
+	if (Node.Objective == EFoundFootageInteractableObjective::ExitRouteGate)
+	{
+		return Location.Equals(FVector(2200.0, 0.0, HorrorRouteKitDefaults::ObjectiveHeightCm), KINDA_SMALL_NUMBER);
+	}
+	return false;
 }
 }
 
@@ -193,6 +247,10 @@ void ADeepWaterStationRouteKit::BeginPlay()
 	{
 		ConfigureDefaultFirstLoopObjectiveNodes();
 	}
+	else
+	{
+		EnsureDefaultFirstLoopObjectiveNodes();
+	}
 	SpawnObjectiveNodes();
 	SpawnEncounterDirector();
 }
@@ -202,34 +260,85 @@ void ADeepWaterStationRouteKit::ConfigureDefaultFirstLoopObjectiveNodes()
 	ObjectiveNodes.Reset(UE_ARRAY_COUNT(FirstLoopObjectiveSpecs));
 	for (const FFirstLoopObjectiveSpec& Spec : FirstLoopObjectiveSpecs)
 	{
-		FDeepWaterStationObjectiveNode Node = MakeFirstLoopNode(
-			Spec.Objective,
-			Spec.SourceId,
-			MakeFirstLoopRelativeLocation(Spec.XOffsetCm),
-			Spec.TrailerBeatId,
-			Spec.ObjectiveHint,
-			Spec.DebugLabel,
-			Spec.bEnableBodycamOnInteract,
-			Spec.bIsRecordingForFirstAnomalyRecord);
-
-		if (Spec.EvidenceId && Spec.EvidenceDisplayName)
-		{
-			Node.EvidenceMetadata.EvidenceId = Spec.EvidenceId;
-			Node.EvidenceMetadata.DisplayName = FText::FromString(Spec.EvidenceDisplayName);
-		}
-
-		if (Spec.NoteId && Spec.NoteTitle)
-		{
-			Node.NoteMetadata.NoteId = Spec.NoteId;
-			Node.NoteMetadata.Title = FText::FromString(Spec.NoteTitle);
-			if (Spec.NoteBody)
-			{
-				Node.NoteMetadata.Body = FText::FromString(Spec.NoteBody);
-			}
-		}
-
-		ObjectiveNodes.Add(MoveTemp(Node));
+		ObjectiveNodes.Add(MakeFirstLoopNode(Spec));
 	}
+}
+
+bool ADeepWaterStationRouteKit::EnsureDefaultFirstLoopObjectiveNodes()
+{
+	bool bChanged = false;
+
+	if (ObjectiveNodes.Num() != UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))
+	{
+		TArray<FDeepWaterStationObjectiveNode> RepairedNodes;
+		RepairedNodes.Reserve(UE_ARRAY_COUNT(FirstLoopObjectiveSpecs));
+		for (const FFirstLoopObjectiveSpec& Spec : FirstLoopObjectiveSpecs)
+		{
+			const FDeepWaterStationObjectiveNode* ExistingNode = ObjectiveNodes.FindByPredicate(
+				[&Spec](const FDeepWaterStationObjectiveNode& Node)
+				{
+					return Node.Objective == Spec.Objective;
+				});
+			RepairedNodes.Add(ExistingNode ? *ExistingNode : MakeFirstLoopNode(Spec));
+		}
+		ObjectiveNodes = MoveTemp(RepairedNodes);
+		bChanged = true;
+	}
+
+	for (int32 ObjectiveIndex = 0; ObjectiveIndex < UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder); ++ObjectiveIndex)
+	{
+		if (!ObjectiveNodes.IsValidIndex(ObjectiveIndex) || ObjectiveNodes[ObjectiveIndex].Objective != DeepWaterExpectedObjectiveOrder[ObjectiveIndex])
+		{
+			ConfigureDefaultFirstLoopObjectiveNodes();
+			return true;
+		}
+
+		const FFirstLoopObjectiveSpec& Spec = FirstLoopObjectiveSpecs[ObjectiveIndex];
+		FDeepWaterStationObjectiveNode& Node = ObjectiveNodes[ObjectiveIndex];
+		const FDeepWaterStationObjectiveNode DefaultNode = MakeFirstLoopNode(Spec);
+		if (Node.SourceId.IsNone())
+		{
+			Node.SourceId = DefaultNode.SourceId;
+			bChanged = true;
+		}
+		if (Node.TrailerBeatId.IsNone())
+		{
+			Node.TrailerBeatId = DefaultNode.TrailerBeatId;
+			bChanged = true;
+		}
+		if (Node.ObjectiveHint.IsEmpty())
+		{
+			Node.ObjectiveHint = DefaultNode.ObjectiveHint;
+			bChanged = true;
+		}
+		if (Node.DebugLabel.IsEmpty())
+		{
+			Node.DebugLabel = DefaultNode.DebugLabel;
+			bChanged = true;
+		}
+		if (Node.bIsRecordingForFirstAnomalyRecord != DefaultNode.bIsRecordingForFirstAnomalyRecord)
+		{
+			Node.bIsRecordingForFirstAnomalyRecord = DefaultNode.bIsRecordingForFirstAnomalyRecord;
+			bChanged = true;
+		}
+		if (IsLegacyStraightLineLateObjectivePlacement(Node))
+		{
+			Node.RelativeTransform = DefaultNode.RelativeTransform;
+			bChanged = true;
+		}
+		if (DeepWaterObjectiveRequiresEvidenceMetadata(Node.Objective) && Node.EvidenceMetadata.EvidenceId.IsNone())
+		{
+			Node.EvidenceMetadata = DefaultNode.EvidenceMetadata;
+			bChanged = true;
+		}
+		if (DeepWaterObjectiveRequiresNoteMetadata(Node.Objective) && Node.NoteMetadata.NoteId.IsNone())
+		{
+			Node.NoteMetadata = DefaultNode.NoteMetadata;
+			bChanged = true;
+		}
+	}
+
+	return bChanged;
 }
 
 bool ADeepWaterStationRouteKit::ValidateObjectiveNodes(TArray<FText>& ValidationErrors) const
@@ -247,17 +356,17 @@ void ADeepWaterStationRouteKit::ValidateRouteKitClassSettings(TArray<FText>& Val
 {
 	if (!ObjectiveInteractableClass)
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("未设置 ObjectiveInteractableClass。")));
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("ObjectiveInteractableClass is not set.")));
 	}
 
 	if (!EncounterDirectorClass)
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("未设置 EncounterDirectorClass。")));
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("EncounterDirectorClass is not set.")));
 	}
 
 	if (EncounterId.IsNone())
 	{
-		ValidationErrors.Add(FText::FromString(TEXT("未设置 EncounterId。")));
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("EncounterId is not set.")));
 	}
 }
 
@@ -266,7 +375,7 @@ void ADeepWaterStationRouteKit::ValidateObjectiveRouteOrder(TArray<FText>& Valid
 	if (ObjectiveNodes.Num() != UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标路线必须正好包含 {0} 个首轮节点。")),
+			FText::AsCultureInvariant(TEXT("Objective route must contain exactly {0} first-loop nodes.")),
 			FText::AsNumber(UE_ARRAY_COUNT(DeepWaterExpectedObjectiveOrder))));
 	}
 
@@ -275,7 +384,7 @@ void ADeepWaterStationRouteKit::ValidateObjectiveRouteOrder(TArray<FText>& Valid
 		if (!ObjectiveNodes.IsValidIndex(ObjectiveIndex) || ObjectiveNodes[ObjectiveIndex].Objective != DeepWaterExpectedObjectiveOrder[ObjectiveIndex])
 		{
 			ValidationErrors.Add(FText::Format(
-				FText::FromString(TEXT("目标节点 {0} 不符合首轮顺序。")),
+				FText::AsCultureInvariant(TEXT("Objective node {0} does not match the first-loop order.")),
 				FText::AsNumber(ObjectiveIndex)));
 		}
 	}
@@ -305,13 +414,13 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeIdentity(
 	if (ObjectiveNode.SourceId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 缺少 SourceId。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} is missing SourceId.")),
 			FText::AsNumber(NodeIndex)));
 	}
 	else if (SeenSourceIds.Contains(ObjectiveNode.SourceId))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 重复使用 SourceId {1}。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} has duplicate SourceId {1}.")),
 			FText::AsNumber(NodeIndex),
 			FText::FromName(ObjectiveNode.SourceId)));
 	}
@@ -323,13 +432,13 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeIdentity(
 	if (ObjectiveNode.TrailerBeatId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 缺少 TrailerBeatId。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} is missing TrailerBeatId.")),
 			FText::AsNumber(NodeIndex)));
 	}
 	else if (SeenTrailerBeatIds.Contains(ObjectiveNode.TrailerBeatId))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 重复使用 TrailerBeatId {1}。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} has duplicate TrailerBeatId {1}.")),
 			FText::AsNumber(NodeIndex),
 			FText::FromName(ObjectiveNode.TrailerBeatId)));
 	}
@@ -347,14 +456,14 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeText(
 	if (ObjectiveNode.ObjectiveHint.IsEmpty())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 缺少 ObjectiveHint。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} is missing ObjectiveHint.")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (ObjectiveNode.DebugLabel.IsEmpty())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 缺少 DebugLabel。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} is missing DebugLabel.")),
 			FText::AsNumber(NodeIndex)));
 	}
 }
@@ -368,21 +477,21 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeRequirements(
 		!= (ObjectiveNode.Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord))
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 的首个异常录制标记无效。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} has invalid first anomaly recording flag.")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (DeepWaterObjectiveRequiresEvidenceMetadata(ObjectiveNode.Objective) && ObjectiveNode.EvidenceMetadata.EvidenceId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 需要证据元数据。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} requires evidence metadata.")),
 			FText::AsNumber(NodeIndex)));
 	}
 
 	if (DeepWaterObjectiveRequiresNoteMetadata(ObjectiveNode.Objective) && ObjectiveNode.NoteMetadata.NoteId.IsNone())
 	{
 		ValidationErrors.Add(FText::Format(
-			FText::FromString(TEXT("目标节点 {0} 需要笔记元数据。")),
+			FText::AsCultureInvariant(TEXT("Objective node {0} requires note metadata.")),
 			FText::AsNumber(NodeIndex)));
 	}
 }

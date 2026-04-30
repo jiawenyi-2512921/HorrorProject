@@ -23,13 +23,14 @@ namespace
 	constexpr float FallingBrakeDeceleration = 1500.0f;
 	constexpr float MinimumJumpZVelocity = 520.0f;
 	constexpr float MinimumMaxStepHeight = 55.0f;
+	const FName FirstPersonCameraSocketName(TEXT("head"));
 }
 
 AHorrorProjectCharacter::AHorrorProjectCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(InitialCapsuleRadius, CapsuleHalfHeight);
-	
+
 	// Create the first person mesh that will be viewed only by this character's owner
 	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
 
@@ -38,9 +39,9 @@ AHorrorProjectCharacter::AHorrorProjectCharacter()
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
-	// Create the Camera Component	
+	// Create the Camera Component
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
+	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh);
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(
 		FVector(-2.8f, 5.89f, 0.0f),
 		FRotator(0.0f, FirstPersonCameraYaw, FirstPersonCameraRoll));
@@ -67,6 +68,16 @@ AHorrorProjectCharacter::AHorrorProjectCharacter()
 void AHorrorProjectCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if (FirstPersonMesh
+		&& FirstPersonCameraComponent
+		&& FirstPersonMesh->DoesSocketExist(FirstPersonCameraSocketName)
+		&& FirstPersonCameraComponent->GetAttachSocketName() != FirstPersonCameraSocketName)
+	{
+		FirstPersonCameraComponent->AttachToComponent(
+			FirstPersonMesh,
+			FAttachmentTransformRules::KeepRelativeTransform,
+			FirstPersonCameraSocketName);
+	}
 	ConfigureJumpMovementDefaults();
 }
 
@@ -81,7 +92,7 @@ void AHorrorProjectCharacter::ConfigureJumpMovementDefaults()
 }
 
 void AHorrorProjectCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{	
+{
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{

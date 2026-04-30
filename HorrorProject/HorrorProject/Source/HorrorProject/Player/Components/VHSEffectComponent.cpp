@@ -3,6 +3,7 @@
 #include "Player/Components/VHSEffectComponent.h"
 
 #include "Camera/CameraComponent.h"
+#include "Engine/Scene.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -300,7 +301,24 @@ void UVHSEffectComponent::ApplyPostProcessBlendWeight()
 		return;
 	}
 
-	BoundPostProcessCamera->PostProcessSettings.AddBlendable(
-		MaterialToUse,
-		bFeedbackActive ? FMath::Clamp(VHSPostProcessBlendWeight, 0.0f, 1.0f) : 0.0f);
+	const float TargetWeight = bFeedbackActive ? FMath::Clamp(VHSPostProcessBlendWeight, 0.0f, 1.0f) : 0.0f;
+
+	// Update existing entry instead of accumulating duplicates
+	bool bFound = false;
+	TArray<FWeightedBlendable>& BlendablesArray = BoundPostProcessCamera->PostProcessSettings.WeightedBlendables.Array;
+
+	for (FWeightedBlendable& Blendable : BlendablesArray)
+	{
+		if (Blendable.Object == MaterialToUse)
+		{
+			Blendable.Weight = TargetWeight;
+			bFound = true;
+			break;
+		}
+	}
+
+	if (!bFound)
+	{
+		BoundPostProcessCamera->PostProcessSettings.AddBlendable(MaterialToUse, TargetWeight);
+	}
 }

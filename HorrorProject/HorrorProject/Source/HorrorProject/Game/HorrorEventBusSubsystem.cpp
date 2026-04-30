@@ -49,20 +49,20 @@ bool UHorrorEventBusSubsystem::Publish(FGameplayTag EventTag, FName SourceId, FG
 		Message.DebugLabel = SourceMetadata->DebugLabel;
 	}
 
-	// Performance optimization: Reserve capacity and use circular buffer approach
+	// Ring buffer: overwrite oldest entry when full
 	if (History.Num() == 0)
 	{
 		History.Reserve(HistoryCapacity);
 	}
 
 	FHorrorEventMessage HistoryMessage = Message;
-	HistoryMessage.SourceObject = nullptr;
+	HistoryMessage.SourceObject = nullptr; // Prevent GC issues from holding UObject refs in history
 
 	if (History.Num() >= HistoryCapacity)
 	{
 		History.RemoveAt(0, 1, EAllowShrinking::No);
 	}
-	History.Add(HistoryMessage);
+	History.Add(MoveTemp(HistoryMessage));
 	OnEventPublished.Broadcast(Message);
 	OnEventPublishedNative.Broadcast(Message);
 	return true;

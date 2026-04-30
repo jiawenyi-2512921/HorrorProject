@@ -20,7 +20,7 @@ void FArchiveSubsystemSpec::Define()
 {
 	BeforeEach([this]()
 	{
-		TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+		TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 		UGameInstance* GameInstance = TestWorld->GetGameInstance();
 		ArchiveSubsystem = GameInstance->GetSubsystem<UArchiveSubsystem>();
 		ArchiveSubsystem->ClearAllEntries();

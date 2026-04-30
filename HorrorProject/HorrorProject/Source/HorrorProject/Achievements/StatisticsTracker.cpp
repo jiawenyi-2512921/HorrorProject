@@ -139,7 +139,7 @@ FString UStatisticsTracker::GenerateSessionReport() const
 {
 	FString Report;
 
-	Report += TEXT("=== SESSION REPORT ===\n\n");
+	Report += TEXT("=== 会话报告 ===\n\n");
 
 	// Statistics Report
 	if (StatisticsSubsystem)

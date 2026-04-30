@@ -1,0 +1,75 @@
+name: Build HorrorProject
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/build.yml'
+      - 'HorrorProject/HorrorProject/Source/**'
+      - 'HorrorProject/HorrorProject/*.uproject'
+      - 'HorrorProject/HorrorProject/Source/**/*.Build.cs'
+      - 'HorrorProject/HorrorProject/Source/**/*.Target.cs'
+      - 'HorrorProject/HorrorProject/Config/**'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  UE_ROOT: D:\UnrealEngine\UE_5.6
+  PROJECT_ROOT: ${{ github.workspace }}\HorrorProject\HorrorProject
+
+jobs:
+  build-game:
+    name: Build Game (Win64 Development)
+    runs-on: [self-hosted, Windows, UE5.6]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build Game Module
+        shell: pwsh
+        run: |
+          & "$env:UE_ROOT\Engine\Build\BatchFiles\Build.bat" `
+            HorrorProject Win64 Development `
+            -Project="$env:PROJECT_ROOT\HorrorProject.uproject" `
+            -WaitMutex -NoHotReload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build Editor Module
+        shell: pwsh
+        run: |
+          & "$env:UE_ROOT\Engine\Build\BatchFiles\Build.bat" `
+            HorrorProjectEditor Win64 Development `
+            -Project="$env:PROJECT_ROOT\HorrorProject.uproject" `
+            -WaitMutex -NoHotReload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: HorrorProject-Binaries
+          path: HorrorProject/HorrorProject/Binaries/Win64/
+          retention-days: 7
+          if-no-files-found: warn
+
+  build-shipping:
+    name: Build Shipping
+    runs-on: [self-hosted, Windows, UE5.6]
+    timeout-minutes: 45
+    needs: build-game
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build Shipping
+        shell: pwsh
+        run: |
+          & "$env:UE_ROOT\Engine\Build\BatchFiles\Build.bat" `
+            HorrorProject Win64 Shipping `
+            -Project="$env:PROJECT_ROOT\HorrorProject.uproject" `
+            -WaitMutex -NoHotReload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

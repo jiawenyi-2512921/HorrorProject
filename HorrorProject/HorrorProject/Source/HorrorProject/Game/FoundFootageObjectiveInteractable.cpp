@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Game/FoundFootageObjectiveInteractable.h"
 
@@ -165,14 +165,35 @@ bool AFoundFootageObjectiveInteractable::Interact_Implementation(AActor* Instiga
 	{
 		ProgressId = GameMode->GetPendingFirstAnomalySourceId();
 	}
+	const bool bRecordingPendingAnomalyFromCandidate =
+		Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
+		&& GameMode
+		&& CanRecordFirstAnomalyFromCandidate(*GameMode);
+	if (bRecordingPendingAnomalyFromCandidate)
+	{
+		ProgressId = GameMode->GetPendingFirstAnomalySourceId();
+	}
 
 	const bool bCompleted = TryCompleteObjectiveForInstigator(GameMode, InstigatorActor);
 	if (bCompleted)
 	{
-		RecordInstigatorProgress(InstigatorActor, ProgressId);
+		if (bRecordingPendingAnomalyFromCandidate)
+		{
+			if (AHorrorPlayerCharacter* PlayerCharacter = Cast<AHorrorPlayerCharacter>(InstigatorActor))
+			{
+				RecordEvidenceProgress(*PlayerCharacter, ProgressId, true);
+			}
+		}
+		else
+		{
+			RecordInstigatorProgress(InstigatorActor, ProgressId);
+		}
 		if (ADeepWaterStationRouteKit* OwningRouteKit = Cast<ADeepWaterStationRouteKit>(GetOwner()))
 		{
-			OwningRouteKit->HandleObjectiveCompleted(Objective, InstigatorActor);
+			const EFoundFootageInteractableObjective CompletedObjective = bRecordingPendingAnomalyFromCandidate
+				? EFoundFootageInteractableObjective::FirstAnomalyRecord
+				: Objective;
+			OwningRouteKit->HandleObjectiveCompleted(CompletedObjective, InstigatorActor);
 		}
 	}
 	return bCompleted;
@@ -199,7 +220,8 @@ bool AFoundFootageObjectiveInteractable::CanCompleteObjectiveForInstigator(AHorr
 		return GameMode->CanCollectFirstNote();
 
 	case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
-		return !ResolveSourceId().IsNone() && GameMode->CanBeginFirstAnomalyCandidate();
+		return (!ResolveSourceId().IsNone() && GameMode->CanBeginFirstAnomalyCandidate())
+			|| CanRecordFirstAnomalyFromCandidate(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
 		return GameMode->CanRecordFirstAnomaly(GameMode->IsLeadPlayerRecording());
@@ -235,6 +257,10 @@ bool AFoundFootageObjectiveInteractable::TryCompleteObjectiveForInstigator(AHorr
 		return TryCompleteFirstNoteObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
+		if (CanRecordFirstAnomalyFromCandidate(*GameMode))
+		{
+			return TryCompleteFirstAnomalyRecordObjective(*GameMode);
+		}
 		return TryCompleteFirstAnomalyCandidateObjective(*GameMode);
 
 	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
@@ -255,7 +281,7 @@ FText AFoundFootageObjectiveInteractable::GetInteractionPromptText(AActor* Insti
 	AHorrorGameModeBase* GameMode = ResolveObjectiveGameMode();
 	if (CanCompleteObjectiveForInstigator(GameMode, InstigatorActor))
 	{
-		return BuildObjectiveActionPrompt();
+		return BuildObjectiveActionPrompt(GameMode);
 	}
 
 	return BuildBlockedObjectivePrompt(GameMode, InstigatorActor);
@@ -498,97 +524,112 @@ bool AFoundFootageObjectiveInteractable::TryCompleteExitRouteGateObjective(AHorr
 	return bCompleted;
 }
 
+bool AFoundFootageObjectiveInteractable::CanRecordFirstAnomalyFromCandidate(AHorrorGameModeBase& GameMode) const
+{
+	const FName ProgressId = ResolveSourceId();
+	return !ProgressId.IsNone()
+		&& GameMode.GetPendingFirstAnomalySourceId() == ProgressId
+		&& GameMode.CanRecordFirstAnomaly(GameMode.IsLeadPlayerRecording());
+}
+
 FText AFoundFootageObjectiveInteractable::BuildBlockedObjectivePrompt(AHorrorGameModeBase* GameMode, AActor* InstigatorActor) const
 {
 	if (!GameMode)
 	{
-		return FText::FromString(TEXT("目标不可用。"));
+		return NSLOCTEXT("FoundFootageObjective", "ObjectiveUnavailable", "目标暂不可用。");
 	}
 
 	switch (Objective)
 	{
 	case EFoundFootageInteractableObjective::Bodycam:
 		return GameMode->HasBodycamAcquired()
-			? FText::FromString(TEXT("随身摄像机已经找回。"))
-			: FText::FromString(TEXT("找回随身摄像机。"));
+			? NSLOCTEXT("FoundFootageObjective", "BodycamAlreadyAcquired", "随身摄像机已取回。")
+			: NSLOCTEXT("FoundFootageObjective", "RecoverBodycam", "取回随身摄像机。");
 
 	case EFoundFootageInteractableObjective::FirstNote:
 		if (!GameMode->HasBodycamAcquired())
 		{
-			return FText::FromString(TEXT("先找回随身摄像机。"));
+			return NSLOCTEXT("FoundFootageObjective", "RecoverBodycamFirst", "先取回随身摄像机。");
 		}
 		return GameMode->HasCollectedFirstNote()
-			? FText::FromString(TEXT("笔记已经记录。"))
-			: FText::FromString(TEXT("阅读站内笔记。"));
+			? NSLOCTEXT("FoundFootageObjective", "NoteAlreadyRecorded", "备忘录已记录。")
+			: NSLOCTEXT("FoundFootageObjective", "ReadStationNote", "阅读站内备忘录。");
 
 	case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
 		if (!GameMode->HasCollectedFirstNote())
 		{
-			return FText::FromString(TEXT("先找到第一份站内笔记。"));
+			return NSLOCTEXT("FoundFootageObjective", "FindFirstNoteFirst", "先找到第一份站内备忘录。");
 		}
 		if (GameMode->HasPendingFirstAnomalyCandidate())
 		{
-			return FText::FromString(TEXT("异常点已对准，开始录制。"));
+			return NSLOCTEXT("FoundFootageObjective", "AnomalyAlignedRecord", "异常已对准，开始录像。");
 		}
 		return GameMode->HasRecordedFirstAnomaly()
-			? FText::FromString(TEXT("异常已经记录。"))
-			: FText::FromString(TEXT("对准异常点。"));
+			? NSLOCTEXT("FoundFootageObjective", "AnomalyAlreadyRecorded", "异常已记录。")
+			: NSLOCTEXT("FoundFootageObjective", "AimAtAnomaly", "对准异常。");
 
 	case EFoundFootageInteractableObjective::FirstAnomalyRecord:
 		if (!GameMode->HasPendingFirstAnomalyCandidate())
 		{
-			return FText::FromString(TEXT("先对准异常点。"));
+			return NSLOCTEXT("FoundFootageObjective", "AimAtAnomalyFirst", "先对准异常。");
 		}
 		if (!GameMode->IsLeadPlayerRecording())
 		{
-	return FText::FromString(TEXT("先开始录制，再按 E键记录异常点。"));
+			return NSLOCTEXT("FoundFootageObjective", "StartRecordingFirst", "先开启录像，再按互动键记录异常。");
 		}
 		return GameMode->HasRecordedFirstAnomaly()
-			? FText::FromString(TEXT("异常已经记录。"))
-			: FText::FromString(TEXT("捕获异常。"));
+			? NSLOCTEXT("FoundFootageObjective", "AnomalyAlreadyCaptured", "异常已记录。")
+			: NSLOCTEXT("FoundFootageObjective", "CaptureAnomaly", "捕捉异常。");
 
 	case EFoundFootageInteractableObjective::ArchiveReview:
 		if (!GameMode->HasRecordedFirstAnomaly())
 		{
-			return FText::FromString(TEXT("先记录异常点，再使用档案终端。"));
+			return NSLOCTEXT("FoundFootageObjective", "RecordAnomalyFirst", "先记录异常，再使用档案终端。");
 		}
 		if (!InstigatorActor)
 		{
-			return FText::FromString(TEXT("靠近档案终端。"));
+			return NSLOCTEXT("FoundFootageObjective", "ApproachArchiveTerminal", "靠近档案终端。");
 		}
 		return GameMode->HasReviewedArchive()
-			? FText::FromString(TEXT("档案已经审查。"))
-			: FText::FromString(TEXT("缺少所需录像证据。"));
+			? NSLOCTEXT("FoundFootageObjective", "ArchiveAlreadyReviewed", "档案已复查。")
+			: NSLOCTEXT("FoundFootageObjective", "MissingVideoEvidence", "缺少必要录像证据。");
 
 	case EFoundFootageInteractableObjective::ExitRouteGate:
 		if (GameMode->IsDay1Complete())
 		{
-			return FText::FromString(TEXT("第 1 天完成。"));
+			return NSLOCTEXT("FoundFootageObjective", "Day1Complete", "第一天已完成。");
 		}
 		if (!GameMode->IsExitUnlocked())
 		{
-			return FText::FromString(TEXT("出口已锁定。先审查档案。"));
+			return NSLOCTEXT("FoundFootageObjective", "ExitLocked", "出口已锁定，请先复查档案。");
 		}
 		if (const ADeepWaterStationRouteKit* OwningRouteKit = ResolveOwningRouteKit())
 		{
 			if (OwningRouteKit->IsRouteGatedByEncounter() && !OwningRouteKit->CanResolveEncounterAtExit())
 			{
-				return FText::FromString(TEXT("路线被封锁。先撑过这次遭遇。"));
+				return NSLOCTEXT("FoundFootageObjective", "RouteBlocked", "路线受阻，先撑过遭遇。");
 			}
 		}
-		return FText::FromString(TEXT("从勤务闸门离开。"));
+		return NSLOCTEXT("FoundFootageObjective", "ExitThroughGate", "穿过维修闸门离开。");
 	}
 
-	return FText::FromString(TEXT("目标不可用。"));
+	return NSLOCTEXT("FoundFootageObjective", "ObjectiveUnavailableFallback", "目标暂不可用。");
 }
 
-FText AFoundFootageObjectiveInteractable::BuildObjectiveActionPrompt() const
+FText AFoundFootageObjectiveInteractable::BuildObjectiveActionPrompt(AHorrorGameModeBase* GameMode) const
 {
+	if (Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
+		&& GameMode
+		&& CanRecordFirstAnomalyFromCandidate(*GameMode))
+	{
+		return NSLOCTEXT("FoundFootageObjective", "InteractionPromptCaptureAnomaly", "互动键：捕捉异常");
+	}
+
 	const FText Label = !DebugLabel.IsEmpty()
 		? DebugLabel
-		: (!ObjectiveHint.IsEmpty() ? ObjectiveHint : FText::FromString(TEXT("目标")));
+		: (!ObjectiveHint.IsEmpty() ? ObjectiveHint : NSLOCTEXT("FoundFootageObjective", "DefaultObjectiveLabel", "目标"));
 
-	return FText::Format(FText::FromString(TEXT("E键  {0}")), Label);
+	return FText::Format(NSLOCTEXT("FoundFootageObjective", "InteractionPromptFormat", "互动键：{0}"), Label);
 }
 
 void AFoundFootageObjectiveInteractable::RecordEvidenceProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId, bool bMarkCollected) const
@@ -639,10 +680,10 @@ void AFoundFootageObjectiveInteractable::RecordObjectiveHintNoteProgress(AHorror
 	HintNote.NoteId = HintNoteId;
 	HintNote.Title = !DebugLabel.IsEmpty()
 		? DebugLabel
-		: (!EvidenceMetadata.DisplayName.IsEmpty() ? EvidenceMetadata.DisplayName : FText::FromString(TEXT("目标提示")));
+		: (!EvidenceMetadata.DisplayName.IsEmpty() ? EvidenceMetadata.DisplayName : NSLOCTEXT("FoundFootageObjective", "ObjectiveHintTitle", "目标线索"));
 	HintNote.Body = !ObjectiveHint.IsEmpty()
 		? ObjectiveHint
-		: FText::FromString(TEXT("这条线索已记录到目标日志。"));
+		: NSLOCTEXT("FoundFootageObjective", "ObjectiveHintBody", "这条线索已记录到目标日志。");
 
 	NoteRecorder->RegisterNoteMetadata(HintNote);
 	NoteRecorder->AddRecordedNoteId(HintNoteId);
@@ -660,9 +701,9 @@ void AFoundFootageObjectiveInteractable::RecordArchiveSummaryProgress(AHorrorPla
 
 	FHorrorNoteMetadata ArchiveSummary;
 	ArchiveSummary.NoteId = ArchiveSummaryNoteId;
-	ArchiveSummary.Title = FText::FromString(TEXT("档案终端摘要"));
-	ArchiveSummary.Body = FText::FromString(FString::Printf(
-		TEXT("档案审查已确认一号异常录像，并恢复出口闸门指令。勤务闸门密码：%s。"),
+	ArchiveSummary.Title = NSLOCTEXT("FoundFootageObjective", "ArchiveSummaryTitle", "档案终端摘要");
+	ArchiveSummary.Body = FText::AsCultureInvariant(FString::Printf(
+		TEXT("档案复查确认了第一异常录像，并恢复了出口闸门指令。维修闸门门禁码：%s。"),
 		ArchiveExitGateCode));
 
 	NoteRecorder->RegisterNoteMetadata(ArchiveSummary);

@@ -9,19 +9,19 @@
 UENUM(BlueprintType, meta=(ScriptName="ColorBlindModeEnum"))
 enum class EColorBlindMode : uint8
 {
-    None UMETA(DisplayName = "None"),
-    Protanopia UMETA(DisplayName = "Protanopia (Red-Blind)"),
-    Deuteranopia UMETA(DisplayName = "Deuteranopia (Green-Blind)"),
-    Tritanopia UMETA(DisplayName = "Tritanopia (Blue-Blind)")
+    None UMETA(DisplayName = "无"),
+    Protanopia UMETA(DisplayName = "红色弱辅助"),
+    Deuteranopia UMETA(DisplayName = "绿色弱辅助"),
+    Tritanopia UMETA(DisplayName = "蓝色弱辅助")
 };
 
 UENUM(BlueprintType)
 enum class ESubtitleSize : uint8
 {
-    Small UMETA(DisplayName = "Small"),
-    Medium UMETA(DisplayName = "Medium"),
-    Large UMETA(DisplayName = "Large"),
-    ExtraLarge UMETA(DisplayName = "Extra Large")
+    Small UMETA(DisplayName = "小"),
+    Medium UMETA(DisplayName = "中"),
+    Large UMETA(DisplayName = "大"),
+    ExtraLarge UMETA(DisplayName = "特大")
 };
 
 USTRUCT(BlueprintType)

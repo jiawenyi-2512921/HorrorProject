@@ -7,6 +7,7 @@
 #include "Engine/Texture2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Sound/SoundBase.h"
 #include "Audio/HorrorAudioSubsystem.h"
@@ -84,7 +85,7 @@ void UCameraPhotoComponent::SetupCaptureComponent()
 		CaptureComponent->RegisterComponent();
 		CaptureComponent->bCaptureEveryFrame = false;
 		CaptureComponent->bCaptureOnMovement = false;
-		CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+		CaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 		CaptureComponent->ShowFlags.SetTemporalAA(true);
 		CaptureComponent->ShowFlags.SetMotionBlur(false);
 		CaptureComponent->ShowFlags.SetGrain(false);
@@ -102,6 +103,14 @@ bool UCameraPhotoComponent::CanTakePhoto() const
 	if (IsPhotoStorageFull())
 	{
 		return false;
+	}
+
+	if (!QuantumCamera)
+	{
+		if (const AActor* Owner = GetOwner())
+		{
+			const_cast<UCameraPhotoComponent*>(this)->QuantumCamera = Owner->FindComponentByClass<UQuantumCameraComponent>();
+		}
 	}
 
 	if (QuantumCamera && !QuantumCamera->IsCameraEnabled())
@@ -156,12 +165,6 @@ UCameraComponent* UCameraPhotoComponent::BeginPhotoCapture()
 		return nullptr;
 	}
 
-	if (!AreCaptureComponentsReady())
-	{
-		UE_LOG(LogTemp, Error, TEXT("CameraPhotoComponent: Capture components not initialized"));
-		return nullptr;
-	}
-
 	bIsCapturing = true;
 	UWorld* World = GetWorld();
 	if (!World || !GetOwner())
@@ -176,6 +179,14 @@ UCameraComponent* UCameraPhotoComponent::BeginPhotoCapture()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CameraPhotoComponent: No player camera found"));
 		bIsCapturing = false;
+	}
+	else if (!AreCaptureComponentsReady())
+	{
+		InitializeCaptureComponents();
+		if (!AreCaptureComponentsReady())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CameraPhotoComponent: Render capture unavailable; storing photo metadata only"));
+		}
 	}
 	return PlayerCamera;
 }
@@ -195,6 +206,14 @@ bool UCameraPhotoComponent::AreCaptureComponentsReady() const
 UCameraComponent* UCameraPhotoComponent::ResolvePlayerCamera() const
 {
 	AActor* Owner = GetOwner();
+	if (APawn* OwnerPawn = Cast<APawn>(Owner))
+	{
+		if (UCameraComponent* Camera = OwnerPawn->FindComponentByClass<UCameraComponent>())
+		{
+			return Camera;
+		}
+	}
+
 	APlayerController* PlayerController = Owner ? Cast<APlayerController>(Owner->GetInstigatorController()) : nullptr;
 	APawn* Pawn = PlayerController ? PlayerController->GetPawn() : nullptr;
 	return Pawn ? Pawn->FindComponentByClass<UCameraComponent>() : nullptr;

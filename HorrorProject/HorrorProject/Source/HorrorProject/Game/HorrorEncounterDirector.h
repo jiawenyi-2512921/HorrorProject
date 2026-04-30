@@ -99,7 +99,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter")
 	FTransform ThreatRelativeTransform = FTransform(FRotator::ZeroRotator, FVector(100.0f, 0.0f, 0.0f));
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Horror|Encounter", Transient)
 	TObjectPtr<AHorrorThreatCharacter> ThreatActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Encounter", meta=(ClampMin="0.0", Units="cm"))

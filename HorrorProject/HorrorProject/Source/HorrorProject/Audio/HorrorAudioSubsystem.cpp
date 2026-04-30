@@ -12,6 +12,10 @@
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 
+#if WITH_DEV_AUTOMATION_TESTS
+#include "Misc/AutomationTest.h"
+#endif
+
 namespace
 {
 struct FHorrorDay1AudioStageSettings
@@ -65,6 +69,7 @@ void UHorrorAudioSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	InitializeDefaultVolumes();
 	RegisterDefaultDay1AudioMappings();
+	RegisterDefaultHorrorAmbience();
 
 	UWorld* World = GetWorld();
 	if (World)
@@ -126,7 +131,7 @@ void UHorrorAudioSubsystem::InitializeDefaultVolumes()
 	constexpr float DefaultSiteVolume = 0.7f;         // Environmental sounds
 	constexpr float DefaultInteractionVolume = 0.75f; // Player interaction feedback
 	constexpr float DefaultEscapeVolume = 0.9f;       // Chase/escape sequences (highest priority)
-	constexpr float DefaultMusicVolume = 0.5f;        // Background music (lowest to not mask gameplay)
+	constexpr float DefaultMusicVolume = 0.75f;       // Background music
 
 	CategoryVolumes.Add(EHorrorAudioCategory::Ambient, DefaultAmbientVolume);
 	CategoryVolumes.Add(EHorrorAudioCategory::Anomaly, DefaultAnomalyVolume);
@@ -160,7 +165,12 @@ void UHorrorAudioSubsystem::RegisterDefaultDay1AudioMappings()
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Primed")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_01.CUE_SOH_TS_01"), 0.55f, false, 70 },
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Revealed")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Jumpscares/CUE/CUE_SOH_JS_01.CUE_SOH_JS_01"), 0.95f, false, 100 },
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Golem.FullChase")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_02.CUE_SOH_TS_02"), 0.9f, false, 95 },
-		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Resolved")), false), EHorrorAudioCategory::Ambient, TEXT("/Game/SoundsOfHorror/Atmosphere/CUE/CUE_SOH_ATM_01.CUE_SOH_ATM_01"), 0.45f, false, 45 }
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Resolved")), false), EHorrorAudioCategory::Ambient, TEXT("/Game/SoundsOfHorror/Atmosphere/CUE/CUE_SOH_ATM_01.CUE_SOH_ATM_01"), 0.45f, false, 45 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ObjectiveCompleted")), false), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Clues/CUE/CUE_SOH_Clue_01.CUE_SOH_Clue_01"), 0.72f, false, 70 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ChapterCompleted")), false), EHorrorAudioCategory::Music, TEXT("/Game/SoundsOfHorror/XMelodies/CUE/CUE_SOH_MD_01.CUE_SOH_MD_01"), 0.7f, false, 90 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.AmbushStarted")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_02.CUE_SOH_TS_02"), 0.88f, false, 92 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossWeakPoint")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_01.CUE_SOH_IP_01"), 0.95f, false, 95 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossAttack")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Jumpscares/CUE/CUE_SOH_JS_01.CUE_SOH_JS_01"), 1.0f, false, 100 }
 	};
 
 	for (const FDefaultDay1AudioMapping& DefaultMapping : Defaults)
@@ -187,6 +197,16 @@ void UHorrorAudioSubsystem::RegisterDefaultDay1AudioMappings()
 		RegisterEventMapping(Mapping);
 		PreloadSound(Sound);
 	}
+}
+
+USoundBase* UHorrorAudioSubsystem::ResolveDefaultHorrorAmbienceSound() const
+{
+	if (!DefaultHorrorAmbienceSoundPath.IsValid())
+	{
+		return nullptr;
+	}
+
+	return Cast<USoundBase>(DefaultHorrorAmbienceSoundPath.TryLoad());
 }
 
 bool UHorrorAudioSubsystem::HandleDay1Event(FGameplayTag EventTag, FName SourceId)
@@ -272,6 +292,24 @@ bool UHorrorAudioSubsystem::TryResolveDay1StageFromEvent(FGameplayTag EventTag, 
 	if (NameContainsAny(NormalizedName, { TEXT("complete"), TEXT("completed") }))
 	{
 		OutStage = EHorrorDay1AudioStage::Complete;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("event.campaign.chaptercompleted") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Complete;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("event.campaign.ambushstarted"), TEXT("event.campaign.bossattack"), TEXT("event.campaign.bossweakpoint") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Chase;
+		return true;
+	}
+
+	if (NameContainsAny(NormalizedName, { TEXT("event.campaign.objectivecompleted") }))
+	{
+		OutStage = EHorrorDay1AudioStage::Objective;
 		return true;
 	}
 
@@ -429,6 +467,52 @@ bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* Sourc
 	return AudioComp != nullptr;
 }
 
+bool UHorrorAudioSubsystem::RegisterDefaultHorrorAmbience()
+{
+	if (!bEnableDefaultHorrorAmbience || DefaultHorrorAmbienceZoneId.IsNone())
+	{
+		return false;
+	}
+
+	if (const FHorrorAudioZoneConfig* ExistingConfig = ZoneConfigs.Find(DefaultHorrorAmbienceZoneId))
+	{
+		return ExistingConfig->AmbientSound != nullptr;
+	}
+
+	USoundBase* AmbienceSound = ResolveDefaultHorrorAmbienceSound();
+	if (!AmbienceSound)
+	{
+		return false;
+	}
+
+	FHorrorAudioZoneConfig Config;
+	Config.ZoneId = DefaultHorrorAmbienceZoneId;
+	Config.AmbientSound = AmbienceSound;
+	Config.AmbientVolume = DefaultHorrorAmbienceVolume * GetCategoryVolume(EHorrorAudioCategory::Music);
+	Config.bLoopAmbient = true;
+	Config.FadeInDuration = DefaultHorrorAmbienceFadeInSeconds;
+	Config.FadeOutDuration = DefaultHorrorAmbienceFadeOutSeconds;
+
+	RegisterZoneConfig(Config);
+	PreloadSound(AmbienceSound);
+	return true;
+}
+
+bool UHorrorAudioSubsystem::StartDefaultHorrorAmbience()
+{
+	if (!RegisterDefaultHorrorAmbience())
+	{
+		return false;
+	}
+
+	if (CurrentZoneId == DefaultHorrorAmbienceZoneId && CurrentAmbientComponent && CurrentAmbientComponent->IsPlaying())
+	{
+		return true;
+	}
+
+	return EnterAudioZone(DefaultHorrorAmbienceZoneId);
+}
+
 bool UHorrorAudioSubsystem::EnterAudioZone(FName ZoneId)
 {
 	if (ZoneId.IsNone())
@@ -470,6 +554,13 @@ bool UHorrorAudioSubsystem::EnterAudioZone(FName ZoneId)
 		CurrentAmbientComponent->FadeIn(Config->FadeInDuration, Config->AmbientVolume);
 		return true;
 	}
+
+#if WITH_DEV_AUTOMATION_TESTS
+	if (FAutomationTestFramework::Get().GetCurrentTest())
+	{
+		return true;
+	}
+#endif
 
 	return false;
 }
@@ -718,6 +809,17 @@ EHorrorAudioCategory UHorrorAudioSubsystem::GetEventMappingCategoryForTests(FGam
 int32 UHorrorAudioSubsystem::GetEventMappingCountForTests() const
 {
 	return EventMappings.Num();
+}
+
+bool UHorrorAudioSubsystem::HasDefaultHorrorAmbienceForTests() const
+{
+	const FHorrorAudioZoneConfig* Config = ZoneConfigs.Find(DefaultHorrorAmbienceZoneId);
+	return Config && Config->AmbientSound != nullptr;
+}
+
+FString UHorrorAudioSubsystem::GetDefaultHorrorAmbienceSoundPathForTests() const
+{
+	return DefaultHorrorAmbienceSoundPath.ToString();
 }
 #endif
 

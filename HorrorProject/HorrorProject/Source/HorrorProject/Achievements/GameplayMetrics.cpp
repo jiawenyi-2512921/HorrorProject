@@ -77,41 +77,41 @@ FString UHorrorGameplayMetricsLibrary::GenerateMetricsReport(const FHorrorGamepl
 {
 	FString Report;
 
-	Report += TEXT("=== GAMEPLAY METRICS REPORT ===\n\n");
+	Report += TEXT("=== 游戏指标报告 ===\n\n");
 
 	// Performance
-	Report += TEXT("--- PERFORMANCE ---\n");
-	Report += FString::Printf(TEXT("Average FPS: %.2f\n"), Metrics.AverageFPS);
-	Report += FString::Printf(TEXT("Min FPS: %.2f\n"), Metrics.MinFPS);
-	Report += FString::Printf(TEXT("Max FPS: %.2f\n"), Metrics.MaxFPS);
+	Report += TEXT("--- 性能 ---\n");
+	Report += FString::Printf(TEXT("平均帧率：%.2f\n"), Metrics.AverageFPS);
+	Report += FString::Printf(TEXT("最低帧率：%.2f\n"), Metrics.MinFPS);
+	Report += FString::Printf(TEXT("最高帧率：%.2f\n"), Metrics.MaxFPS);
 
 	// Gameplay
-	Report += TEXT("\n--- GAMEPLAY ---\n");
-	Report += FString::Printf(TEXT("Average Sanity: %.2f%%\n"), Metrics.AverageSanity);
-	Report += FString::Printf(TEXT("Min Sanity: %.2f%%\n"), Metrics.MinSanity);
-	Report += FString::Printf(TEXT("Total Interactions: %d\n"), Metrics.TotalInteractions);
-	Report += FString::Printf(TEXT("Failed Interactions: %d\n"), Metrics.FailedInteractions);
+	Report += TEXT("\n--- 玩法 ---\n");
+	Report += FString::Printf(TEXT("平均理智值：%.2f%%\n"), Metrics.AverageSanity);
+	Report += FString::Printf(TEXT("最低理智值：%.2f%%\n"), Metrics.MinSanity);
+	Report += FString::Printf(TEXT("互动总数：%d\n"), Metrics.TotalInteractions);
+	Report += FString::Printf(TEXT("失败互动：%d\n"), Metrics.FailedInteractions);
 
 	float SuccessRate = Metrics.TotalInteractions > 0
 		? (float)(Metrics.TotalInteractions - Metrics.FailedInteractions) / Metrics.TotalInteractions * HorrorGameplayMetrics::PercentMultiplier
 		: 0.0f;
-	Report += FString::Printf(TEXT("Interaction Success Rate: %.2f%%\n"), SuccessRate);
+	Report += FString::Printf(TEXT("互动成功率：%.2f%%\n"), SuccessRate);
 
 	// Horror
-	Report += TEXT("\n--- HORROR EXPERIENCE ---\n");
-	Report += FString::Printf(TEXT("Jump Scares: %d\n"), Metrics.JumpScareCount);
-	Report += FString::Printf(TEXT("Total Scare Intensity: %.2f\n"), Metrics.TotalScareIntensity);
+	Report += TEXT("\n--- 恐怖体验 ---\n");
+	Report += FString::Printf(TEXT("惊吓次数：%d\n"), Metrics.JumpScareCount);
+	Report += FString::Printf(TEXT("惊吓强度总和：%.2f\n"), Metrics.TotalScareIntensity);
 
 	float AvgScareIntensity = Metrics.JumpScareCount > 0
 		? Metrics.TotalScareIntensity / Metrics.JumpScareCount
 		: 0.0f;
-	Report += FString::Printf(TEXT("Average Scare Intensity: %.2f\n"), AvgScareIntensity);
+	Report += FString::Printf(TEXT("平均惊吓强度：%.2f\n"), AvgScareIntensity);
 
 	// Session
-	Report += TEXT("\n--- SESSION ---\n");
-	Report += FString::Printf(TEXT("Session Duration: %.2f minutes\n"), Metrics.SessionDuration / HorrorGameplayMetrics::SecondsPerMinute);
-	Report += FString::Printf(TEXT("Saves: %d\n"), Metrics.SaveCount);
-	Report += FString::Printf(TEXT("Loads: %d\n"), Metrics.LoadCount);
+	Report += TEXT("\n--- 会话 ---\n");
+	Report += FString::Printf(TEXT("会话时长：%.2f 分钟\n"), Metrics.SessionDuration / HorrorGameplayMetrics::SecondsPerMinute);
+	Report += FString::Printf(TEXT("保存次数：%d\n"), Metrics.SaveCount);
+	Report += FString::Printf(TEXT("读取次数：%d\n"), Metrics.LoadCount);
 
 	Report += TEXT("\n================================\n");
 

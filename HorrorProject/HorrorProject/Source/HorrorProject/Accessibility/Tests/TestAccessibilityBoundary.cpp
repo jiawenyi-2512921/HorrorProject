@@ -9,7 +9,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityBoundaryTest, "HorrorProject.Acce
 
 bool FAccessibilityBoundaryTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
 
     if (!AccessibilitySys)
@@ -43,7 +43,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FColorBlindModeTest, "HorrorProject.Accessibili
 
 bool FColorBlindModeTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
 
     if (!AccessibilitySys)
@@ -84,7 +84,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubtitleSystemStressTest, "HorrorProject.Acces
 
 bool FSubtitleSystemStressTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
 
     if (!AccessibilitySys)
@@ -116,7 +116,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityHighContrastTest, "HorrorProject.
 
 bool FAccessibilityHighContrastTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
 
     if (!AccessibilitySys)

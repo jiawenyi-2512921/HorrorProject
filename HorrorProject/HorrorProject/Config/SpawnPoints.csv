@@ -1,0 +1,9 @@
+LevelName,Tag,Description,LocationX,LocationY,LocationZ,Pitch,Roll,Yaw,CameraFadeIn,FadeDuration
+Level_01_ForestPath,ForestStart,"森林入口 - 游戏开始位置",0.0,0.0,100.0,0.0,0.0,0.0,True,2.0
+Level_01_ForestPath,CabinFront,"小屋前方 - 用于快速测试",2000.0,1000.0,100.0,0.0,0.0,180.0,True,1.0
+Level_02_Hospital,HospitalMainEntrance,"医院主入口 - 从森林传送过来的位置",0.0,0.0,100.0,0.0,0.0,90.0,True,2.0
+Level_02_Hospital,HospitalReception,"医院接待处 - 快速测试用",500.0,0.0,100.0,0.0,0.0,0.0,True,1.0
+Level_02_Hospital,HospitalSecondFloor,"医院二楼 - 档案室附近",1000.0,500.0,400.0,0.0,0.0,270.0,True,1.0
+Level_03_Basement,BasementStairsTop,"地下室楼梯顶部 - 从医院下来的位置",0.0,0.0,300.0,0.0,0.0,180.0,True,2.5
+Level_03_Basement,BasementMainHall,"地下室主厅 - 测试用",0.0,-500.0,0.0,0.0,0.0,0.0,True,1.0
+Level_04_Ending,EndingStart,"结局开始位置",0.0,0.0,100.0,0.0,0.0,0.0,True,3.0

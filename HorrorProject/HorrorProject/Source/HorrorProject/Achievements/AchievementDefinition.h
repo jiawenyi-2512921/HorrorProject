@@ -7,14 +7,14 @@
 UENUM(BlueprintType)
 enum class EAchievementCategory : uint8
 {
-	Exploration UMETA(DisplayName = "Exploration"),
-	Collection UMETA(DisplayName = "Collection"),
-	Survival UMETA(DisplayName = "Survival"),
-	Combat UMETA(DisplayName = "Combat"),
-	Speedrun UMETA(DisplayName = "Speedrun"),
-	Story UMETA(DisplayName = "Story"),
-	Secret UMETA(DisplayName = "Secret"),
-	Challenge UMETA(DisplayName = "Challenge")
+	Exploration UMETA(DisplayName = "探索"),
+	Collection UMETA(DisplayName = "收集"),
+	Survival UMETA(DisplayName = "生存"),
+	Combat UMETA(DisplayName = "战斗"),
+	Speedrun UMETA(DisplayName = "速通"),
+	Story UMETA(DisplayName = "剧情"),
+	Secret UMETA(DisplayName = "秘密"),
+	Challenge UMETA(DisplayName = "挑战")
 };
 
 USTRUCT(BlueprintType)

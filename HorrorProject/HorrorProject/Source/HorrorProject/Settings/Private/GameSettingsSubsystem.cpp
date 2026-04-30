@@ -17,8 +17,6 @@ void UGameSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	InitializeSettings();
 	LoadSettings();
 	MigrateSettings();
-
-	bHasUnsavedChanges = false;
 }
 
 void UGameSettingsSubsystem::Deinitialize()
@@ -42,18 +40,35 @@ void UGameSettingsSubsystem::InitializeSettings()
 
 void UGameSettingsSubsystem::LoadSettings()
 {
+	LoadDefaultSettings();
+	bHasUnsavedChanges = false;
+	DirtyCategories.Empty();
+
 	if (!ConfigManager)
 	{
+		MarkDirty(NAME_None);
 		return;
 	}
 
-	ConfigManager->LoadConfig(TEXT("Graphics"), GraphicsSettings);
-	ConfigManager->LoadConfig(TEXT("Audio"), AudioSettings);
-	ConfigManager->LoadConfig(TEXT("Controls"), ControlSettings);
-	ConfigManager->LoadConfig(TEXT("Gameplay"), GameplaySettings);
+	if (!ConfigManager->LoadConfig(TEXT("Graphics"), GraphicsSettings))
+	{
+		MarkDirty(TEXT("Graphics"));
+	}
 
-	bHasUnsavedChanges = false;
-	DirtyCategories.Empty();
+	if (!ConfigManager->LoadConfig(TEXT("Audio"), AudioSettings))
+	{
+		MarkDirty(TEXT("Audio"));
+	}
+
+	if (!ConfigManager->LoadConfig(TEXT("Controls"), ControlSettings))
+	{
+		MarkDirty(TEXT("Controls"));
+	}
+
+	if (!ConfigManager->LoadConfig(TEXT("Gameplay"), GameplaySettings))
+	{
+		MarkDirty(TEXT("Gameplay"));
+	}
 }
 
 void UGameSettingsSubsystem::SaveSettings()
@@ -63,24 +78,35 @@ void UGameSettingsSubsystem::SaveSettings()
 		return;
 	}
 
-	if (DirtyCategories.Contains(TEXT("Graphics")) || DirtyCategories.Num() == 0)
+	if (DirtyCategories.Num() == 0)
 	{
+		// No specific categories dirty - save all
 		ConfigManager->SaveConfig(TEXT("Graphics"), GraphicsSettings);
-	}
-
-	if (DirtyCategories.Contains(TEXT("Audio")) || DirtyCategories.Num() == 0)
-	{
 		ConfigManager->SaveConfig(TEXT("Audio"), AudioSettings);
-	}
-
-	if (DirtyCategories.Contains(TEXT("Controls")) || DirtyCategories.Num() == 0)
-	{
 		ConfigManager->SaveConfig(TEXT("Controls"), ControlSettings);
-	}
-
-	if (DirtyCategories.Contains(TEXT("Gameplay")) || DirtyCategories.Num() == 0)
-	{
 		ConfigManager->SaveConfig(TEXT("Gameplay"), GameplaySettings);
+	}
+	else
+	{
+		if (DirtyCategories.Contains(TEXT("Graphics")))
+		{
+			ConfigManager->SaveConfig(TEXT("Graphics"), GraphicsSettings);
+		}
+
+		if (DirtyCategories.Contains(TEXT("Audio")))
+		{
+			ConfigManager->SaveConfig(TEXT("Audio"), AudioSettings);
+		}
+
+		if (DirtyCategories.Contains(TEXT("Controls")))
+		{
+			ConfigManager->SaveConfig(TEXT("Controls"), ControlSettings);
+		}
+
+		if (DirtyCategories.Contains(TEXT("Gameplay")))
+		{
+			ConfigManager->SaveConfig(TEXT("Gameplay"), GameplaySettings);
+		}
 	}
 
 	bHasUnsavedChanges = false;

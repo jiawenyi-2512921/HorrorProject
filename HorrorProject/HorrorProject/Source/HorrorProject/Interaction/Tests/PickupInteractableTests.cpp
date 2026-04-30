@@ -15,7 +15,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableConstructionTest, "HorrorProject.Interaction.Pickup.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
@@ -29,7 +29,7 @@ bool FPickupInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractablePickupTest, "HorrorProject.Interaction.Pickup.Pickup", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractablePickupTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -48,7 +48,7 @@ bool FPickupInteractablePickupTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableEvidenceTest, "HorrorProject.Interaction.Pickup.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -72,7 +72,7 @@ bool FPickupInteractableEvidenceTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNoInventoryTest, "HorrorProject.Interaction.Pickup.NoInventory", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableNoInventoryTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -87,7 +87,7 @@ bool FPickupInteractableNoInventoryTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableOnceOnlyTest, "HorrorProject.Interaction.Pickup.OnceOnly", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableOnceOnlyTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -104,7 +104,7 @@ bool FPickupInteractableOnceOnlyTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableComponentsTest, "HorrorProject.Interaction.Pickup.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -121,7 +121,7 @@ bool FPickupInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableItemIdTest, "HorrorProject.Interaction.Pickup.ItemId", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableItemIdTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 
 	const FName TestItemId = TEXT("TestItem");
@@ -135,7 +135,7 @@ bool FPickupInteractableItemIdTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableNullInstigatorTest, "HorrorProject.Interaction.Pickup.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 
 	FHitResult Hit;
@@ -147,7 +147,7 @@ bool FPickupInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableTypesTest, "HorrorProject.Interaction.Pickup.Types", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableTypesTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 
 	// Test different pickup types
 	TArray<EPickupType> Types = {
@@ -171,7 +171,7 @@ bool FPickupInteractableTypesTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPickupInteractableDestroyTest, "HorrorProject.Interaction.Pickup.Destroy", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPickupInteractableDestroyTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	APickupInteractable* Pickup = World->SpawnActor<APickupInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 

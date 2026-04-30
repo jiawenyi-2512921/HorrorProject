@@ -15,7 +15,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentBasicTest, "HorrorProject.
 
 bool FCameraPhotoComponentBasicTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -40,7 +40,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentStorageTest, "HorrorProjec
 
 bool FCameraPhotoComponentStorageTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -68,7 +68,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentFlashTest, "HorrorProject.
 
 bool FCameraPhotoComponentFlashTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -93,7 +93,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentEvidenceDetectionTest, "Ho
 
 bool FCameraPhotoComponentEvidenceDetectionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -133,7 +133,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentIntegrationTest, "HorrorPr
 
 bool FCameraPhotoComponentIntegrationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -166,7 +166,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraPhotoComponentDelegateTest, "HorrorProje
 
 bool FCameraPhotoComponentDelegateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

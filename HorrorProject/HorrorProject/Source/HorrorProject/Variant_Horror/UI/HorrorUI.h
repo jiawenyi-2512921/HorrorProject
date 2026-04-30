@@ -48,7 +48,7 @@ UCLASS(abstract)
 class HORRORPROJECT_API UHorrorUI : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	/** Sets up delegate listeners for the passed character */
@@ -106,15 +106,15 @@ protected:
 	virtual void NativeDestruct() override;
 
 	/** Passes control to Blueprint to update the sprint meter widgets */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror", meta = (DisplayName = "Sprint Meter Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror", meta = (DisplayName = "体力条已更新"))
 	void BP_SprintMeterUpdated(float Percent);
 
 	/** Passes control to Blueprint to update the sprint meter status */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror", meta = (DisplayName = "Sprint State Changed"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror", meta = (DisplayName = "奔跑状态已变化"))
 	void BP_SprintStateChanged(bool bSprinting);
 
 	/** Passes control to Blueprint to refresh archive/evidence widgets from the latest component state. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "Archive Snapshot Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "档案快照已更新"))
 	void BP_ArchiveSnapshotUpdated(
 		const TArray<FName>& CollectedEvidenceIds,
 		int32 TotalEvidenceCount,
@@ -122,35 +122,35 @@ protected:
 		int32 TotalRecordedNotes);
 
 	/** Passes control to Blueprint to refresh archive/evidence widgets with metadata-rich rows. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "Archive Metadata Snapshot Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "档案元数据快照已更新"))
 	void BP_ArchiveMetadataSnapshotUpdated(const FHorrorArchiveSnapshot& Snapshot);
 
 	/** Passes control to Blueprint when new evidence is collected. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "Evidence Collected"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "证据已收集"))
 	void BP_EvidenceCollected(FName EvidenceId, int32 TotalEvidenceCount);
 
 	/** Passes control to Blueprint when a new note is recorded. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "Note Recorded"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Archive", meta = (DisplayName = "笔记已记录"))
 	void BP_NoteRecorded(FName NoteId, int32 TotalRecordedNotes);
 
-	/** Passes control to Blueprint when VHS/bodycam feedback changes. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|VHS", meta = (DisplayName = "VHS Feedback Changed"))
+	/** Passes control to Blueprint when bodycam feedback changes. */
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|VHS", meta = (DisplayName = "录像带反馈已变化"))
 	void BP_VHSFeedbackChanged(bool bIsActive, EQuantumCameraMode CameraMode);
 
 	/** Passes objective event bus messages into Blueprint. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "Objective Event Published"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "目标事件已发布"))
 	void BP_ObjectiveEventPublished(const FHorrorEventMessage& Message);
 
 	/** Passes current objective progress into Blueprint. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Objectives", meta = (DisplayName = "Objective Progress Snapshot Updated"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Objectives", meta = (DisplayName = "目标进度快照已更新"))
 	void BP_ObjectiveProgressSnapshotUpdated(const FHorrorFoundFootageProgressSnapshot& Snapshot);
 
 	/** Requests a concise objective/event toast from Blueprint. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "Objective Toast Requested"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "请求目标提示"))
 	void BP_ObjectiveToastRequested(FGameplayTag EventTag, FName SourceId, FGameplayTag StateTag);
 
 	/** Requests a metadata-rich objective/event toast from Blueprint. */
-	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "Objective Toast Requested With Metadata"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Horror|Events", meta = (DisplayName = "请求带元数据的目标提示"))
 	void BP_ObjectiveToastRequestedWithMetadata(FGameplayTag EventTag, FName SourceId, FGameplayTag StateTag, FName TrailerBeatId, const FText& ObjectiveHint, const FText& DebugLabel);
 
 private:

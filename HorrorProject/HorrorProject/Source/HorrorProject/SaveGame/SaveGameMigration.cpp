@@ -1,12 +1,15 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright HorrorProject. All Rights Reserved.
 
 #include "SaveGameMigration.h"
 #include "HorrorProject/Save/HorrorSaveGame.h"
+
+DEFINE_LOG_CATEGORY(LogSaveMigration);
 
 bool USaveGameMigration::MigrateSaveGame(UHorrorSaveGame* SaveGame)
 {
 	if (!SaveGame)
 	{
+		UE_LOG(LogSaveMigration, Error, TEXT("MigrateSaveGame: null SaveGame"));
 		return false;
 	}
 
@@ -21,23 +24,47 @@ bool USaveGameMigration::MigrateSaveGame(UHorrorSaveGame* SaveGame)
 	}
 
 	const int32 StartVersion = SaveGame->SaveVersion;
-	UE_LOG(LogTemp, Log, TEXT("Migrating save game from version %d to %d"), StartVersion, CurrentSaveVersion);
+	UE_LOG(LogSaveMigration, Log, TEXT("Migrating save game from version %d to %d"), StartVersion, CurrentSaveVersion);
 
-	for (const FSaveGameMigrationStep& Step : MigrationSteps)
+	constexpr int32 MaxIterations = 16;
+	int32 Iterations = 0;
+
+	while (SaveGame->SaveVersion < CurrentSaveVersion && Iterations < MaxIterations)
 	{
-		if (SaveGame->SaveVersion == Step.FromVersion)
+		bool bFoundStep = false;
+
+		for (const FSaveGameMigrationStep& Step : MigrationSteps)
 		{
-			if (Step.MigrationFunction && Step.MigrationFunction(SaveGame))
+			if (SaveGame->SaveVersion == Step.FromVersion)
 			{
-				SaveGame->SaveVersion = Step.ToVersion;
-				UE_LOG(LogTemp, Log, TEXT("Successfully migrated from version %d to %d"), Step.FromVersion, Step.ToVersion);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("Failed to migrate from version %d to %d"), Step.FromVersion, Step.ToVersion);
-				return false;
+				if (Step.MigrationFunction && Step.MigrationFunction(SaveGame))
+				{
+					SaveGame->SaveVersion = Step.ToVersion;
+					UE_LOG(LogSaveMigration, Log, TEXT("Successfully migrated from version %d to %d"), Step.FromVersion, Step.ToVersion);
+					bFoundStep = true;
+				}
+				else
+				{
+					UE_LOG(LogSaveMigration, Error, TEXT("Failed to migrate from version %d to %d"), Step.FromVersion, Step.ToVersion);
+					return false;
+				}
+				break;
 			}
 		}
+
+		if (!bFoundStep)
+		{
+			UE_LOG(LogSaveMigration, Error, TEXT("No migration step found for version %d"), SaveGame->SaveVersion);
+			return false;
+		}
+
+		++Iterations;
+	}
+
+	if (Iterations >= MaxIterations)
+	{
+		UE_LOG(LogSaveMigration, Error, TEXT("Migration exceeded maximum iterations (%d)"), MaxIterations);
+		return false;
 	}
 
 	return SaveGame->SaveVersion == CurrentSaveVersion;
@@ -52,7 +79,6 @@ void USaveGameMigration::RegisterMigrationSteps()
 {
 	MigrationSteps.Empty();
 
-	// Example migration from V1 to V2
 	FSaveGameMigrationStep V1ToV2;
 	V1ToV2.FromVersion = 1;
 	V1ToV2.ToVersion = 2;
@@ -72,10 +98,8 @@ bool USaveGameMigration::MigrateFromV1ToV2(UHorrorSaveGame* SaveGame)
 		return false;
 	}
 
-	// Example migration logic
-	// Add any new fields or transform existing data
-	UE_LOG(LogTemp, Log, TEXT("Performing V1 to V2 migration"));
+	UE_LOG(LogSaveMigration, Log, TEXT("Performing V1 to V2 migration"));
 
-	// Migration successful
+	// V2 changes: SaveVersion bumped, any structural changes applied here
 	return true;
 }

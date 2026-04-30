@@ -12,15 +12,15 @@ class APostProcessVolume;
 UENUM(BlueprintType)
 enum class EPostProcessEffectType : uint8
 {
-	VHS UMETA(DisplayName = "VHS Effect"),
-	Underwater UMETA(DisplayName = "Underwater"),
-	PressureVignette UMETA(DisplayName = "Pressure Vignette"),
-	LensDroplets UMETA(DisplayName = "Lens Droplets"),
-	ChromaticAberration UMETA(DisplayName = "Chromatic Aberration"),
-	Scanlines UMETA(DisplayName = "Scanlines"),
-	NoiseOverlay UMETA(DisplayName = "Noise Overlay"),
-	DeathEffect UMETA(DisplayName = "Death Effect"),
-	FearEffect UMETA(DisplayName = "Fear Effect")
+	VHS UMETA(DisplayName = "录像带效果"),
+	Underwater UMETA(DisplayName = "水下"),
+	PressureVignette UMETA(DisplayName = "压力暗角"),
+	LensDroplets UMETA(DisplayName = "镜头水滴"),
+	ChromaticAberration UMETA(DisplayName = "色差"),
+	Scanlines UMETA(DisplayName = "扫描线"),
+	NoiseOverlay UMETA(DisplayName = "噪点叠加"),
+	DeathEffect UMETA(DisplayName = "死亡效果"),
+	FearEffect UMETA(DisplayName = "恐惧效果")
 };
 
 USTRUCT(BlueprintType)

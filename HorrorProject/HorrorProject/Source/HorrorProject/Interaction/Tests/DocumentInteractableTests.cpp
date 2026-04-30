@@ -15,7 +15,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableConstructionTest, "HorrorProject.Interaction.Document.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
@@ -28,7 +28,7 @@ bool FDocumentInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableReadTest, "HorrorProject.Interaction.Document.Read", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableReadTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -45,7 +45,7 @@ bool FDocumentInteractableReadTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableCloseTest, "HorrorProject.Interaction.Document.Close", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableCloseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -64,7 +64,7 @@ bool FDocumentInteractableCloseTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableEvidenceTest, "HorrorProject.Interaction.Document.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -84,7 +84,7 @@ bool FDocumentInteractableEvidenceTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTitleContentTest, "HorrorProject.Interaction.Document.TitleContent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableTitleContentTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 
 	const FText Title = FText::FromString("Test Document");
@@ -99,7 +99,7 @@ bool FDocumentInteractableTitleContentTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableTypesTest, "HorrorProject.Interaction.Document.Types", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableTypesTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 
 	TArray<EDocumentType> Types = {
 		EDocumentType::Text,
@@ -119,7 +119,7 @@ bool FDocumentInteractableTypesTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableComponentsTest, "HorrorProject.Interaction.Document.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -136,7 +136,7 @@ bool FDocumentInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableMultipleReadsTest, "HorrorProject.Interaction.Document.MultipleReads", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableMultipleReadsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -156,7 +156,7 @@ bool FDocumentInteractableMultipleReadsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableNullInstigatorTest, "HorrorProject.Interaction.Document.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 
 	FHitResult Hit;
@@ -168,7 +168,7 @@ bool FDocumentInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDocumentInteractableImageTest, "HorrorProject.Interaction.Document.Image", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDocumentInteractableImageTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADocumentInteractable* Document = World->SpawnActor<ADocumentInteractable>();
 
 	// Test image retrieval (will be null by default)

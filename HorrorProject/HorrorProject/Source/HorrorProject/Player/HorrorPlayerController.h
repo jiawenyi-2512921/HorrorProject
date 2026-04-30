@@ -19,6 +19,10 @@ class UControlSettings;
 class UHorrorAudioSettings;
 class UGraphicsSettings;
 class UNoteRecorderComponent;
+class AHorrorGameModeBase;
+class AHorrorCampaignObjectiveActor;
+class AHorrorPlayerCharacter;
+class AFoundFootageObjectiveInteractable;
 struct FKey;
 struct FInputKeyEventArgs;
 struct FHorrorEventMessage;
@@ -64,6 +68,7 @@ public:
 	void ResetDay1ModalInputState();
 
 	void ShowPlayerMessage(const FText& MessageText, const FLinearColor& MessageColor = FLinearColor::White, float DisplaySeconds = 2.5f);
+	bool TrySubmitActiveAdvancedInteractionExpectedInput();
 
 	bool IsAwaitingDoorPassword() const { return PendingPasswordDoor.IsValid(); }
 	FString GetDoorPasswordBufferForTests() const { return DoorPasswordBuffer; }
@@ -75,8 +80,11 @@ public:
 	bool HandleInputKeyForTests(const FKey& Key, EInputEvent Event = IE_Pressed);
 	void BindObjectiveEventBusForTests();
 	void RefreshDay1HUDStateForTests();
+	bool UpdateDay1RuntimeStateForTests(float DeltaSeconds);
 	bool IsBoundToNoteRecorderForTests(const UNoteRecorderComponent* NoteRecorder) const;
 	bool HasNoteRecordedDelegateForTests(const UNoteRecorderComponent* NoteRecorder);
+	void SetActiveAdvancedInteractionObjectiveForTests(AHorrorCampaignObjectiveActor* ObjectiveActor);
+	AHorrorCampaignObjectiveActor* GetActiveAdvancedInteractionObjectiveForTests() const;
 	int32 GetNoteRecordedFeedbackCountForTests() const { return NoteRecordedFeedbackCountForTests; }
 	int32 GetDefaultMappingContextCountForTests() const { return DefaultMappingContexts.Num(); }
 	int32 GetMobileExcludedMappingContextCountForTests() const { return MobileExcludedMappingContexts.Num(); }
@@ -130,9 +138,17 @@ private:
 	void UnbindPawnNoteRecorder();
 	UFUNCTION()
 	void HandlePawnNoteRecorded(FName NoteId, int32 TotalRecordedNotes);
+	bool UpdateDay1RuntimeState(float DeltaSeconds);
 	void RefreshDay1HUDState();
+	void RefreshAdvancedInteractionHUD(ADay1SliceHUD& Day1HUD, const AHorrorPlayerCharacter* HorrorPlayerCharacter);
 	void RefreshInteractionPrompt();
+	void RefreshAnomalyCaptureHUD(ADay1SliceHUD& Day1HUD, const AHorrorPlayerCharacter* HorrorPlayerCharacter, const AHorrorGameModeBase* HorrorGameMode);
+	AHorrorCampaignObjectiveActor* ResolveActiveAdvancedInteractionObjective(const AHorrorPlayerCharacter* HorrorPlayerCharacter = nullptr);
+	AFoundFootageObjectiveInteractable* ResolveFocusedFirstAnomalyTarget(const AHorrorPlayerCharacter& HorrorPlayerCharacter) const;
+	bool IsFocusedFirstAnomalyTarget(const AFoundFootageObjectiveInteractable* ObjectiveActor) const;
+	bool TryAutoCaptureFocusedAnomaly(float DeltaSeconds);
 	FText BuildObjectivePrompt() const;
+	bool TryHandleAdvancedInteractionKey(const FKey& Key);
 	void ClearDoorPasswordEntry();
 	void CancelDoorPasswordEntry();
 	void ShowDoorPasswordPrompt() const;
@@ -169,6 +185,9 @@ private:
 	FDelegateHandle ObjectiveEventHandle;
 	TWeakObjectPtr<UNoteRecorderComponent> BoundNoteRecorder;
 	FDelegateHandle NoteRecordedHandle;
+	TWeakObjectPtr<AFoundFootageObjectiveInteractable> LockedAnomalyTarget;
+	TWeakObjectPtr<AHorrorCampaignObjectiveActor> ActiveAdvancedInteractionObjective;
+	float FocusedAnomalyLockSeconds = 0.0f;
 #if WITH_DEV_AUTOMATION_TESTS
 	int32 NoteRecordedFeedbackCountForTests = 0;
 #endif

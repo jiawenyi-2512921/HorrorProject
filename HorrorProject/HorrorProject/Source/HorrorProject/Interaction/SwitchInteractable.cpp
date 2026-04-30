@@ -65,7 +65,7 @@ ASwitchInteractable::ASwitchInteractable()
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Default settings
-	InteractionPrompt = FText::FromString(TEXT("使用开关"));
+	InteractionPrompt = NSLOCTEXT("SwitchInteractable", "UseSwitch", "使用开关");
 	bCanInteractMultipleTimes = true;
 }
 

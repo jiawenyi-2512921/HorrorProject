@@ -4,6 +4,8 @@
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
+#include "Game/HorrorAdvancedInteractionTypes.h"
+#include "Game/HorrorFoundFootageContract.h"
 #include "Misc/AutomationTest.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Tests/AutomationCommon.h"
@@ -56,6 +58,74 @@ bool FDay1SliceHUDStoresNativeFallbackStateTest::RunTest(const FString& Paramete
 	HUD->ClearObjectiveNavigation();
 	TestTrue(TEXT("Day1 HUD should clear objective navigation feedback."), HUD->GetObjectiveNavigationForTests().IsEmpty());
 
+	FHorrorObjectiveTrackerSnapshot ObjectiveTracker;
+	ObjectiveTracker.Stage = EHorrorObjectiveTrackerStage::RecordFirstAnomaly;
+	ObjectiveTracker.Title = FText::FromString(TEXT("记录异常"));
+	ObjectiveTracker.PrimaryInstruction = FText::FromString(TEXT("保持录像，对准异常。"));
+	ObjectiveTracker.SecondaryInstruction = FText::FromString(TEXT("稳定取景直到信号锁定。"));
+	ObjectiveTracker.ProgressLabel = FText::FromString(TEXT("进度 2/5"));
+	FHorrorObjectiveChecklistItem ChecklistItem;
+	ChecklistItem.Stage = EHorrorObjectiveTrackerStage::RecordFirstAnomaly;
+	ChecklistItem.Label = FText::FromString(TEXT("录像锁定第一个异常"));
+	ChecklistItem.bActive = true;
+	ChecklistItem.bRequiresRecording = true;
+	ObjectiveTracker.ChecklistItems.Add(ChecklistItem);
+	ObjectiveTracker.CompletedMilestoneCount = 2;
+	ObjectiveTracker.RequiredMilestoneCount = 5;
+	ObjectiveTracker.ProgressFraction = 0.4f;
+	ObjectiveTracker.bRequiresRecording = true;
+	ObjectiveTracker.bUrgent = true;
+	HUD->SetObjectiveTracker(ObjectiveTracker);
+	TestEqual(TEXT("Day1 HUD should store the tracker title."), HUD->GetObjectiveTrackerTitleForTests().ToString(), FString(TEXT("记录异常")));
+	TestEqual(TEXT("Day1 HUD should promote the tracker primary instruction."), HUD->GetCurrentObjectiveForTests().ToString(), FString(TEXT("保持录像，对准异常。")));
+	TestEqual(TEXT("Day1 HUD should store the tracker secondary instruction."), HUD->GetObjectiveTrackerDetailForTests().ToString(), FString(TEXT("稳定取景直到信号锁定。")));
+	TestEqual(TEXT("Day1 HUD should store the tracker progress label."), HUD->GetObjectiveTrackerProgressLabelForTests().ToString(), FString(TEXT("进度 2/5")));
+	TestTrue(TEXT("Day1 HUD should expose urgent objective state."), HUD->IsObjectiveTrackerUrgentForTests());
+	TestTrue(TEXT("Day1 HUD should expose recording requirement state."), HUD->IsObjectiveTrackerRecordingRequiredForTests());
+	TestTrue(TEXT("Day1 HUD should store objective progress fraction."), FMath::IsNearlyEqual(HUD->GetObjectiveTrackerProgressFractionForTests(), 0.4f));
+	TestEqual(TEXT("Day1 HUD should store objective checklist items."), HUD->GetObjectiveChecklistItemCountForTests(), 1);
+	TestEqual(TEXT("Day1 HUD should expose objective checklist labels."), HUD->GetObjectiveChecklistItemLabelForTests(0).ToString(), FString(TEXT("录像锁定第一个异常")));
+	TestTrue(TEXT("Day1 HUD should expose the active checklist row."), HUD->IsObjectiveChecklistItemActiveForTests(0));
+	TestTrue(TEXT("Day1 HUD should expose checklist recording requirements."), HUD->DoesObjectiveChecklistItemRequireRecordingForTests(0));
+
+	HUD->SetAnomalyCaptureStatus(FText::FromString(TEXT("异常已对准，开启录像锁定。")), 0.35f, false, true);
+	TestTrue(TEXT("Day1 HUD should expose anomaly capture status visibility."), HUD->IsAnomalyCaptureStatusVisibleForTests());
+	TestEqual(TEXT("Day1 HUD should store anomaly capture status text."), HUD->GetAnomalyCaptureStatusForTests().ToString(), FString(TEXT("异常已对准，开启录像锁定。")));
+	TestTrue(TEXT("Day1 HUD should store anomaly capture progress fraction."), FMath::IsNearlyEqual(HUD->GetAnomalyCaptureProgressForTests(), 0.35f));
+	TestFalse(TEXT("Day1 HUD should expose capture locked state."), HUD->IsAnomalyCaptureLockedForTests());
+	TestTrue(TEXT("Day1 HUD should expose capture recording requirement state."), HUD->DoesAnomalyCaptureRequireRecordingForTests());
+	HUD->ClearAnomalyCaptureStatus();
+	TestFalse(TEXT("Day1 HUD should clear anomaly capture status visibility."), HUD->IsAnomalyCaptureStatusVisibleForTests());
+
+	FHorrorAdvancedInteractionHUDState CircuitPanel;
+	CircuitPanel.bVisible = true;
+	CircuitPanel.Mode = EHorrorCampaignInteractionMode::CircuitWiring;
+	CircuitPanel.Title = FText::FromString(TEXT("修复深水站主供电"));
+	CircuitPanel.ExpectedInputId = TEXT("蓝色端子");
+	CircuitPanel.FeedbackText = FText::FromString(TEXT("蓝色电弧：线路接入成功。"));
+	CircuitPanel.ProgressFraction = 0.48f;
+	CircuitPanel.TimingFraction = 0.58f;
+	CircuitPanel.PauseRemainingSeconds = 0.0f;
+	CircuitPanel.bTimingWindowOpen = true;
+	CircuitPanel.bPaused = false;
+	CircuitPanel.StepIndex = 2;
+	CircuitPanel.RequiredStepCount = 3;
+	HUD->SetAdvancedInteractionState(CircuitPanel);
+	TestTrue(TEXT("Day1 HUD should expose advanced interaction panel visibility."), HUD->IsAdvancedInteractionPanelVisibleForTests());
+	TestEqual(TEXT("Day1 HUD should store the advanced interaction mode."), HUD->GetAdvancedInteractionModeForTests(), EHorrorCampaignInteractionMode::CircuitWiring);
+	TestEqual(TEXT("Day1 HUD should store the advanced panel title."), HUD->GetAdvancedInteractionTitleForTests().ToString(), FString(TEXT("修复深水站主供电")));
+	TestEqual(TEXT("Day1 HUD should store the expected animated input id."), HUD->GetAdvancedInteractionExpectedInputForTests(), FName(TEXT("蓝色端子")));
+	TestEqual(TEXT("Day1 HUD should store advanced interaction feedback."), HUD->GetAdvancedInteractionFeedbackForTests().ToString(), FString(TEXT("蓝色电弧：线路接入成功。")));
+	TestTrue(TEXT("Day1 HUD should store advanced interaction progress."), FMath::IsNearlyEqual(HUD->GetAdvancedInteractionProgressForTests(), 0.48f));
+	TestTrue(TEXT("Day1 HUD should store advanced interaction timing cursor."), FMath::IsNearlyEqual(HUD->GetAdvancedInteractionTimingForTests(), 0.58f));
+	TestTrue(TEXT("Day1 HUD should expose whether the timing window is open."), HUD->IsAdvancedInteractionTimingWindowOpenForTests());
+	TestFalse(TEXT("Day1 HUD should expose paused state for animated devices."), HUD->IsAdvancedInteractionPausedForTests());
+	TestEqual(TEXT("Day1 HUD should store the advanced interaction step index."), HUD->GetAdvancedInteractionStepIndexForTests(), 2);
+	TestEqual(TEXT("Day1 HUD should store the required animated step count."), HUD->GetAdvancedInteractionRequiredStepCountForTests(), 3);
+
+	HUD->ClearAdvancedInteractionState();
+	TestFalse(TEXT("Day1 HUD should clear the advanced interaction panel."), HUD->IsAdvancedInteractionPanelVisibleForTests());
+
 	HUD->ShowPasswordPrompt(
 		FText::FromString(TEXT("Door_0417")),
 		FText::FromString(TEXT("备忘录上的前四个数字。")),
@@ -101,7 +171,7 @@ bool FDay1SliceHUDStoresNativeFallbackStateTest::RunTest(const FString& Paramete
 	HUD->ShowNotesJournal({});
 	TestTrue(TEXT("Day1 journal should become visible for empty native fallback state."), HUD->IsNotesJournalVisibleForTests());
 	TestTrue(TEXT("Day1 journal should expose empty note state."), HUD->IsNotesJournalEmptyForTests());
-	TestEqual(TEXT("Day1 journal should use an empty fallback title."), HUD->GetNotesJournalEmptyTextForTests().ToString(), FString(TEXT("尚未记录笔记。")));
+	TestEqual(TEXT("Day1 journal should use an empty fallback title."), HUD->GetNotesJournalEmptyTextForTests().ToString(), FString(TEXT("还没有记录任何笔记。")));
 
 	FHorrorNoteMetadata StationMemo;
 	StationMemo.NoteId = TEXT("Note.StationMemo");

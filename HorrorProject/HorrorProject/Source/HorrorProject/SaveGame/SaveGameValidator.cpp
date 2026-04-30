@@ -8,7 +8,7 @@ ESaveGameValidationResult USaveGameValidator::ValidateSaveGame(const UHorrorSave
 {
 	if (!SaveGame)
 	{
-		return ESaveGameValidationResult::CorruptedData;
+		return ESaveGameValidationResult::NullInput;
 	}
 
 	if (!ValidateVersion(SaveGame))
@@ -40,6 +40,8 @@ FString USaveGameValidator::GetValidationErrorMessage(ESaveGameValidationResult 
 	{
 	case ESaveGameValidationResult::Valid:
 		return TEXT("Save game is valid");
+	case ESaveGameValidationResult::NullInput:
+		return TEXT("No save game provided");
 	case ESaveGameValidationResult::CorruptedData:
 		return TEXT("Save game data is corrupted");
 	case ESaveGameValidationResult::InvalidVersion:

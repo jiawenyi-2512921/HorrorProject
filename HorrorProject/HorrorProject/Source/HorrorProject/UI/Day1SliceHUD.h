@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Game/HorrorAdvancedInteractionTypes.h"
+#include "Game/HorrorFoundFootageContract.h"
 #include "GameFramework/HUD.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Day1SliceHUD.generated.h"
@@ -32,9 +34,12 @@ public:
 	void ClearInteractionPrompt();
 
 	void SetCurrentObjective(const FText& ObjectiveText);
+	void SetObjectiveTracker(const FHorrorObjectiveTrackerSnapshot& Snapshot);
 	void SetObjectiveNavigation(const FText& NavigationText);
 	void ClearObjectiveNavigation();
 	void ShowObjectiveToast(const FText& TitleText, const FText& HintText, float DisplaySeconds = 5.0f);
+	void SetAnomalyCaptureStatus(const FText& StatusText, float ProgressFraction, bool bLocked, bool bRequiresRecording);
+	void ClearAnomalyCaptureStatus();
 	void ShowTransientMessage(const FText& MessageText, const FLinearColor& MessageColor, float DisplaySeconds = 2.5f);
 	void ShowAutosaveIndicator(const FText& IndicatorText, float DisplaySeconds = 2.0f);
 	void ShowDay1CompletionOverlay(const FText& TitleText, const FText& HintText);
@@ -50,8 +55,26 @@ public:
 
 	void ShowPauseMenu(EDay1PauseMenuSelection Selection, float MouseSensitivity, float MasterVolume, float Brightness);
 	void ClearPauseMenu();
+	void SetAdvancedInteractionState(const FHorrorAdvancedInteractionHUDState& State);
+	void ClearAdvancedInteractionState();
 
 	FText GetCurrentObjectiveForTests() const { return CurrentObjective; }
+	FText GetObjectiveTrackerTitleForTests() const { return ObjectiveTrackerTitle; }
+	FText GetObjectiveTrackerDetailForTests() const { return ObjectiveTrackerDetail; }
+	FText GetObjectiveTrackerProgressLabelForTests() const { return ObjectiveTrackerProgressLabel; }
+	float GetObjectiveTrackerProgressFractionForTests() const { return ObjectiveTrackerProgressFraction; }
+	bool IsObjectiveTrackerUrgentForTests() const { return bObjectiveTrackerUrgent; }
+	bool IsObjectiveTrackerRecordingRequiredForTests() const { return bObjectiveTrackerRequiresRecording; }
+	int32 GetObjectiveChecklistItemCountForTests() const { return ObjectiveChecklistItems.Num(); }
+	FText GetObjectiveChecklistItemLabelForTests(int32 Index) const { return ObjectiveChecklistItems.IsValidIndex(Index) ? ObjectiveChecklistItems[Index].Label : FText::GetEmpty(); }
+	bool IsObjectiveChecklistItemCompleteForTests(int32 Index) const { return ObjectiveChecklistItems.IsValidIndex(Index) && ObjectiveChecklistItems[Index].bComplete; }
+	bool IsObjectiveChecklistItemActiveForTests(int32 Index) const { return ObjectiveChecklistItems.IsValidIndex(Index) && ObjectiveChecklistItems[Index].bActive; }
+	bool DoesObjectiveChecklistItemRequireRecordingForTests(int32 Index) const { return ObjectiveChecklistItems.IsValidIndex(Index) && ObjectiveChecklistItems[Index].bRequiresRecording; }
+	bool IsAnomalyCaptureStatusVisibleForTests() const { return bAnomalyCaptureStatusVisible; }
+	FText GetAnomalyCaptureStatusForTests() const { return AnomalyCaptureStatus; }
+	float GetAnomalyCaptureProgressForTests() const { return AnomalyCaptureProgressFraction; }
+	bool IsAnomalyCaptureLockedForTests() const { return bAnomalyCaptureLocked; }
+	bool DoesAnomalyCaptureRequireRecordingForTests() const { return bAnomalyCaptureRequiresRecording; }
 	FText GetObjectiveNavigationForTests() const { return ObjectiveNavigation; }
 	FText GetInteractionPromptForTests() const { return InteractionPrompt; }
 	bool IsPasswordPromptVisibleForTests() const { return bPasswordPromptVisible; }
@@ -76,9 +99,29 @@ public:
 	int32 GetNotesJournalEntryCountForTests() const { return NotesJournalEntries.Num(); }
 	FText GetNotesJournalTitleForTests(int32 Index) const { return NotesJournalEntries.IsValidIndex(Index) ? NotesJournalEntries[Index].Title : FText::GetEmpty(); }
 	FText GetNotesJournalBodyForTests(int32 Index) const { return NotesJournalEntries.IsValidIndex(Index) ? NotesJournalEntries[Index].Body : FText::GetEmpty(); }
+	bool IsAdvancedInteractionPanelVisibleForTests() const { return AdvancedInteractionState.bVisible; }
+	EHorrorCampaignInteractionMode GetAdvancedInteractionModeForTests() const { return AdvancedInteractionState.Mode; }
+	FText GetAdvancedInteractionTitleForTests() const { return AdvancedInteractionState.Title; }
+	FName GetAdvancedInteractionExpectedInputForTests() const { return AdvancedInteractionState.ExpectedInputId; }
+	FText GetAdvancedInteractionFeedbackForTests() const { return AdvancedInteractionState.FeedbackText; }
+	float GetAdvancedInteractionProgressForTests() const { return AdvancedInteractionState.ProgressFraction; }
+	float GetAdvancedInteractionTimingForTests() const { return AdvancedInteractionState.TimingFraction; }
+	bool IsAdvancedInteractionTimingWindowOpenForTests() const { return AdvancedInteractionState.bTimingWindowOpen; }
+	bool IsAdvancedInteractionPausedForTests() const { return AdvancedInteractionState.bPaused; }
+	int32 GetAdvancedInteractionStepIndexForTests() const { return AdvancedInteractionState.StepIndex; }
+	int32 GetAdvancedInteractionRequiredStepCountForTests() const { return AdvancedInteractionState.RequiredStepCount; }
 
 private:
 	void DrawCurrentObjective(float CanvasWidth);
+	void DrawAdvancedInteractionPanel(float CanvasWidth, float CanvasHeight);
+	void DrawCircuitWiringPanel(float PanelX, float PanelY, float PanelWidth, float PanelHeight, UFont* Font, float WorldSeconds);
+	void DrawGearCalibrationPanel(float PanelX, float PanelY, float PanelWidth, float PanelHeight, UFont* Font, float WorldSeconds);
+	void DrawAdvancedInteractionHeader(float PanelX, float PanelY, float PanelWidth, UFont* Font, const FLinearColor& AccentColor);
+	void DrawAdvancedInteractionProgress(float PanelX, float PanelY, float PanelWidth, UFont* Font, const FLinearColor& AccentColor);
+	void DrawLine(const FVector2D& Start, const FVector2D& End, const FLinearColor& Color, float Thickness = 2.0f);
+	void DrawCircleLines(const FVector2D& Center, float Radius, const FLinearColor& Color, int32 Segments = 48, float Thickness = 2.0f);
+	void DrawRotatedRect(const FVector2D& Center, const FVector2D& Size, float AngleRadians, const FLinearColor& Color);
+	void DrawAnomalyCaptureStatus(float CanvasWidth, float CanvasHeight);
 	void DrawObjectiveToast(float CanvasWidth);
 	void DrawInteractionPrompt(float CanvasWidth, float CanvasHeight);
 	void DrawTransientMessage(float CanvasWidth, float CanvasHeight);
@@ -98,7 +141,19 @@ private:
 	FText CurrentObjective;
 
 	UPROPERTY(Transient)
+	FText ObjectiveTrackerTitle;
+
+	UPROPERTY(Transient)
+	FText ObjectiveTrackerDetail;
+
+	UPROPERTY(Transient)
+	FText ObjectiveTrackerProgressLabel;
+
+	UPROPERTY(Transient)
 	FText ObjectiveNavigation;
+
+	UPROPERTY(Transient)
+	FText AnomalyCaptureStatus;
 
 	UPROPERTY(Transient)
 	FText ToastTitle;
@@ -130,6 +185,12 @@ private:
 	UPROPERTY(Transient)
 	TArray<FHorrorNoteMetadata> NotesJournalEntries;
 
+	UPROPERTY(Transient)
+	TArray<FHorrorObjectiveChecklistItem> ObjectiveChecklistItems;
+
+	UPROPERTY(Transient)
+	FHorrorAdvancedInteractionHUDState AdvancedInteractionState;
+
 	FLinearColor TransientMessageColor = FLinearColor::White;
 	float ToastExpireWorldSeconds = -1.0f;
 	float TransientMessageExpireWorldSeconds = -1.0f;
@@ -142,7 +203,14 @@ private:
 	float StatusFearPercent = 0.0f;
 	float StatusSprintPercent = 1.0f;
 	float BodycamBatteryPercent = 100.0f;
+	float ObjectiveTrackerProgressFraction = 0.0f;
+	float AnomalyCaptureProgressFraction = 0.0f;
 	EDay1PauseMenuSelection PauseMenuSelection = EDay1PauseMenuSelection::Resume;
+	bool bObjectiveTrackerUrgent = false;
+	bool bObjectiveTrackerRequiresRecording = false;
+	bool bAnomalyCaptureStatusVisible = false;
+	bool bAnomalyCaptureLocked = false;
+	bool bAnomalyCaptureRequiresRecording = false;
 	bool bStatusBodycamAcquired = false;
 	bool bStatusBodycamEnabled = false;
 	bool bStatusRecording = false;

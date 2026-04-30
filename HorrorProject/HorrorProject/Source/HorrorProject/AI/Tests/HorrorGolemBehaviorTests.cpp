@@ -124,6 +124,8 @@ bool FHorrorGolemBehaviorPhaseConfigTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Final impact trigger distance should be 500"), GolemBehavior->FinalImpact_TriggerDistance, 500.0f);
 
 	TestEqual(TEXT("Chase triggered speed multiplier should be 0.7"), GolemBehavior->ChaseTriggered_SpeedMultiplier, 0.7f);
+	TestTrue(TEXT("Castle golem triggered chase should stay slow enough for the player to outrun"), GolemBehavior->ChaseTriggered_BaseSpeed <= 220.0f);
+	TestTrue(TEXT("Castle golem full chase should stay below sprint speed"), GolemBehavior->FullChase_Speed <= 260.0f);
 	TestTrue(TEXT("Full chase destruction should be enabled"), GolemBehavior->bFullChase_EnableDestruction);
 	TestTrue(TEXT("Final impact cutscene should be enabled"), GolemBehavior->bFinalImpact_TriggerCutscene);
 

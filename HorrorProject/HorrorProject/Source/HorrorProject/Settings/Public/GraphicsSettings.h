@@ -9,32 +9,32 @@
 UENUM(BlueprintType)
 enum class EQualityPreset : uint8
 {
-	Low = 0,
-	Medium = 1,
-	High = 2,
-	Ultra = 3,
-	Cinematic = 4,
-	Custom = 0xff
+	Low = 0 UMETA(DisplayName = "低"),
+	Medium = 1 UMETA(DisplayName = "中"),
+	High = 2 UMETA(DisplayName = "高"),
+	Ultra = 3 UMETA(DisplayName = "超高"),
+	Cinematic = 4 UMETA(DisplayName = "电影级"),
+	Custom = 0xff UMETA(DisplayName = "自定义")
 };
 
 UENUM(BlueprintType)
 enum class EHorrorAntiAliasingMethod : uint8
 {
-	None,
-	FXAA,
-	TAA,
-	MSAA_2x,
-	MSAA_4x,
-	MSAA_8x
+	None UMETA(DisplayName = "无"),
+	FXAA UMETA(DisplayName = "快速近似抗锯齿"),
+	TAA UMETA(DisplayName = "时间抗锯齿"),
+	MSAA_2x UMETA(DisplayName = "多重采样 2 倍"),
+	MSAA_4x UMETA(DisplayName = "多重采样 4 倍"),
+	MSAA_8x UMETA(DisplayName = "多重采样 8 倍")
 };
 
 UENUM(BlueprintType)
 enum class EShadowQuality : uint8
 {
-	Low,
-	Medium,
-	High,
-	Ultra
+	Low UMETA(DisplayName = "低"),
+	Medium UMETA(DisplayName = "中"),
+	High UMETA(DisplayName = "高"),
+	Ultra UMETA(DisplayName = "超高")
 };
 
 /**

@@ -40,7 +40,7 @@ ADoorInteractable::ADoorInteractable()
 	InteractionVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Default settings
-	InteractionPrompt = FText::FromString(TEXT("打开门"));
+	InteractionPrompt = NSLOCTEXT("DoorInteractable", "OpenDoor", "开门");
 	bCanInteractMultipleTimes = true;
 }
 
@@ -191,7 +191,7 @@ bool ADoorInteractable::SubmitPassword(AActor* InstigatorActor, const FString& S
 				-1,
 				2.0f,
 				FColor::Red,
-				TEXT("门禁密码错误。"));
+				TEXT("门禁码错误。"));
 		}
 		return false;
 	}
@@ -213,7 +213,7 @@ bool ADoorInteractable::SubmitPassword(AActor* InstigatorActor, const FString& S
 			-1,
 			2.0f,
 			FColor::Green,
-			TEXT("门禁已解锁。"));
+			TEXT("门禁码正确。"));
 	}
 	return true;
 }
@@ -315,7 +315,7 @@ void ADoorInteractable::RequestPasswordEntry(AActor* InstigatorActor) const
 			-1,
 			3.0f,
 			FColor::Yellow,
-			TEXT("这扇门需要门禁密码。"));
+			TEXT("这扇门需要门禁码。"));
 	}
 }
 

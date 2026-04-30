@@ -16,7 +16,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusIntegrationTest,
 
 bool FEventBusIntegrationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -59,7 +59,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusAudioIntegrationTest,
 
 bool FEventBusAudioIntegrationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -92,7 +92,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusEvidenceIntegrationTest,
 
 bool FEventBusEvidenceIntegrationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -133,7 +133,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusNoCircularDependencyTest,
 
 bool FEventBusNoCircularDependencyTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -178,7 +178,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEventBusMultipleSubscribersTest,
 
 bool FEventBusMultipleSubscribersTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

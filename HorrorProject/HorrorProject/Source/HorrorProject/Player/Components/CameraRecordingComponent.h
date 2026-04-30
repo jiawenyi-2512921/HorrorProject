@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
+#include "QuantumCameraComponent.h"
 #include "CameraRecordingComponent.generated.h"
 
-class UQuantumCameraComponent;
 class USoundBase;
 
 USTRUCT(BlueprintType)
@@ -131,7 +131,9 @@ public:
 	FOnRewindProgressSignature OnRewindProgress;
 
 protected:
+	virtual void OnRegister() override;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditDefaultsOnly, Category="CameraRecording|Settings")
 	float MaxRecordingDuration = DefaultMaxRecordingDuration;
@@ -167,6 +169,10 @@ protected:
 	FGameplayTag RewindStoppedEventTag;
 
 private:
+	UFUNCTION()
+	void HandleQuantumCameraModeChanged(EQuantumCameraMode NewMode);
+
+	void ResolveCameraComponent();
 	void CaptureFrame(float DeltaTime);
 	void ProcessRewind(float DeltaTime);
 	void PublishEvent(FGameplayTag EventTag);

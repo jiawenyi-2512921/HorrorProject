@@ -18,7 +18,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EFullGameplayTest,
 
 bool FE2EFullGameplayTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -92,7 +92,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2ESaveLoadCycleTest,
 
 bool FE2ESaveLoadCycleTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -140,7 +140,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EPerformanceStressTest,
 
 bool FE2EPerformanceStressTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -198,7 +198,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EEdgeCaseTest,
 
 bool FE2EEdgeCaseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -240,7 +240,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FE2EComplexInteractionTest,
 
 bool FE2EComplexInteractionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

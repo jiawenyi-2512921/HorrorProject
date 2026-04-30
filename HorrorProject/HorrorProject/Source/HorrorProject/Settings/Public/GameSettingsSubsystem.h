@@ -108,6 +108,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UConfigManager> ConfigManager;
 
-	bool bHasUnsavedChanges;
+	bool bHasUnsavedChanges = false;
 	TSet<FName> DirtyCategories;
 };

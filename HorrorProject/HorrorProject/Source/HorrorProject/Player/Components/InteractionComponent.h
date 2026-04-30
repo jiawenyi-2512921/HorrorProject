@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -38,6 +38,7 @@ public:
 	bool GetFocusedInteractionPrompt(FText& OutPrompt) const;
 
 	bool FindFocusedInteractable(FHitResult& OutHit, UObject*& OutTargetObject) const;
+	bool FindFocusedInteractionTarget(FHitResult& OutHit, UObject*& OutTargetObject) const;
 	bool TryInteractWithHit(const FHitResult& Hit) const;
 	void SetLegacyDoorTimelineFallbackEnabledForTests(bool bEnabled) { bEnableLegacyDoorTimelineFallback = bEnabled; }
 	UObject* ResolveInterfaceTargetForTests(const FHitResult& Hit) const { return ResolveInterfaceTarget(Hit); }

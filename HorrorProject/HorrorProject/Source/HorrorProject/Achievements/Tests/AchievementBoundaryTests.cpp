@@ -10,7 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementBoundaryTest, "HorrorProject.Achiev
 
 bool FAchievementBoundaryTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
     if (!AchievementSys)
@@ -45,7 +45,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementProgressStressTest, "HorrorProject.
 
 bool FAchievementProgressStressTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
     if (!AchievementSys)
@@ -76,7 +76,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementConcurrencyTest, "HorrorProject.Ach
 
 bool FAchievementConcurrencyTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
     if (!AchievementSys)
@@ -108,7 +108,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatisticsTrackingBoundaryTest, "HorrorProject
 
 bool FStatisticsTrackingBoundaryTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UStatisticsSubsystem* StatsSys = World->GetGameInstance()->GetSubsystem<UStatisticsSubsystem>();
 
     if (!StatsSys)
@@ -138,7 +138,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementNotificationTest, "HorrorProject.Ac
 
 bool FAchievementNotificationTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
     if (!AchievementSys)

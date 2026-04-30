@@ -56,10 +56,10 @@ public:
 
 private:
 	FString GetSlotName(int32 SlotIndex) const;
-	void LoadMetadata();
+	void LoadMetadata() const;
 	void SaveMetadata();
 	void UpdateSlotMetadataFromSave(int32 SlotIndex, const UHorrorSaveGame* SaveGame);
 
 	UPROPERTY(Transient)
-	TObjectPtr<USaveGameMetadata> Metadata;
+	mutable TObjectPtr<USaveGameMetadata> Metadata;
 };

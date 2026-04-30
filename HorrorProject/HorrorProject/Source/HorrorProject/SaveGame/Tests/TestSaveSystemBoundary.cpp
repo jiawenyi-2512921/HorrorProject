@@ -77,7 +77,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutoSaveStressTest, "HorrorProject.SaveSystem.
 
 bool FAutoSaveStressTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     AActor* TestActor = World->SpawnActor<AActor>();
 
     UAutoSaveComponent* AutoSave = NewObject<UAutoSaveComponent>(TestActor);

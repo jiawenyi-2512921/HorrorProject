@@ -16,7 +16,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableConstructionTest, "HorrorProject.Interaction.Recorder.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
@@ -29,7 +29,7 @@ bool FRecorderInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePlayTest, "HorrorProject.Interaction.Recorder.Play", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractablePlayTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	Recorder->PlayAudioLog();
@@ -41,7 +41,7 @@ bool FRecorderInteractablePlayTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableStopTest, "HorrorProject.Interaction.Recorder.Stop", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableStopTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	Recorder->PlayAudioLog();
@@ -54,7 +54,7 @@ bool FRecorderInteractableStopTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractablePauseTest, "HorrorProject.Interaction.Recorder.Pause", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractablePauseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	Recorder->PlayAudioLog();
@@ -67,7 +67,7 @@ bool FRecorderInteractablePauseTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableInteractTest, "HorrorProject.Interaction.Recorder.Interact", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableInteractTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -83,7 +83,7 @@ bool FRecorderInteractableInteractTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableEvidenceTest, "HorrorProject.Interaction.Recorder.Evidence", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableEvidenceTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -103,7 +103,7 @@ bool FRecorderInteractableEvidenceTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableSaveLoadTest, "HorrorProject.Interaction.Recorder.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -131,7 +131,7 @@ bool FRecorderInteractableSaveLoadTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableComponentsTest, "HorrorProject.Interaction.Recorder.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -152,7 +152,7 @@ bool FRecorderInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableProgressTest, "HorrorProject.Interaction.Recorder.Progress", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableProgressTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	float Progress = Recorder->GetPlaybackProgress();
@@ -164,7 +164,7 @@ bool FRecorderInteractableProgressTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecorderInteractableNullInstigatorTest, "HorrorProject.Interaction.Recorder.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRecorderInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ARecorderInteractable* Recorder = World->SpawnActor<ARecorderInteractable>();
 
 	FHitResult Hit;

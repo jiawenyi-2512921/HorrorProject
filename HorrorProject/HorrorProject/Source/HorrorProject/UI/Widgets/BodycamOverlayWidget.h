@@ -56,7 +56,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="时间戳已更新"))
 	void BP_TimestampUpdated(const FString& FormattedTime);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="VHS 强度已变化"))
+	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="录像带强度已变化"))
 	void BP_VHSIntensityChanged(float Intensity);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Bodycam|UI", meta=(DisplayName="故障效果已触发"))

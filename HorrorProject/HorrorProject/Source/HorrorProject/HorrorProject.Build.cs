@@ -21,17 +21,15 @@ public class HorrorProject : ModuleRules
 			"UMG",
 			"SlateCore",
 			"Niagara",
-			"OnlineSubsystem",
-			"OnlineSubsystemUtils",
-			"Sockets",
-			"Networking",
 			"Slate",
 			"EngineSettings",
 			"RHI",
 			"RenderCore",
 			"NavigationSystem",
 			"Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"LevelSequence",
+			"MovieScene"
 		});
 
 		PublicDefinitions.Add("HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS=0");

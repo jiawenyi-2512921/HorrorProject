@@ -15,6 +15,26 @@
 
 namespace
 {
+	bool ContainsAsciiLetter(const FString& Text)
+	{
+		for (const TCHAR Character : Text)
+		{
+			if ((Character >= TEXT('A') && Character <= TEXT('Z')) || (Character >= TEXT('a') && Character <= TEXT('z')))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void TestNoAsciiLetters(FAutomationTestBase& Test, const TCHAR* Context, const FText& Text)
+	{
+		Test.TestFalse(
+			FString::Printf(TEXT("%s should not expose English letters: %s"), Context, *Text.ToString()),
+			ContainsAsciiLetter(Text.ToString()));
+	}
+
 	AHorrorGameModeBase* CreateObjectivePromptGameMode(FAutomationTestBase& Test, FTestWorldWrapper& TestWorld, UWorld*& OutWorld)
 	{
 		OutWorld = nullptr;
@@ -84,33 +104,33 @@ bool FFoundFootageObjectivePromptExplainsBlockedStatesTest::RunTest(const FStrin
 	TestEqual(
 		TEXT("Available bodycam objective should present an action prompt."),
 		Bodycam->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("E键  取得随身摄像机")));
+		FString(TEXT("互动键：取得随身摄像机")));
 
 	TestEqual(
 		TEXT("Blocked first note objective should explain that the bodycam is required."),
 		FirstNote->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("先找回随身摄像机。")));
+		FString(TEXT("先取回随身摄像机。")));
 
 	TestEqual(
 		TEXT("Blocked anomaly recording should explain the missing framed anomaly."),
 		AnomalyRecorder->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("先对准异常点。")));
+		FString(TEXT("先对准异常。")));
 
 	TestEqual(
 		TEXT("Blocked archive should explain that anomaly recording is required."),
 		Archive->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("先记录异常点，再使用档案终端。")));
+		FString(TEXT("先记录异常，再使用档案终端。")));
 
 	TestEqual(
 		TEXT("Blocked exit should explain that archive review unlocks it."),
 		ExitGate->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("出口已锁定。先审查档案。")));
+		FString(TEXT("出口已锁定，请先复查档案。")));
 
 	TestTrue(TEXT("Bodycam objective should complete for follow-up prompt coverage."), Bodycam->TryCompleteObjective(GameMode));
 	TestEqual(
 		TEXT("Completed bodycam objective should explain its completed state."),
 		Bodycam->GetInteractionPromptText(nullptr).ToString(),
-		FString(TEXT("随身摄像机已经找回。")));
+		FString(TEXT("随身摄像机已取回。")));
 
 	TestTrue(TEXT("First note objective should complete so the anomaly can be framed."), FirstNote->TryCompleteObjective(GameMode));
 	TestTrue(TEXT("First anomaly candidate should be framed for recording prompt coverage."), GameMode->BeginFirstAnomalyCandidate(TEXT("Evidence.Anomaly01")));
@@ -118,7 +138,21 @@ bool FFoundFootageObjectivePromptExplainsBlockedStatesTest::RunTest(const FStrin
 	TestEqual(
 		TEXT("Blocked anomaly recording with a framed candidate should tell the player to start recording and interact."),
 		AnomalyRecorder->GetInteractionPromptText(nullptr).ToString(),
-			FString(TEXT("先开始录制，再按 E键记录异常点。")));
+			FString(TEXT("先开启录像，再按互动键记录异常。")));
+
+	const FText PlayerVisiblePrompts[] =
+	{
+		Bodycam->GetInteractionPromptText(nullptr),
+		FirstNote->GetInteractionPromptText(nullptr),
+		AnomalyRecorder->GetInteractionPromptText(nullptr),
+		Archive->GetInteractionPromptText(nullptr),
+		ExitGate->GetInteractionPromptText(nullptr)
+	};
+
+	for (const FText& Prompt : PlayerVisiblePrompts)
+	{
+		TestNoAsciiLetters(*this, TEXT("Found-footage objective prompt"), Prompt);
+	}
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -184,7 +218,7 @@ bool FFoundFootageObjectiveArchiveReviewRecordsSummaryNoteTest::RunTest(const FS
 	TestTrue(TEXT("Archive summary should register metadata for the journal UI."), NoteRecorder->GetNoteMetadata(TEXT("Note.ArchiveSummary"), SummaryMetadata));
 	TestEqual(TEXT("Archive summary should keep the expected id."), SummaryMetadata.NoteId, FName(TEXT("Note.ArchiveSummary")));
 	TestTrue(TEXT("Archive summary title should identify the archive terminal."), SummaryMetadata.Title.ToString().Contains(TEXT("档案")));
-	TestTrue(TEXT("Archive summary should mention the recorded anomaly evidence."), SummaryMetadata.Body.ToString().Contains(TEXT("一号异常录像")));
+	TestTrue(TEXT("Archive summary should mention the recorded anomaly evidence."), SummaryMetadata.Body.ToString().Contains(TEXT("第一异常录像")));
 	TestTrue(TEXT("Archive summary should preserve the exit gate code clue."), SummaryMetadata.Body.ToString().Contains(TEXT("1697")));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));

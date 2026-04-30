@@ -11,6 +11,12 @@
 
 namespace
 {
+	const FText& GetMissingKeyFallbackText()
+	{
+		static const FText MissingKeyFallbackText = FText::FromString(TEXT("文本缺失"));
+		return MissingKeyFallbackText;
+	}
+
 	void AddFallbackMainMenuTexts(TMap<FString, FText>& LocalizedTexts)
 	{
 		LocalizedTexts.Add(TEXT("UI.MainMenu.Start"), FText::FromString(TEXT("开始游戏")));
@@ -73,7 +79,12 @@ FText ULocalizationSubsystem::GetLocalizedText(const FString& Key) const
 	{
 		return *FoundText;
 	}
-	return FText::FromString(Key);
+	return GetMissingKeyFallbackText();
+}
+
+bool ULocalizationSubsystem::HasLocalizedText(const FString& Key) const
+{
+	return LocalizedTexts.Contains(Key);
 }
 
 bool ULocalizationSubsystem::IsRTLLanguage() const

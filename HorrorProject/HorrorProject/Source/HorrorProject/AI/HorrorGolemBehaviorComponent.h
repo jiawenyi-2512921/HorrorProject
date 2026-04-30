@@ -19,10 +19,10 @@ namespace HorrorGolemDefaults
 	inline constexpr float CloseStalkingPatrolPauseSeconds = 2.0f;
 	inline constexpr float ChaseTriggeredStartDistanceCm = 2000.0f;
 	inline constexpr float ChaseTriggeredSpeedMultiplier = 0.7f;
-	inline constexpr float ChaseTriggeredBaseSpeedCmPerSecond = 400.0f;
+	inline constexpr float ChaseTriggeredBaseSpeedCmPerSecond = 220.0f;
 	inline constexpr float FullChaseMinDistanceCm = 1000.0f;
 	inline constexpr float FullChaseMaxDistanceCm = 2500.0f;
-	inline constexpr float FullChaseSpeedCmPerSecond = 600.0f;
+	inline constexpr float FullChaseSpeedCmPerSecond = 260.0f;
 	inline constexpr float FinalImpactTriggerDistanceCm = 500.0f;
 }
 

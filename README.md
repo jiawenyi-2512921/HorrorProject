@@ -7,17 +7,24 @@ Unreal Engine 5.6 first-person horror project.
 - Engine: Unreal Engine 5.6
 - Project: `HorrorProject/HorrorProject/HorrorProject.uproject`
 - Source modules: `HorrorProject`, `HorrorProjectEditor`
-- Runtime default map: `/Game/Variant_Horror/Lvl_Horror`
-- Large third-party/sample asset packs are intentionally excluded from Git unless explicitly promoted to project-owned content and tracked through Git LFS.
+- Runtime default map: `/Game/Bodycam_VHS_Effect/Maps/LVL_Showcase_01`
+- Campaign cook maps include `Bodycam_VHS_Effect`, `ForestOfSpikes`, `Scrapopolis`, `Fantastic_Dungeon_Pack`, and `DeepWaterStation`.
+- Large third-party/sample asset packs are intentionally excluded from Git unless explicitly promoted to project-owned content and tracked through Git LFS. The current campaign-promoted packs must be committed through Git LFS.
 
 ## Local Build
 
 ```powershell
-& "D:\UnrealEngine\UE_5.6\Engine\Build\BatchFiles\Build.bat" HorrorProject Win64 Development -Project="D:\gptzuo\HorrorProject\HorrorProject\HorrorProject.uproject" -WaitMutex -NoHotReload
+$ProjectRoot = Resolve-Path ".\HorrorProject\HorrorProject"
+$UERoot = $env:UE_5_6_ROOT
+if (-not $UERoot) { $UERoot = "D:\UnrealEngine\UE_5.6" }
+& "$UERoot\Engine\Build\BatchFiles\Build.bat" HorrorProject Win64 Development -Project="$ProjectRoot\HorrorProject.uproject" -WaitMutex -NoHotReload
 ```
 
 ```powershell
-& "D:\UnrealEngine\UE_5.6\Engine\Build\BatchFiles\Build.bat" HorrorProjectEditor Win64 Development -Project="D:\gptzuo\HorrorProject\HorrorProject\HorrorProject.uproject" -WaitMutex -NoHotReload
+$ProjectRoot = Resolve-Path ".\HorrorProject\HorrorProject"
+$UERoot = $env:UE_5_6_ROOT
+if (-not $UERoot) { $UERoot = "D:\UnrealEngine\UE_5.6" }
+& "$UERoot\Engine\Build\BatchFiles\Build.bat" HorrorProjectEditor Win64 Development -Project="$ProjectRoot\HorrorProject.uproject" -WaitMutex -NoHotReload
 ```
 
 ## Source Control Notes

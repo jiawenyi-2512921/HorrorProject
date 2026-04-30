@@ -10,7 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementTrackerTest, "HorrorProject.Achieve
 bool FAchievementTrackerTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -50,7 +50,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressiveAchievementTest, "HorrorProject.Ach
 bool FProgressiveAchievementTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -96,7 +96,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSecretAchievementTest, "HorrorProject.Achievem
 bool FSecretAchievementTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -134,7 +134,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurvivalAchievementTest, "HorrorProject.Achiev
 bool FSurvivalAchievementTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -178,7 +178,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpeedrunAchievementTest, "HorrorProject.Achiev
 bool FSpeedrunAchievementTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));

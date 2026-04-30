@@ -7,9 +7,18 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformFileManager.h"
+#include "HAL/PlatformMisc.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
-#include "Misc/SecureHash.h"
+
+namespace
+{
+	void AppendStringBytes(const FString& Value, TArray<uint8>& OutBytes)
+	{
+		FTCHARToUTF8 Converter(*Value);
+		OutBytes.Append(reinterpret_cast<const uint8*>(Converter.Get()), Converter.Length());
+	}
+}
 
 void UAnalyticsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -276,8 +285,20 @@ void UAnalyticsSubsystem::SaveUserConsent()
 
 FString UAnalyticsSubsystem::AnonymizeUserId(const FString& UserId)
 {
-	// Use SHA-256 hash for anonymization
-	return FMD5::HashAnsiString(*UserId);
+	TArray<uint8> UserIdBytes;
+	AppendStringBytes(UserId, UserIdBytes);
+	if (UserIdBytes.Num() == 0)
+	{
+		return FString();
+	}
+
+	FSHA256Signature Signature;
+	if (!FPlatformMisc::GetSHA256Signature(UserIdBytes.GetData(), static_cast<uint32>(UserIdBytes.Num()), Signature))
+	{
+		return FString();
+	}
+
+	return Signature.ToString();
 }
 
 void UAnalyticsSubsystem::ProcessEventQueue()

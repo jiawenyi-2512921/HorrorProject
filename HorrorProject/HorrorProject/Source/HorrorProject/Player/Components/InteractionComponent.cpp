@@ -9,6 +9,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
 #include "Game/FoundFootageObjectiveInteractable.h"
+#include "Game/HorrorCampaignObjectiveActor.h"
 #include "HorrorProject.h"
 #include "Interaction/BaseInteractable.h"
 #include "Interaction/DoorInteractable.h"
@@ -85,13 +86,32 @@ bool UInteractionComponent::FindFocusedInteractable(FHitResult& OutHit, UObject*
 {
 	OutTargetObject = nullptr;
 
+	if (!FindFocusedInteractionTarget(OutHit, OutTargetObject))
+	{
+		return false;
+	}
+
+	if (!CanInvokeInteractableInterface(OutTargetObject, OutHit))
+	{
+		OutHit = FHitResult();
+		OutTargetObject = nullptr;
+		return false;
+	}
+
+	return true;
+}
+
+bool UInteractionComponent::FindFocusedInteractionTarget(FHitResult& OutHit, UObject*& OutTargetObject) const
+{
+	OutTargetObject = nullptr;
+
 	if (!FindInteractionHit(OutHit))
 	{
 		return false;
 	}
 
 	UObject* InterfaceTarget = ResolveInterfaceTarget(OutHit);
-	if (!InterfaceTarget || !CanInvokeInteractableInterface(InterfaceTarget, OutHit))
+	if (!InterfaceTarget)
 	{
 		OutHit = FHitResult();
 		return false;
@@ -311,15 +331,15 @@ FText UInteractionComponent::BuildInteractionPrompt(UObject* TargetObject, const
 	{
 		if (Door->RequiresPassword() && !Door->IsPasswordUnlocked())
 		{
-			return FText::FromString(TEXT("E键  输入门禁密码"));
+			return FText::FromString(TEXT("互动键：输入门禁密码"));
 		}
 
 		if (Door->IsOpen())
 		{
-			return FText::FromString(TEXT("E键  关门"));
+			return FText::FromString(TEXT("互动键：关门"));
 		}
 
-		return FText::FromString(TEXT("E键  开门"));
+		return FText::FromString(TEXT("互动键：开门"));
 	}
 
 	if (const AFoundFootageObjectiveInteractable* ObjectiveActor = Cast<AFoundFootageObjectiveInteractable>(TargetActor))
@@ -327,22 +347,27 @@ FText UInteractionComponent::BuildInteractionPrompt(UObject* TargetObject, const
 		return ObjectiveActor->GetInteractionPromptText(GetOwner());
 	}
 
+	if (const AHorrorCampaignObjectiveActor* CampaignObjectiveActor = Cast<AHorrorCampaignObjectiveActor>(TargetActor))
+	{
+		return CampaignObjectiveActor->GetInteractionPromptText();
+	}
+
 	if (const ABaseInteractable* BaseInteractable = Cast<ABaseInteractable>(TargetActor))
 	{
 		const FText PromptText = BaseInteractable->GetInteractionPromptText();
 		return PromptText.IsEmpty()
-			? FText::FromString(TEXT("E键  互动"))
-			: FText::Format(FText::FromString(TEXT("E键  {0}")), PromptText);
+			? FText::FromString(TEXT("互动键：互动"))
+			: FText::Format(FText::FromString(TEXT("互动键：{0}")), PromptText);
 	}
 
-	return FText::FromString(TEXT("E键  互动"));
+	return FText::FromString(TEXT("互动键：互动"));
 }
 
 void UInteractionComponent::ShowBlockedInteractionFeedback(UObject* TargetObject, const FHitResult& Hit) const
 {
 	FText PromptText = BuildInteractionPrompt(TargetObject, Hit);
 	FString Message = PromptText.ToString();
-	if (Message.StartsWith(TEXT("E键  ")))
+	if (Message.StartsWith(TEXT("互动键：")))
 	{
 		Message.RightChopInline(4, EAllowShrinking::No);
 		Message.TrimStartAndEndInline();

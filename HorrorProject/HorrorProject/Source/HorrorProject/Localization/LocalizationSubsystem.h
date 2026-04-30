@@ -9,11 +9,11 @@
 UENUM(BlueprintType)
 enum class ELanguage : uint8
 {
-	English UMETA(DisplayName = "English"),
-	Chinese UMETA(DisplayName = "Chinese"),
-	Japanese UMETA(DisplayName = "Japanese"),
-	Korean UMETA(DisplayName = "Korean"),
-	Spanish UMETA(DisplayName = "Spanish")
+	English UMETA(DisplayName = "英语"),
+	Chinese UMETA(DisplayName = "简体中文"),
+	Japanese UMETA(DisplayName = "日语"),
+	Korean UMETA(DisplayName = "韩语"),
+	Spanish UMETA(DisplayName = "西班牙语")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLanguageChanged, ELanguage, NewLanguage);
@@ -41,6 +41,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Localization")
 	FText GetLocalizedText(const FString& Key) const;
+
+	UFUNCTION(BlueprintPure, Category = "Localization")
+	bool HasLocalizedText(const FString& Key) const;
 
 	UFUNCTION(BlueprintPure, Category = "Localization")
 	bool IsRTLLanguage() const;

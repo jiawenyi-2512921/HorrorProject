@@ -6,6 +6,8 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Game/DeepWaterStationRouteKit.h"
+#include "Game/FoundFootageObjectiveInteractable.h"
+#include "Game/HorrorCampaignObjectiveActor.h"
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Game/HorrorEncounterDirector.h"
 #include "Game/HorrorFoundFootageContract.h"
@@ -15,12 +17,15 @@
 #include "InputKeyEventArgs.h"
 #include "Interaction/DoorInteractable.h"
 #include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
 #include "Player/HorrorPlayerCharacter.h"
 #include "Player/Components/CameraBatteryComponent.h"
 #include "Player/Components/FearComponent.h"
+#include "Player/Components/FlashlightComponent.h"
 #include "Player/Components/InteractionComponent.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/InventoryComponent.h"
 #include "ControlSettings.h"
 #include "GameSettingsSubsystem.h"
 #include "GraphicsSettings.h"
@@ -31,12 +36,17 @@
 #include "HorrorProject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
+#include "EngineUtils.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 namespace
 {
 	constexpr float Day1NavigationArrivedDistanceCm = 125.0f;
+	constexpr float FirstAnomalyCaptureLockSeconds = 0.85f;
+	constexpr float FirstAnomalyCaptureDecaySecondsPerSecond = 1.5f;
+	constexpr float FirstAnomalyCaptureMaxDistanceCm = 650.0f;
+	constexpr float FirstAnomalyCaptureMaxFocusAngleDegrees = 12.0f;
 
 	EFoundFootageInteractableObjective ResolveNextDay1Objective(const AHorrorGameModeBase& GameMode)
 	{
@@ -73,13 +83,34 @@ namespace
 		return EFoundFootageInteractableObjective::ExitRouteGate;
 	}
 
+	const TCHAR* ResolveDay1ObjectiveNavigationLabel(EFoundFootageInteractableObjective Objective)
+	{
+		switch (Objective)
+		{
+		case EFoundFootageInteractableObjective::Bodycam:
+			return TEXT("随身摄像机");
+		case EFoundFootageInteractableObjective::FirstNote:
+			return TEXT("站内备忘录");
+		case EFoundFootageInteractableObjective::FirstAnomalyCandidate:
+			return TEXT("第一个异常");
+		case EFoundFootageInteractableObjective::FirstAnomalyRecord:
+			return TEXT("异常录像窗口");
+		case EFoundFootageInteractableObjective::ArchiveReview:
+			return TEXT("档案终端");
+		case EFoundFootageInteractableObjective::ExitRouteGate:
+			return TEXT("出口闸门");
+		}
+
+		return TEXT("目标");
+	}
+
 	const TCHAR* ResolveNavigationDirectionLabel(const APawn& Pawn, const FVector& ToObjective)
 	{
 		const FVector HorizontalToObjective(ToObjective.X, ToObjective.Y, 0.0f);
-	if (HorizontalToObjective.SizeSquared() <= FMath::Square(Day1NavigationArrivedDistanceCm))
-	{
-		return TEXT("附近");
-	}
+		if (HorizontalToObjective.SizeSquared() <= FMath::Square(Day1NavigationArrivedDistanceCm))
+		{
+			return TEXT("附近");
+		}
 
 		const FRotator YawRotation(0.0f, Pawn.GetActorRotation().Yaw, 0.0f);
 		const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -88,18 +119,18 @@ namespace
 		const float ForwardDot = FVector::DotProduct(Forward, Direction);
 		const float RightDot = FVector::DotProduct(Right, Direction);
 
-	if (ForwardDot >= 0.65f)
-	{
-		return TEXT("前方");
-	}
+		if (ForwardDot >= 0.65f)
+		{
+			return TEXT("前方");
+		}
 
-	if (ForwardDot <= -0.65f)
-	{
-		return TEXT("后方");
-	}
+		if (ForwardDot <= -0.65f)
+		{
+			return TEXT("后方");
+		}
 
-	return RightDot >= 0.0f ? TEXT("右侧") : TEXT("左侧");
-}
+		return RightDot >= 0.0f ? TEXT("右侧") : TEXT("左侧");
+	}
 
 	FText BuildDay1NavigationText(const APawn& Pawn, const AHorrorGameModeBase& GameMode, const ADeepWaterStationRouteKit& RouteKit)
 	{
@@ -108,20 +139,49 @@ namespace
 			return FText::GetEmpty();
 		}
 
+		const EFoundFootageInteractableObjective NextObjective = ResolveNextDay1Objective(GameMode);
 		FVector ObjectiveLocation = FVector::ZeroVector;
-		if (!RouteKit.TryGetObjectiveWorldLocation(ResolveNextDay1Objective(GameMode), ObjectiveLocation))
+		if (!RouteKit.TryGetObjectiveWorldLocation(NextObjective, ObjectiveLocation))
 		{
 			return FText::GetEmpty();
 		}
 
 		const FVector ToObjective = ObjectiveLocation - Pawn.GetActorLocation();
 		const FVector HorizontalToObjective(ToObjective.X, ToObjective.Y, 0.0f);
-	const int32 DistanceMeters = FMath::Max(0, FMath::RoundToInt(HorizontalToObjective.Size() / 100.0f));
-	return FText::FromString(FString::Printf(
-		TEXT("%s %d 米"),
-		ResolveNavigationDirectionLabel(Pawn, ToObjective),
-		DistanceMeters));
-}
+		const int32 DistanceMeters = FMath::Max(0, FMath::RoundToInt(HorizontalToObjective.Size() / 100.0f));
+		return FText::FromString(FString::Printf(
+			TEXT("%s：%s %d 米"),
+			ResolveDay1ObjectiveNavigationLabel(NextObjective),
+			ResolveNavigationDirectionLabel(Pawn, ToObjective),
+			DistanceMeters));
+	}
+
+	FText BuildCampaignNavigationText(const APawn& Pawn, const AHorrorGameModeBase& GameMode)
+	{
+		FVector ObjectiveLocation = FVector::ZeroVector;
+		if (!GameMode.TryGetCurrentCampaignObjectiveWorldLocation(ObjectiveLocation))
+		{
+			return FText::GetEmpty();
+		}
+
+		const FVector ToObjective = ObjectiveLocation - Pawn.GetActorLocation();
+		const FVector HorizontalToObjective(ToObjective.X, ToObjective.Y, 0.0f);
+		const int32 DistanceMeters = FMath::Max(0, FMath::RoundToInt(HorizontalToObjective.Size() / 100.0f));
+		const FText ActionText = GameMode.GetCurrentCampaignObjectiveActionText();
+		if (!ActionText.IsEmpty())
+		{
+			return FText::Format(
+				NSLOCTEXT("HorrorPlayerController", "CampaignNavigationWithAction", "目标：{0} / {1} {2} 米"),
+				ActionText,
+				FText::FromString(ResolveNavigationDirectionLabel(Pawn, ToObjective)),
+				FText::AsNumber(DistanceMeters));
+		}
+
+		return FText::Format(
+			NSLOCTEXT("HorrorPlayerController", "CampaignNavigation", "目标：{0} {1} 米"),
+			FText::FromString(ResolveNavigationDirectionLabel(Pawn, ToObjective)),
+			FText::AsNumber(DistanceMeters));
+	}
 }
 
 AHorrorPlayerController::AHorrorPlayerController()
@@ -180,7 +240,7 @@ void AHorrorPlayerController::BeginPlay()
 void AHorrorPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	RefreshDay1HUDState();
+	UpdateDay1RuntimeState(DeltaSeconds);
 }
 
 void AHorrorPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -268,8 +328,8 @@ void AHorrorPlayerController::RestampCheckpointLoadedUIState()
 		if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 		{
 			Day1HUD->ShowDay1CompletionOverlay(
-				FText::FromString(TEXT("第 1 天完成")),
-				FText::FromString(TEXT("证据已保全。画面切黑。")));
+				NSLOCTEXT("HorrorPlayerController", "Day1CompleteTitle", "第一天完成"),
+				NSLOCTEXT("HorrorPlayerController", "Day1CompleteHint", "证据已保存，画面正在淡出。"));
 		}
 	}
 	else if (bDay1CompletionInputLocked)
@@ -349,6 +409,30 @@ void AHorrorPlayerController::ShowPlayerMessage(const FText& MessageText, const 
 	}
 }
 
+bool AHorrorPlayerController::TrySubmitActiveAdvancedInteractionExpectedInput()
+{
+	if (bDay1CompletionInputLocked || bDay1PauseMenuOpen || bDay1NotesJournalOpen || PendingPasswordDoor.IsValid())
+	{
+		return false;
+	}
+
+	AHorrorCampaignObjectiveActor* ObjectiveActor = ResolveActiveAdvancedInteractionObjective();
+	if (!ObjectiveActor)
+	{
+		return false;
+	}
+
+	const FName ExpectedInputId = ObjectiveActor->GetExpectedAdvancedInputId();
+	if (ExpectedInputId.IsNone())
+	{
+		return false;
+	}
+
+	const bool bSubmitted = ObjectiveActor->SubmitAdvancedInteractionInput(ExpectedInputId, GetPawn() ? Cast<AActor>(GetPawn()) : Cast<AActor>(this));
+	RefreshDay1HUDState();
+	return bSubmitted;
+}
+
 void AHorrorPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -386,9 +470,24 @@ bool AHorrorPlayerController::InputKey(const FInputKeyEventArgs& Params)
 				return true;
 			}
 		}
+		else if (TryHandleAdvancedInteractionKey(Params.Key))
+		{
+			return true;
+		}
 		else if (Params.Key == EKeys::J || Params.Key == EKeys::Tab)
 		{
 			return ToggleDay1NotesJournal();
+		}
+		else if (Params.Key == EKeys::F)
+		{
+			if (AHorrorPlayerCharacter* HorrorPlayerCharacter = Cast<AHorrorPlayerCharacter>(GetPawn()))
+			{
+				if (UFlashlightComponent* FlashlightComponent = HorrorPlayerCharacter->GetFlashlightComponent())
+				{
+					FlashlightComponent->ToggleFlashlight();
+					return true;
+				}
+			}
 		}
 		else if (Params.Key == EKeys::Escape)
 		{
@@ -416,6 +515,11 @@ void AHorrorPlayerController::RefreshDay1HUDStateForTests()
 	RefreshDay1HUDState();
 }
 
+bool AHorrorPlayerController::UpdateDay1RuntimeStateForTests(float DeltaSeconds)
+{
+	return UpdateDay1RuntimeState(DeltaSeconds);
+}
+
 bool AHorrorPlayerController::IsBoundToNoteRecorderForTests(const UNoteRecorderComponent* NoteRecorder) const
 {
 	return NoteRecorder && BoundNoteRecorder.Get() == NoteRecorder;
@@ -424,6 +528,16 @@ bool AHorrorPlayerController::IsBoundToNoteRecorderForTests(const UNoteRecorderC
 bool AHorrorPlayerController::HasNoteRecordedDelegateForTests(const UNoteRecorderComponent* NoteRecorder)
 {
 	return NoteRecorder && BoundNoteRecorder.Get() == NoteRecorder && NoteRecordedHandle.IsValid();
+}
+
+void AHorrorPlayerController::SetActiveAdvancedInteractionObjectiveForTests(AHorrorCampaignObjectiveActor* ObjectiveActor)
+{
+	ActiveAdvancedInteractionObjective = ObjectiveActor;
+}
+
+AHorrorCampaignObjectiveActor* AHorrorPlayerController::GetActiveAdvancedInteractionObjectiveForTests() const
+{
+	return ActiveAdvancedInteractionObjective.Get();
 }
 #endif
 
@@ -556,14 +670,14 @@ void AHorrorPlayerController::HandleObjectiveEventPublished(const FHorrorEventMe
 		if (Message.StateTag == HorrorDay1Tags::CheckpointRestoredState())
 		{
 			Day1HUD->ShowTransientMessage(
-				FText::FromString(TEXT("已恢复到上一个检查点。")),
+				NSLOCTEXT("HorrorPlayerController", "CheckpointRestored", "已恢复到上一个检查点。"),
 				FLinearColor(0.42f, 0.82f, 1.0f),
 				2.5f);
 		}
 		else if (Message.StateTag == HorrorDay1Tags::CheckpointMissingState())
 		{
 			Day1HUD->ShowTransientMessage(
-				FText::FromString(TEXT("没有可用检查点。")),
+				NSLOCTEXT("HorrorPlayerController", "NoCheckpoint", "没有可用检查点。"),
 				FLinearColor(1.0f, 0.78f, 0.15f),
 				2.5f);
 		}
@@ -572,7 +686,7 @@ void AHorrorPlayerController::HandleObjectiveEventPublished(const FHorrorEventMe
 
 	const FText Title = !Message.DebugLabel.IsEmpty()
 		? Message.DebugLabel
-		: FText::FromString(Message.EventTag.IsValid() ? Message.EventTag.ToString() : TEXT("目标已更新"));
+		: NSLOCTEXT("HorrorPlayerController", "ObjectiveUpdated", "目标已更新");
 	const FText Hint = !Message.ObjectiveHint.IsEmpty()
 		? Message.ObjectiveHint
 		: BuildObjectivePrompt();
@@ -581,13 +695,13 @@ void AHorrorPlayerController::HandleObjectiveEventPublished(const FHorrorEventMe
 
 	if (Message.EventTag == HorrorSaveTags::CheckpointSavedEvent())
 	{
-		Day1HUD->ShowAutosaveIndicator(FText::FromString(TEXT("检查点已保存。")));
+		Day1HUD->ShowAutosaveIndicator(NSLOCTEXT("HorrorPlayerController", "CheckpointSaved", "检查点已保存。"));
 	}
 
 	if (Message.EventTag == HorrorSaveTags::CheckpointSaveFailedEvent())
 	{
 		Day1HUD->ShowTransientMessage(
-			FText::FromString(TEXT("检查点保存失败。")),
+			NSLOCTEXT("HorrorPlayerController", "CheckpointSaveFailed", "检查点保存失败。"),
 			FLinearColor(1.0f, 0.78f, 0.15f),
 			3.0f);
 	}
@@ -595,10 +709,10 @@ void AHorrorPlayerController::HandleObjectiveEventPublished(const FHorrorEventMe
 	if (bDay1Completed)
 	{
 		Day1HUD->ShowDay1CompletionOverlay(
-			FText::FromString(TEXT("第 1 天完成")),
-			FText::FromString(TEXT("证据已保全。画面切黑。")));
+			NSLOCTEXT("HorrorPlayerController", "Day1CompleteTitle2", "第 1 天完成"),
+			NSLOCTEXT("HorrorPlayerController", "Day1CompleteHint2", "证据已保存，画面正在淡出。"));
 		Day1HUD->ShowTransientMessage(
-			FText::FromString(TEXT("第 1 天完成。证据已保全。画面切黑。")),
+			NSLOCTEXT("HorrorPlayerController", "Day1CompleteMessage", "第一天完成。证据已保存，画面正在淡出。"),
 			FLinearColor(0.32f, 0.95f, 0.78f),
 			6.0f);
 	}
@@ -655,7 +769,7 @@ void AHorrorPlayerController::HandlePawnNoteRecorded(FName NoteId, int32 TotalRe
 	++NoteRecordedFeedbackCountForTests;
 #endif
 	ShowPlayerMessage(
-		FText::FromString(TEXT("笔记已记录。按 J键/Tab键查看。")),
+		NSLOCTEXT("HorrorPlayerController", "NoteRecorded", "笔记已记录，按 J键/Tab键 查看。"),
 		FLinearColor(0.42f, 0.82f, 1.0f),
 		2.5f);
 
@@ -663,6 +777,13 @@ void AHorrorPlayerController::HandlePawnNoteRecorded(FName NoteId, int32 TotalRe
 	{
 		RefreshDay1NotesJournalHUD();
 	}
+}
+
+bool AHorrorPlayerController::UpdateDay1RuntimeState(float DeltaSeconds)
+{
+	const bool bCapturedFocusedAnomaly = TryAutoCaptureFocusedAnomaly(DeltaSeconds);
+	RefreshDay1HUDState();
+	return bCapturedFocusedAnomaly;
 }
 
 void AHorrorPlayerController::RefreshDay1HUDState()
@@ -681,10 +802,29 @@ void AHorrorPlayerController::RefreshDay1HUDState()
 		const AHorrorEncounterDirector* EncounterDirector = HorrorGameMode ? HorrorGameMode->GetRuntimeEncounterDirector() : nullptr;
 		const bool bDanger = (RouteKit && RouteKit->IsRouteGatedByEncounter()) || (EncounterDirector && EncounterDirector->IsRouteGated());
 
-		Day1HUD->SetCurrentObjective(BuildObjectivePrompt());
+		if (HorrorGameMode)
+		{
+			Day1HUD->SetObjectiveTracker(HorrorGameMode->BuildObjectiveTrackerSnapshot());
+		}
+		else
+		{
+			Day1HUD->SetCurrentObjective(BuildObjectivePrompt());
+		}
 		if (HorrorPlayerCharacter && HorrorGameMode && RouteKit)
 		{
 			const FText NavigationText = BuildDay1NavigationText(*HorrorPlayerCharacter, *HorrorGameMode, *RouteKit);
+			if (!NavigationText.IsEmpty())
+			{
+				Day1HUD->SetObjectiveNavigation(NavigationText);
+			}
+			else
+			{
+				Day1HUD->ClearObjectiveNavigation();
+			}
+		}
+		else if (HorrorPlayerCharacter && HorrorGameMode)
+		{
+			const FText NavigationText = BuildCampaignNavigationText(*HorrorPlayerCharacter, *HorrorGameMode);
 			if (!NavigationText.IsEmpty())
 			{
 				Day1HUD->SetObjectiveNavigation(NavigationText);
@@ -714,6 +854,9 @@ void AHorrorPlayerController::RefreshDay1HUDState()
 		{
 			Day1HUD->ClearBodycamBatteryStatus();
 		}
+
+		RefreshAnomalyCaptureHUD(*Day1HUD, HorrorPlayerCharacter, HorrorGameMode);
+		RefreshAdvancedInteractionHUD(*Day1HUD, HorrorPlayerCharacter);
 	}
 
 	RefreshInteractionPrompt();
@@ -721,6 +864,22 @@ void AHorrorPlayerController::RefreshDay1HUDState()
 	if (bDay1NotesJournalOpen)
 	{
 		RefreshDay1NotesJournalHUD();
+	}
+}
+
+void AHorrorPlayerController::RefreshAdvancedInteractionHUD(ADay1SliceHUD& Day1HUD, const AHorrorPlayerCharacter* HorrorPlayerCharacter)
+{
+	AHorrorCampaignObjectiveActor* ObjectiveActor = ResolveActiveAdvancedInteractionObjective(HorrorPlayerCharacter);
+	if (!ObjectiveActor)
+	{
+		Day1HUD.ClearAdvancedInteractionState();
+		return;
+	}
+
+	Day1HUD.SetAdvancedInteractionState(ObjectiveActor->BuildAdvancedInteractionHUDState());
+	if (ObjectiveActor->IsAdvancedInteractionActive())
+	{
+		Day1HUD.ClearInteractionPrompt();
 	}
 }
 
@@ -733,6 +892,12 @@ void AHorrorPlayerController::RefreshInteractionPrompt()
 	}
 
 	if (PendingPasswordDoor.IsValid())
+	{
+		Day1HUD->ClearInteractionPrompt();
+		return;
+	}
+
+	if (ResolveActiveAdvancedInteractionObjective())
 	{
 		Day1HUD->ClearInteractionPrompt();
 		return;
@@ -751,50 +916,290 @@ void AHorrorPlayerController::RefreshInteractionPrompt()
 	}
 }
 
+AHorrorCampaignObjectiveActor* AHorrorPlayerController::ResolveActiveAdvancedInteractionObjective(const AHorrorPlayerCharacter* HorrorPlayerCharacter)
+{
+	if (AHorrorCampaignObjectiveActor* CachedObjective = ActiveAdvancedInteractionObjective.Get())
+	{
+		if (CachedObjective->IsAdvancedInteractionActive() && !CachedObjective->IsCompleted())
+		{
+			return CachedObjective;
+		}
+	}
+	ActiveAdvancedInteractionObjective.Reset();
+
+	if (!HorrorPlayerCharacter)
+	{
+		HorrorPlayerCharacter = Cast<AHorrorPlayerCharacter>(GetPawn());
+	}
+
+	const UInteractionComponent* InteractionComponent = HorrorPlayerCharacter ? HorrorPlayerCharacter->GetInteractionComponent() : nullptr;
+	if (!InteractionComponent)
+	{
+		return nullptr;
+	}
+
+	FHitResult FocusedHit;
+	UObject* FocusedTargetObject = nullptr;
+	if (!InteractionComponent->FindFocusedInteractionTarget(FocusedHit, FocusedTargetObject))
+	{
+		return nullptr;
+	}
+
+	AHorrorCampaignObjectiveActor* FocusedObjective = Cast<AHorrorCampaignObjectiveActor>(FocusedTargetObject);
+	if (!FocusedObjective)
+	{
+		FocusedObjective = Cast<AHorrorCampaignObjectiveActor>(FocusedHit.GetActor());
+	}
+
+	if (FocusedObjective && FocusedObjective->IsAdvancedInteractionActive() && !FocusedObjective->IsCompleted())
+	{
+		ActiveAdvancedInteractionObjective = FocusedObjective;
+		return FocusedObjective;
+	}
+
+	return nullptr;
+}
+
+void AHorrorPlayerController::RefreshAnomalyCaptureHUD(
+	ADay1SliceHUD& Day1HUD,
+	const AHorrorPlayerCharacter* HorrorPlayerCharacter,
+	const AHorrorGameModeBase* HorrorGameMode)
+{
+	if (!HorrorPlayerCharacter || !HorrorGameMode || HorrorGameMode->HasRecordedFirstAnomaly())
+	{
+		Day1HUD.ClearAnomalyCaptureStatus();
+		return;
+	}
+
+	const UInteractionComponent* InteractionComponent = HorrorPlayerCharacter->GetInteractionComponent();
+	const UQuantumCameraComponent* QuantumCamera = HorrorPlayerCharacter->GetQuantumCameraComponent();
+	if (!HorrorGameMode->HasCollectedFirstNote() || !InteractionComponent || !QuantumCamera)
+	{
+		Day1HUD.ClearAnomalyCaptureStatus();
+		return;
+	}
+
+	const AFoundFootageObjectiveInteractable* ObjectiveActor = ResolveFocusedFirstAnomalyTarget(*HorrorPlayerCharacter);
+	const bool bFocusedFirstAnomaly = ObjectiveActor != nullptr;
+	if (!bFocusedFirstAnomaly)
+	{
+		Day1HUD.SetAnomalyCaptureStatus(
+			NSLOCTEXT("HorrorPlayerController", "AnomalyCaptureSearching", "搜索异常信号。"),
+			FMath::Clamp(FocusedAnomalyLockSeconds / FirstAnomalyCaptureLockSeconds, 0.0f, 1.0f),
+			false,
+			false);
+		return;
+	}
+
+	const bool bRecording = QuantumCamera->IsCameraMode(EQuantumCameraMode::Recording);
+	const float LockProgress = FMath::Clamp(FocusedAnomalyLockSeconds / FirstAnomalyCaptureLockSeconds, 0.0f, 1.0f);
+	Day1HUD.SetAnomalyCaptureStatus(
+		bRecording
+			? NSLOCTEXT("HorrorPlayerController", "AnomalyCaptureLocking", "异常已对准，保持录像锁定。")
+			: NSLOCTEXT("HorrorPlayerController", "AnomalyCaptureNeedsRecording", "异常已对准，开启录像锁定。"),
+		bRecording ? FMath::Max(0.1f, LockProgress) : 0.35f,
+		bRecording && LockProgress >= 1.0f,
+		!bRecording);
+}
+
+AFoundFootageObjectiveInteractable* AHorrorPlayerController::ResolveFocusedFirstAnomalyTarget(const AHorrorPlayerCharacter& HorrorPlayerCharacter) const
+{
+	const UCameraComponent* FirstPersonCamera = HorrorPlayerCharacter.GetFirstPersonCameraComponent();
+	UWorld* World = GetWorld();
+	if (!FirstPersonCamera || !World)
+	{
+		return nullptr;
+	}
+
+	AFoundFootageObjectiveInteractable* BestCandidate = nullptr;
+	float BestFocusScore = -1.0f;
+	const FVector CameraLocation = FirstPersonCamera->GetComponentLocation();
+	const FVector CameraForward = FirstPersonCamera->GetForwardVector();
+	const float RequiredFocusDot = FMath::Cos(FMath::DegreesToRadians(FirstAnomalyCaptureMaxFocusAngleDegrees));
+
+	for (TActorIterator<AFoundFootageObjectiveInteractable> It(World); It; ++It)
+	{
+		AFoundFootageObjectiveInteractable* Candidate = *It;
+		if (!IsFocusedFirstAnomalyTarget(Candidate))
+		{
+			continue;
+		}
+
+		const FVector ToAnomaly = Candidate->GetActorLocation() - CameraLocation;
+		const float DistanceSquared = ToAnomaly.SizeSquared();
+		if (DistanceSquared > FMath::Square(FirstAnomalyCaptureMaxDistanceCm) || DistanceSquared <= UE_KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
+
+		const float FocusDot = FVector::DotProduct(CameraForward, ToAnomaly.GetSafeNormal());
+		if (FocusDot < RequiredFocusDot)
+		{
+			continue;
+		}
+
+		const float FocusScore = FocusDot - (DistanceSquared / FMath::Square(FirstAnomalyCaptureMaxDistanceCm)) * 0.05f;
+		if (FocusScore > BestFocusScore)
+		{
+			BestFocusScore = FocusScore;
+			BestCandidate = Candidate;
+		}
+	}
+
+	return BestCandidate;
+}
+
+bool AHorrorPlayerController::IsFocusedFirstAnomalyTarget(const AFoundFootageObjectiveInteractable* ObjectiveActor) const
+{
+	return ObjectiveActor
+		&& (ObjectiveActor->Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
+			|| ObjectiveActor->Objective == EFoundFootageInteractableObjective::FirstAnomalyRecord);
+}
+
+bool AHorrorPlayerController::TryAutoCaptureFocusedAnomaly(float DeltaSeconds)
+{
+	AHorrorPlayerCharacter* HorrorPlayerCharacter = Cast<AHorrorPlayerCharacter>(GetPawn());
+	AHorrorGameModeBase* HorrorGameMode = Cast<AHorrorGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (!HorrorPlayerCharacter || !HorrorGameMode || HorrorGameMode->HasRecordedFirstAnomaly())
+	{
+		FocusedAnomalyLockSeconds = 0.0f;
+		LockedAnomalyTarget.Reset();
+		return false;
+	}
+
+	UQuantumCameraComponent* QuantumCamera = HorrorPlayerCharacter->GetQuantumCameraComponent();
+	if (!QuantumCamera)
+	{
+		return false;
+	}
+
+	const float SafeDeltaSeconds = FMath::Clamp(DeltaSeconds, 0.0f, 1.0f);
+
+	AFoundFootageObjectiveInteractable* ObjectiveActor = ResolveFocusedFirstAnomalyTarget(*HorrorPlayerCharacter);
+	const bool bRecording = HorrorGameMode->IsLeadPlayerRecording() || QuantumCamera->IsCameraMode(EQuantumCameraMode::Recording);
+	if (!ObjectiveActor || !bRecording)
+	{
+		FocusedAnomalyLockSeconds = FMath::Max(0.0f, FocusedAnomalyLockSeconds - (SafeDeltaSeconds * FirstAnomalyCaptureDecaySecondsPerSecond));
+		if (!ObjectiveActor)
+		{
+			LockedAnomalyTarget.Reset();
+		}
+		return false;
+	}
+
+	if (LockedAnomalyTarget.Get() != ObjectiveActor)
+	{
+		LockedAnomalyTarget = ObjectiveActor;
+		FocusedAnomalyLockSeconds = 0.0f;
+	}
+	FocusedAnomalyLockSeconds = FMath::Min(FirstAnomalyCaptureLockSeconds, FocusedAnomalyLockSeconds + SafeDeltaSeconds);
+	if (FocusedAnomalyLockSeconds < FirstAnomalyCaptureLockSeconds)
+	{
+		return false;
+	}
+
+	if (ObjectiveActor->Objective == EFoundFootageInteractableObjective::FirstAnomalyCandidate
+		&& !HorrorGameMode->HasPendingFirstAnomalyCandidate())
+	{
+		if (!HorrorGameMode->BeginFirstAnomalyCandidate(ObjectiveActor->SourceId))
+		{
+			return false;
+		}
+	}
+
+	const FName PendingAnomalyId = HorrorGameMode->GetPendingFirstAnomalySourceId();
+	const bool bRecordedFirstAnomaly = !PendingAnomalyId.IsNone() && HorrorGameMode->TryRecordFirstAnomaly(bRecording);
+	if (!bRecordedFirstAnomaly)
+	{
+		return false;
+	}
+
+	if (UInventoryComponent* Inventory = HorrorPlayerCharacter->GetInventoryComponent())
+	{
+		if (!ObjectiveActor->EvidenceMetadata.EvidenceId.IsNone()
+			&& ObjectiveActor->EvidenceMetadata.EvidenceId == PendingAnomalyId)
+		{
+			Inventory->RegisterEvidenceMetadata(ObjectiveActor->EvidenceMetadata);
+		}
+		Inventory->AddCollectedEvidenceId(PendingAnomalyId);
+	}
+
+	ShowPlayerMessage(
+		NSLOCTEXT("HorrorPlayerController", "AnomalyVideoLocked", "异常录像已锁定。"),
+		FLinearColor(0.32f, 0.95f, 0.78f),
+		2.5f);
+	FocusedAnomalyLockSeconds = 0.0f;
+	LockedAnomalyTarget.Reset();
+	return true;
+}
+
 FText AHorrorPlayerController::BuildObjectivePrompt() const
 {
 	const AHorrorGameModeBase* HorrorGameMode = Cast<AHorrorGameModeBase>(UGameplayStatics::GetGameMode(this));
 	if (!HorrorGameMode)
 	{
-		return FText::FromString(TEXT("找回随身摄像机。"));
+		return NSLOCTEXT("HorrorPlayerController", "ObjRecoverBodycam", "取回随身摄像机。");
 	}
 
-	if (HorrorGameMode->IsDay1Complete())
+	const FHorrorObjectiveTrackerSnapshot Tracker = HorrorGameMode->BuildObjectiveTrackerSnapshot();
+	return Tracker.PrimaryInstruction.IsEmpty()
+		? NSLOCTEXT("HorrorPlayerController", "ObjContinueThrough", "继续深入站内。")
+		: Tracker.PrimaryInstruction;
+}
+
+bool AHorrorPlayerController::TryHandleAdvancedInteractionKey(const FKey& Key)
+{
+	if (bDay1CompletionInputLocked || bDay1PauseMenuOpen || bDay1NotesJournalOpen || PendingPasswordDoor.IsValid())
 	{
-		return FText::FromString(TEXT("第 1 天完成。证据已保全。"));
+		return false;
 	}
 
-	if (!HorrorGameMode->HasBodycamAcquired())
+	AHorrorCampaignObjectiveActor* ObjectiveActor = ResolveActiveAdvancedInteractionObjective();
+	if (!ObjectiveActor)
 	{
-		return FText::FromString(TEXT("找回随身摄像机。"));
+		return false;
 	}
 
-	if (!HorrorGameMode->HasCollectedFirstNote())
+	FName SubmittedInputId = NAME_None;
+	if (Key == EKeys::One || Key == EKeys::NumPadOne)
 	{
-		return FText::FromString(TEXT("找到并阅读第一份站内笔记。"));
+		SubmittedInputId = ObjectiveActor->GetInteractionMode() == EHorrorCampaignInteractionMode::CircuitWiring
+			? FName(TEXT("蓝色端子"))
+			: FName(TEXT("齿轮1"));
 	}
-
-	if (HorrorGameMode->HasPendingFirstAnomalyCandidate() && !HorrorGameMode->HasRecordedFirstAnomaly())
+	else if (Key == EKeys::Two || Key == EKeys::NumPadTwo)
 	{
-		return FText::FromString(TEXT("保持随身摄像机录制，拍下异常点。"));
+		SubmittedInputId = ObjectiveActor->GetInteractionMode() == EHorrorCampaignInteractionMode::CircuitWiring
+			? FName(TEXT("红色端子"))
+			: FName(TEXT("齿轮2"));
 	}
-
-	if (!HorrorGameMode->HasRecordedFirstAnomaly())
+	else if (Key == EKeys::Three || Key == EKeys::NumPadThree)
 	{
-		return FText::FromString(TEXT("找到第一个异常点。"));
+		SubmittedInputId = ObjectiveActor->GetInteractionMode() == EHorrorCampaignInteractionMode::CircuitWiring
+			? FName(TEXT("黄色端子"))
+			: FName(TEXT("齿轮3"));
 	}
-
-	if (!HorrorGameMode->HasReviewedArchive())
+	else if (Key == EKeys::E || Key == EKeys::Enter || Key == EKeys::SpaceBar || Key == EKeys::Gamepad_FaceButton_Bottom)
 	{
-		return FText::FromString(TEXT("前往档案终端查看录像。"));
+		SubmittedInputId = ObjectiveActor->GetExpectedAdvancedInputId();
 	}
-
-	if (HorrorGameMode->IsExitUnlocked())
+	else
 	{
-		return FText::FromString(TEXT("从勤务闸门离开。"));
+		return false;
 	}
 
-	return FText::FromString(TEXT("继续穿过站点。"));
+	if (SubmittedInputId.IsNone())
+	{
+		return true;
+	}
+
+	ObjectiveActor->SubmitAdvancedInteractionInput(SubmittedInputId, GetPawn() ? Cast<AActor>(GetPawn()) : Cast<AActor>(this));
+	if (!ObjectiveActor->IsAdvancedInteractionActive() || ObjectiveActor->IsCompleted())
+	{
+		ActiveAdvancedInteractionObjective.Reset();
+	}
+	RefreshDay1HUDState();
+	return true;
 }
 
 void AHorrorPlayerController::ClearDoorPasswordEntry()
@@ -811,7 +1216,7 @@ void AHorrorPlayerController::ClearDoorPasswordEntry()
 void AHorrorPlayerController::CancelDoorPasswordEntry()
 {
 	ClearDoorPasswordEntry();
-	ShowPlayerMessage(FText::FromString(TEXT("已取消输入门禁密码。")), FLinearColor(0.75f, 0.78f, 0.80f), 1.5f);
+	ShowPlayerMessage(NSLOCTEXT("HorrorPlayerController", "PasswordCancelled", "门禁码输入已取消。"), FLinearColor(0.75f, 0.78f, 0.80f), 1.5f);
 }
 
 void AHorrorPlayerController::ApplyDay1CompletionInputLock()
@@ -1117,19 +1522,19 @@ void AHorrorPlayerController::ShowDoorPasswordPrompt() const
 
 	const ADoorInteractable* Door = PendingPasswordDoor.Get();
 	FString HintText = Door->GetPasswordHint().IsEmpty()
-		? FString(TEXT("在环境中寻找密码。"))
+		? FString(TEXT("在环境中寻找门禁码。"))
 		: Door->GetPasswordHint().ToString();
 	const AHorrorPlayerCharacter* HorrorPlayerCharacter = Cast<AHorrorPlayerCharacter>(GetPawn());
 	const UNoteRecorderComponent* NoteRecorder = HorrorPlayerCharacter ? HorrorPlayerCharacter->GetNoteRecorderComponent() : nullptr;
 	if (NoteRecorder && NoteRecorder->GetRecordedNoteCount() > 0 && !HintText.Contains(TEXT("J键/Tab键")))
 	{
-		HintText += TEXT(" 按 J键/Tab键查看已记录笔记。");
+		HintText += TEXT(" 按 J键/Tab键 查看已记录笔记。");
 	}
 
 	if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 	{
 		Day1HUD->ShowPasswordPrompt(
-			FText::FromString(TEXT("门禁密码")),
+			NSLOCTEXT("HorrorPlayerController", "AccessCodeTitle", "门禁码"),
 			FText::FromString(HintText),
 			DoorPasswordBuffer.Len(),
 			Door->GetRequiredPasswordLength());
@@ -1149,7 +1554,7 @@ void AHorrorPlayerController::ShowDoorPasswordPrompt() const
 			6.0f,
 				FColor::Cyan,
 				FString::Printf(
-				TEXT("需要门禁密码\n输入：%s\n数字键 + 回车键确认，退格键删除，Esc键取消。提示：%s"),
+				TEXT("需要门禁码\n输入：%s\n数字键 + 回车确认，退格删除，取消键取消。提示：%s"),
 				*MaskedInput,
 				*HintText));
 	}
@@ -1195,7 +1600,7 @@ bool AHorrorPlayerController::HandleDoorPasswordKey(const FKey& Key)
 		{
 			DoorPasswordBuffer.Reset();
 			ShowPlayerMessage(
-				FText::FromString(TEXT("密码错误。")),
+				NSLOCTEXT("HorrorPlayerController", "WrongPassword", "密码错误。"),
 				FLinearColor(1.0f, 0.24f, 0.16f),
 				2.5f);
 			ShowDoorPasswordPrompt();

@@ -1,0 +1,80 @@
+name: Quality Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  PROJECT_ROOT: ${{ github.workspace }}\HorrorProject\HorrorProject
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Analyze Source Metrics
+        shell: pwsh
+        run: |
+          $sourceDir = Join-Path $env:PROJECT_ROOT "Source"
+          $metrics = @{
+            TotalHeaders = 0
+            TotalCpp = 0
+            TotalLines = 0
+            FilesWithTests = 0
+            ModulesWithoutTests = @()
+          }
+
+          $modules = Get-ChildItem -Path (Join-Path $sourceDir "HorrorProject") -Directory
+          foreach ($module in $modules) {
+            if ($module.Name -eq "Tests") { continue }
+            $hasTests = Test-Path (Join-Path $module.FullName "Tests")
+            if (-not $hasTests) {
+              $metrics.ModulesWithoutTests += $module.Name
+            }
+          }
+
+          $headers = Get-ChildItem -Path $sourceDir -Recurse -Include *.h
+          $cpps = Get-ChildItem -Path $sourceDir -Recurse -Include *.cpp
+          $metrics.TotalHeaders = $headers.Count
+          $metrics.TotalCpp = $cpps.Count
+
+          $totalLines = 0
+          foreach ($file in ($headers + $cpps)) {
+            $totalLines += (Get-Content $file.FullName | Measure-Object -Line).Lines
+          }
+          $metrics.TotalLines = $totalLines
+
+          Write-Host "=== Source Metrics ==="
+          Write-Host "Headers: $($metrics.TotalHeaders)"
+          Write-Host "CPP files: $($metrics.TotalCpp)"
+          Write-Host "Total lines: $($metrics.TotalLines)"
+          Write-Host "Modules without tests: $($metrics.ModulesWithoutTests.Count)"
+          if ($metrics.ModulesWithoutTests.Count -gt 0) {
+            Write-Warning "Modules missing tests: $($metrics.ModulesWithoutTests -join ', ')"
+          }
+
+      - name: Check Documentation Coverage
+        shell: pwsh
+        run: |
+          $docsDir = Join-Path $env:PROJECT_ROOT "Docs"
+          if (-not (Test-Path $docsDir)) {
+            Write-Warning "No Docs directory found"
+            exit 0
+          }
+
+          $docFiles = Get-ChildItem -Path $docsDir -Recurse -Include *.md
+          Write-Host "Documentation files: $($docFiles.Count)"
+
+          $requiredDocs = @("SystemOverview", "EventBus", "AudioSystemGuide")
+          foreach ($doc in $requiredDocs) {
+            $found = $docFiles | Where-Object { $_.Name -match $doc }
+            if (-not $found) {
+              Write-Warning "Missing required doc: $doc"
+            }
+          }

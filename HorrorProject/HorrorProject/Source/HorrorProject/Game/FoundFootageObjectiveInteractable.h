@@ -101,8 +101,9 @@ private:
 	bool TryCompleteFirstAnomalyRecordObjective(AHorrorGameModeBase& GameMode) const;
 	bool TryCompleteArchiveReviewObjective(AHorrorGameModeBase& GameMode) const;
 	bool TryCompleteExitRouteGateObjective(AHorrorGameModeBase& GameMode) const;
+	bool CanRecordFirstAnomalyFromCandidate(AHorrorGameModeBase& GameMode) const;
 	FText BuildBlockedObjectivePrompt(AHorrorGameModeBase* GameMode, AActor* InstigatorActor) const;
-	FText BuildObjectiveActionPrompt() const;
+	FText BuildObjectiveActionPrompt(AHorrorGameModeBase* GameMode) const;
 	void RecordEvidenceProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId, bool bMarkCollected) const;
 	void RecordNoteProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId) const;
 	void RecordObjectiveHintNoteProgress(AHorrorPlayerCharacter& PlayerCharacter, FName ProgressId) const;

@@ -16,7 +16,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationBasicTest,
 
 bool FAudioIntegrationBasicTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -36,7 +36,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationFootstepTest,
 
 bool FAudioIntegrationFootstepTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -60,7 +60,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationBreathingTest,
 
 bool FAudioIntegrationBreathingTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -84,7 +84,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationEventResponseTest,
 
 bool FAudioIntegrationEventResponseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -116,7 +116,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegration3DPositioningTest,
 
 bool FAudioIntegration3DPositioningTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -144,7 +144,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationPriorityTest,
 
 bool FAudioIntegrationPriorityTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -170,7 +170,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAudioIntegrationMultipleSourcesTest,
 
 bool FAudioIntegrationMultipleSourcesTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

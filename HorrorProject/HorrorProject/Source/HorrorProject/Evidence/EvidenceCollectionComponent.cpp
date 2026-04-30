@@ -125,7 +125,7 @@ bool UEvidenceCollectionComponent::StopVideoCapture(FName& OutEvidenceId, float&
 	VideoMetadata.EvidenceId = CurrentVideoEvidenceId;
 	VideoMetadata.Type = EEvidenceType::Video;
 	VideoMetadata.CollectionTimestamp = FDateTime::Now();
-	VideoMetadata.DisplayName = FText::FromString(FString::Printf(TEXT("录像记录 %d"), VideoCount + 1));
+	VideoMetadata.DisplayName = FText::AsCultureInvariant(FString::Printf(TEXT("录像记录 %d"), VideoCount + 1));
 
 	if (AActor* Owner = GetOwner())
 	{
@@ -343,7 +343,7 @@ float UEvidenceCollectionComponent::CalculateThumbnailResizeScale(const FIntPoin
 FIntPoint UEvidenceCollectionComponent::CalculateThumbnailSize(const FIntPoint& ViewportSize, float ResizeScale) const
 {
 	const float ClampedResizeScale = FMath::Min(
-		1.0f, 
+		1.0f,
 		FMath::Max(ResizeScale, 0.0f));
 	return FIntPoint(
 		FMath::Max(1, FMath::RoundToInt(static_cast<float>(ViewportSize.X) * ClampedResizeScale)),

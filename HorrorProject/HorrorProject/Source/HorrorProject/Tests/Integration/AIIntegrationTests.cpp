@@ -16,7 +16,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationBasicTest,
 
 bool FAIIntegrationBasicTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -40,7 +40,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationNoisePerceptionTest,
 
 bool FAIIntegrationNoisePerceptionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -83,7 +83,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationStateTransitionTest,
 
 bool FAIIntegrationStateTransitionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -119,7 +119,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationEncounterDirectorTest,
 
 bool FAIIntegrationEncounterDirectorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -149,7 +149,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationPlayerDetectionTest,
 
 bool FAIIntegrationPlayerDetectionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -188,7 +188,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAIIntegrationMultipleAITest,
 
 bool FAIIntegrationMultipleAITest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

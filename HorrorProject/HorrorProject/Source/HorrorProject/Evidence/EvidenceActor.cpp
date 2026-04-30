@@ -66,10 +66,10 @@ FText AEvidenceActor::GetInteractionPrompt() const
 
 	if (!EvidenceMetadata.DisplayName.IsEmpty())
 	{
-		return FText::Format(FText::FromString(TEXT("收集 {0}")), EvidenceMetadata.DisplayName);
+		return FText::Format(NSLOCTEXT("EvidenceActor", "CollectFormat", "收集 {0}"), EvidenceMetadata.DisplayName);
 	}
 
-	return FText::FromString(TEXT("收集证据"));
+	return NSLOCTEXT("EvidenceActor", "CollectEvidence", "收集证据");
 }
 
 bool AEvidenceActor::CanInteract_Implementation(AActor* InstigatorActor, const FHitResult& Hit) const

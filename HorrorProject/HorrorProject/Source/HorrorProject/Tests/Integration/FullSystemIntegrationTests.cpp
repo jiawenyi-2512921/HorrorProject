@@ -9,7 +9,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAccessibilityLocalizationIntegrationTest, "Hor
 
 bool FAccessibilityLocalizationIntegrationTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
     ULocalizationSubsystem* LocalizationSys = World->GetGameInstance()->GetSubsystem<ULocalizationSubsystem>();
 
@@ -36,7 +36,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveAchievementIntegrationTest, "HorrorProject
 
 bool FSaveAchievementIntegrationTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
     UHorrorSaveSubsystem* SaveSys = World->GetGameInstance()->GetSubsystem<UHorrorSaveSubsystem>();
 
@@ -68,7 +68,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFullSystemIntegrationTest, "HorrorProject.Inte
 
 bool FFullSystemIntegrationTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UGameInstance* GameInstance = World->GetGameInstance();
 
     if (!GameInstance)

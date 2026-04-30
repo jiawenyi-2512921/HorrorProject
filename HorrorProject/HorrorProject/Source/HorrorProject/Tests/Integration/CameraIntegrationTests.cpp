@@ -15,7 +15,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationBasicTest,
 
 bool FCameraIntegrationBasicTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -39,7 +39,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationBatteryTest,
 
 bool FCameraIntegrationBatteryTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -66,7 +66,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationRecordingTest,
 
 bool FCameraIntegrationRecordingTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -90,7 +90,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationPhotoWithBatteryTest,
 
 bool FCameraIntegrationPhotoWithBatteryTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -118,7 +118,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationEventPublishTest,
 
 bool FCameraIntegrationEventPublishTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -155,7 +155,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationRecordingWithBatteryTest,
 
 bool FCameraIntegrationRecordingWithBatteryTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -183,7 +183,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraIntegrationAllComponentsTest,
 
 bool FCameraIntegrationAllComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

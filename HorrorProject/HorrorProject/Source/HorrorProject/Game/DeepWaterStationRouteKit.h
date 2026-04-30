@@ -74,6 +74,9 @@ public:
 	void ConfigureDefaultFirstLoopObjectiveNodes();
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Route")
+	bool EnsureDefaultFirstLoopObjectiveNodes();
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Route")
 	int32 SpawnObjectiveNodes();
 
 	const TArray<AFoundFootageObjectiveInteractable*>& GetSpawnedObjectiveInteractablesForTests() const { return SpawnedObjectiveInteractableViews; }

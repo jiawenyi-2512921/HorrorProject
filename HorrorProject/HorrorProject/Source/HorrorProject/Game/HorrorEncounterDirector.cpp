@@ -16,6 +16,7 @@
 #include "Player/Components/FearComponent.h"
 #include "Player/Components/NoiseGeneratorComponent.h"
 #include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/SanityComponent.h"
 #include "Player/Components/VHSEffectComponent.h"
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
@@ -250,6 +251,13 @@ void AHorrorEncounterDirector::ExecuteDelayedReveal(AActor* PlayerActor)
 		return;
 	}
 
+	if (!IsValid(PlayerActor))
+	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("ExecuteDelayedReveal: PlayerActor is invalid, aborting reveal"));
+		EncounterPhase = EHorrorEncounterPhase::Dormant;
+		return;
+	}
+
 	AHorrorThreatCharacter* RevealThreat = SpawnThreatActor();
 	EncounterPhase = EHorrorEncounterPhase::Revealed;
 	LastRevealTarget = PlayerActor;
@@ -303,10 +311,16 @@ void AHorrorEncounterDirector::ApplyRevealPlayerFeedback(AActor* PlayerActor)
 		NoiseGenerator->GenerateNoise(ENoiseType::Custom, HorrorEncounterFeedback::RevealNoiseMultiplier, PlayerCharacter->GetActorLocation());
 	}
 
+	if (USanityComponent* Sanity = PlayerCharacter->GetSanityComponent())
+	{
+		Sanity->DrainSanity(HorrorEncounterFeedback::RevealFearAmount * 0.5f, ActiveEncounterId);
+		Sanity->SetThreatProximity(FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation()));
+	}
+
 	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(PlayerCharacter->GetController()))
 	{
 		HorrorPlayerController->ShowPlayerMessage(
-			FText::FromString(TEXT("有什么东西动了。保持随身摄像机抬起。")),
+			NSLOCTEXT("HorrorEncounter", "RevealMessage", "有东西动了，保持摄像机举起。"),
 			FLinearColor(1.0f, 0.24f, 0.16f),
 			4.0f);
 	}
@@ -330,10 +344,16 @@ void AHorrorEncounterDirector::ApplyResolvePlayerFeedback()
 		VHSEffect->UpdateNoiseGenerator(1.0f, HorrorEncounterFeedback::ResolveVHSStress, 1.0f);
 	}
 
+	if (USanityComponent* Sanity = PlayerCharacter->GetSanityComponent())
+	{
+		Sanity->SetThreatProximity(TNumericLimits<float>::Max());
+		Sanity->RecoverSanity(HorrorEncounterFeedback::ResolveFearRelief);
+	}
+
 	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(PlayerCharacter->GetController()))
 	{
 		HorrorPlayerController->ShowPlayerMessage(
-			FText::FromString(TEXT("压力正在下降。立刻去出口。")),
+			NSLOCTEXT("HorrorEncounter", "ResolveMessage", "压迫感正在减弱，立刻前往出口。"),
 			FLinearColor(0.32f, 0.95f, 0.78f),
 			3.0f);
 	}

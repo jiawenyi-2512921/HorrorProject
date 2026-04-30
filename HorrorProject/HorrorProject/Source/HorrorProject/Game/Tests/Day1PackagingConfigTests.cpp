@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CoreMinimal.h"
+#include "Game/HorrorMapChain.h"
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
@@ -97,11 +98,11 @@ namespace
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FDay1PackagingConfigCooksDefaultMapTest,
-	"HorrorProject.Game.Day1.PackagingConfig.CooksDefaultMap",
+	FDay1PackagingConfigCooksFinaleMapTest,
+	"HorrorProject.Game.Day1.PackagingConfig.CooksFinaleMap",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FDay1PackagingConfigCooksDefaultMapTest::RunTest(const FString& Parameters)
+bool FDay1PackagingConfigCooksFinaleMapTest::RunTest(const FString& Parameters)
 {
 	FString GameDefaultMap;
 	TestTrue(
@@ -109,10 +110,20 @@ bool FDay1PackagingConfigCooksDefaultMapTest::RunTest(const FString& Parameters)
 		GConfig && GConfig->GetString(GameMapsSettingsSection, TEXT("GameDefaultMap"), GameDefaultMap, GEngineIni));
 
 	const FString NormalizedGameDefaultMap = NormalizeLongPackagePath(GameDefaultMap);
+	const TArray<FHorrorMapChainEntry>& MapChainEntries = FHorrorMapChain::GetEntries();
+	TestTrue(TEXT("The current campaign map chain should define an opening chapter."), MapChainEntries.Num() > 0);
+	if (MapChainEntries.IsEmpty())
+	{
+		return false;
+	}
+
 	TestEqual(
-		TEXT("Packaged game should boot directly into the Day1 vertical-slice map."),
+		TEXT("Packaged game should boot into the current campaign opening map."),
 		NormalizedGameDefaultMap,
-		FString(ExpectedDay1MapPackage));
+		FHorrorMapChain::NormalizeMapPackageName(MapChainEntries[0].MapPackageName));
+	TestTrue(
+		TEXT("The Day1 vertical-slice map should remain the campaign finale package."),
+		FHorrorMapChain::IsFinalMap(ExpectedDay1MapPackage));
 
 	FString DefaultGameConfigText;
 	TestTrue(
@@ -140,6 +151,62 @@ bool FDay1PackagingConfigCooksDefaultMapTest::RunTest(const FString& Parameters)
 	TestTrue(
 		TEXT("The Day1 vertical-slice map package should exist on disk or in the asset registry."),
 		FPackageName::DoesPackageExist(ExpectedDay1MapPackage));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FMapChainPackagingConfigCooksAllMapsTest,
+	"HorrorProject.Game.MapChain.PackagingConfig.CooksAllMaps",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FMapChainPackagingConfigCooksAllMapsTest::RunTest(const FString& Parameters)
+{
+	FString DefaultGameConfigText;
+	TestTrue(
+		TEXT("DefaultGame.ini should be readable for map-chain packaging validation."),
+		TryLoadConfigFile(TEXT("Config/DefaultGame.ini"), DefaultGameConfigText));
+
+	const TArray<FString> PackagingSettingsLines = ExtractSectionLines(DefaultGameConfigText, ProjectPackagingSettingsSection);
+	TestTrue(
+		TEXT("DefaultGame.ini should define ProjectPackagingSettings for the map-chain cook contract."),
+		PackagingSettingsLines.Num() > 0);
+
+	const TArray<FString> MapsToCook = ExtractStructArrayPathValues(PackagingSettingsLines, TEXT("MapsToCook"), TEXT("FilePath"));
+	for (const FHorrorMapChainEntry& Entry : FHorrorMapChain::GetEntries())
+	{
+		TestTrue(
+			FString::Printf(TEXT("MapsToCook should include map-chain package %s."), *Entry.MapPackageName),
+			MapsToCook.ContainsByPredicate([&Entry](const FString& MapToCook)
+			{
+				return NormalizeLongPackagePath(MapToCook) == Entry.MapPackageName;
+			}));
+	}
+
+	TestFalse(
+		TEXT("MapsToCook should not include asset-library-only maps in the playable chain package list."),
+		MapsToCook.ContainsByPredicate([](const FString& MapToCook)
+		{
+			return NormalizeLongPackagePath(MapToCook).Contains(TEXT("Asset_Library"));
+		}));
+	TestFalse(
+		TEXT("MapsToCook should not include pipe zoo showcase maps in the playable chain package list."),
+		MapsToCook.ContainsByPredicate([](const FString& MapToCook)
+		{
+			return NormalizeLongPackagePath(MapToCook).Contains(TEXT("IndustrialPipesM"));
+		}));
+	TestFalse(
+		TEXT("MapsToCook should not include Stone Golem model showcase maps in the playable chain package list."),
+		MapsToCook.ContainsByPredicate([](const FString& MapToCook)
+		{
+			return NormalizeLongPackagePath(MapToCook).Contains(TEXT("Stone_Golem/map"));
+		}));
+	TestFalse(
+		TEXT("MapsToCook should not include Advanced Universal Spawner showcase maps in the playable chain package list."),
+		MapsToCook.ContainsByPredicate([](const FString& MapToCook)
+		{
+			return NormalizeLongPackagePath(MapToCook).Contains(TEXT("AdvancedUniversalSpawner"));
+		}));
 
 	return true;
 }

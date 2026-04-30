@@ -19,7 +19,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationBasicTest,
 
 bool FSaveLoadIntegrationBasicTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -52,7 +52,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationEventBusStateTest,
 
 bool FSaveLoadIntegrationEventBusStateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -90,7 +90,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationPlayerStateTest,
 
 bool FSaveLoadIntegrationPlayerStateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -126,7 +126,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationEvidenceStateTest,
 
 bool FSaveLoadIntegrationEvidenceStateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -152,7 +152,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationAudioStateTest,
 
 bool FSaveLoadIntegrationAudioStateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -178,7 +178,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationFullCycleTest,
 
 bool FSaveLoadIntegrationFullCycleTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -231,7 +231,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSaveLoadIntegrationNoDataLossTest,
 
 bool FSaveLoadIntegrationNoDataLossTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!World)
 	{
 		AddError(TEXT("Failed to create test world"));

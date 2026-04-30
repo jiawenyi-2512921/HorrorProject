@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Sound/SoundAttenuation.h"
 #include "TimerManager.h"
+#include "UObject/SoftObjectPath.h"
 #include "HorrorAudioSubsystem.generated.h"
 
 class USoundBase;
@@ -176,6 +177,12 @@ public:
 	bool ExitAudioZone(FName ZoneId);
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	bool RegisterDefaultHorrorAmbience();
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
+	bool StartDefaultHorrorAmbience();
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	void StopAllAmbient(float FadeOutDuration = 1.0f);
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
@@ -248,6 +255,9 @@ public:
 	bool HasEventMappingForTests(FGameplayTag EventTag) const;
 	EHorrorAudioCategory GetEventMappingCategoryForTests(FGameplayTag EventTag) const;
 	int32 GetEventMappingCountForTests() const;
+	bool HasDefaultHorrorAmbienceForTests() const;
+	FString GetDefaultHorrorAmbienceSoundPathForTests() const;
+	FName GetDefaultHorrorAmbienceZoneIdForTests() const { return DefaultHorrorAmbienceZoneId; }
 #endif
 
 protected:
@@ -296,6 +306,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Occlusion", meta=(ClampMin="0.0"))
 	float OcclusionInterpSpeed = 8.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience")
+	bool bEnableDefaultHorrorAmbience = true;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience")
+	FName DefaultHorrorAmbienceZoneId = TEXT("Campaign.DefaultHorrorAmbience");
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience")
+	FSoftObjectPath DefaultHorrorAmbienceSoundPath = FSoftObjectPath(TEXT("/Game/Horror/Audio/MainTitles.MainTitles"));
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float DefaultHorrorAmbienceVolume = 0.9f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience", meta=(ClampMin="0.0", Units="s"))
+	float DefaultHorrorAmbienceFadeInSeconds = 3.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Horror|Audio|Default Ambience", meta=(ClampMin="0.0", Units="s"))
+	float DefaultHorrorAmbienceFadeOutSeconds = 1.5f;
+
 private:
 	UPROPERTY(Transient)
 	TArray<FHorrorAudioPoolEntry> AudioPool;
@@ -321,6 +349,7 @@ private:
 	void OnEventPublished(const struct FHorrorEventMessage& Message);
 	void InitializeDefaultVolumes();
 	void RegisterDefaultDay1AudioMappings();
+	USoundBase* ResolveDefaultHorrorAmbienceSound() const;
 	bool TryResolveDay1StageFromEvent(FGameplayTag EventTag, FName EventName, EHorrorDay1AudioStage& OutStage) const;
 	void ProcessAudioQueue();
 	void CleanupAudioPool();

@@ -8,22 +8,50 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 
+namespace
+{
+	FGameplayTag ResolveRecordingTag(const TCHAR* TagName)
+	{
+		return FGameplayTag::RequestGameplayTag(FName(TagName), false);
+	}
+}
+
 UCameraRecordingComponent::UCameraRecordingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	RecordingStartedEventTag = ResolveRecordingTag(TEXT("Horror.Camera.Recording.Started"));
+	RecordingStoppedEventTag = ResolveRecordingTag(TEXT("Horror.Camera.Recording.Stopped"));
+	RewindStartedEventTag = ResolveRecordingTag(TEXT("Horror.Camera.Recording.RewindStarted"));
+	RewindStoppedEventTag = ResolveRecordingTag(TEXT("Horror.Camera.Recording.RewindStopped"));
+}
+
+void UCameraRecordingComponent::OnRegister()
+{
+	Super::OnRegister();
+	ResolveCameraComponent();
 }
 
 void UCameraRecordingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AActor* Owner = GetOwner();
-	CameraComponent = Owner ? Owner->FindComponentByClass<UQuantumCameraComponent>() : nullptr;
+	ResolveCameraComponent();
 	if (!CameraComponent)
 	{
+		AActor* Owner = GetOwner();
 		UE_LOG(LogTemp, Warning, TEXT("CameraRecordingComponent: No QuantumCameraComponent found on %s"), Owner ? *Owner->GetName() : TEXT("unknown owner"));
 	}
+}
+
+void UCameraRecordingComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (CameraComponent)
+	{
+		CameraComponent->OnCameraModeChanged.RemoveDynamic(this, &UCameraRecordingComponent::HandleQuantumCameraModeChanged);
+	}
+	CameraComponent = nullptr;
+	Super::EndPlay(EndPlayReason);
 }
 
 void UCameraRecordingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -45,6 +73,11 @@ bool UCameraRecordingComponent::StartRecording()
 	if (bIsRecording)
 	{
 		return false;
+	}
+
+	if (!CameraComponent)
+	{
+		ResolveCameraComponent();
 	}
 
 	if (!CameraComponent || !CameraComponent->IsCameraEnabled())
@@ -100,6 +133,11 @@ bool UCameraRecordingComponent::StartRewind()
 	if (bIsRewinding || RecordingBuffer.Num() == 0)
 	{
 		return false;
+	}
+
+	if (!CameraComponent)
+	{
+		ResolveCameraComponent();
 	}
 
 	if (!CameraComponent || !CameraComponent->IsCameraEnabled())
@@ -184,6 +222,59 @@ FCameraRecordingMetadata UCameraRecordingComponent::GetRecordingMetadata() const
 void UCameraRecordingComponent::SetMaxRecordingDuration(float NewDuration)
 {
 	MaxRecordingDuration = FMath::Max(1.0f, NewDuration);
+}
+
+void UCameraRecordingComponent::HandleQuantumCameraModeChanged(EQuantumCameraMode NewMode)
+{
+	if (NewMode == EQuantumCameraMode::Recording)
+	{
+		if (!bIsRecording)
+		{
+			StartRecording();
+		}
+		return;
+	}
+
+	if (bIsRecording)
+	{
+		StopRecording();
+	}
+
+	if (NewMode == EQuantumCameraMode::Rewind)
+	{
+		if (!bIsRewinding)
+		{
+			StartRewind();
+		}
+		return;
+	}
+
+	if (bIsRewinding)
+	{
+		StopRewind();
+	}
+}
+
+void UCameraRecordingComponent::ResolveCameraComponent()
+{
+	AActor* Owner = GetOwner();
+	UQuantumCameraComponent* ResolvedCameraComponent = Owner ? Owner->FindComponentByClass<UQuantumCameraComponent>() : nullptr;
+	if (CameraComponent == ResolvedCameraComponent)
+	{
+		return;
+	}
+
+	if (CameraComponent)
+	{
+		CameraComponent->OnCameraModeChanged.RemoveDynamic(this, &UCameraRecordingComponent::HandleQuantumCameraModeChanged);
+	}
+
+	CameraComponent = ResolvedCameraComponent;
+	if (CameraComponent)
+	{
+		CameraComponent->OnCameraModeChanged.RemoveDynamic(this, &UCameraRecordingComponent::HandleQuantumCameraModeChanged);
+		CameraComponent->OnCameraModeChanged.AddDynamic(this, &UCameraRecordingComponent::HandleQuantumCameraModeChanged);
+	}
 }
 
 void UCameraRecordingComponent::CaptureFrame(float DeltaTime)

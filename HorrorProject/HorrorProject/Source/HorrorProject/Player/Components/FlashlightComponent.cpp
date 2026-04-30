@@ -7,8 +7,7 @@
 UFlashlightComponent::UFlashlightComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
-	BatterySeconds = StartingBatterySeconds;
+	PrimaryComponentTick.bStartWithTickEnabled = false; // Enable only when flashlight is on
 }
 
 void UFlashlightComponent::BeginPlay()
@@ -64,6 +63,7 @@ bool UFlashlightComponent::SetFlashlightEnabled(bool bEnabled)
 	}
 
 	bFlashlightOn = bEnabled;
+	SetComponentTickEnabled(bFlashlightOn); // Only tick when flashlight is active
 	UpdateLightState();
 	OnFlashlightToggled.Broadcast(bFlashlightOn);
 
@@ -80,7 +80,7 @@ bool UFlashlightComponent::AddBatteryCharge(float Seconds)
 	const float OldBattery = BatterySeconds;
 	BatterySeconds = FMath::Clamp(BatterySeconds + Seconds, 0.0f, MaxBatterySeconds);
 
-	if (BatterySeconds != OldBattery)
+	if (!FMath::IsNearlyEqual(BatterySeconds, OldBattery))
 	{
 		bBatteryDepletedBroadcast = false;
 		OnBatteryChanged.Broadcast(GetBatteryPercent(), BatterySeconds);
@@ -128,7 +128,7 @@ void UFlashlightComponent::UpdateBatteryDrain(float DeltaTime)
 	const float OldBattery = BatterySeconds;
 	BatterySeconds = FMath::Max(0.0f, BatterySeconds - (DeltaTime * BatteryDrainRate));
 
-	if (BatterySeconds != OldBattery)
+	if (!FMath::IsNearlyEqual(BatterySeconds, OldBattery))
 	{
 		OnBatteryChanged.Broadcast(GetBatteryPercent(), BatterySeconds);
 	}
@@ -162,7 +162,7 @@ void UFlashlightComponent::UpdateFlickerEffect(float DeltaTime)
 		return;
 	}
 
-	FlickerTime += DeltaTime * FlickerFrequency;
+	FlickerTime = FMath::Fmod(FlickerTime + DeltaTime * FlickerFrequency, 1000.0f);
 	const float FlickerNoise = FMath::PerlinNoise1D(FlickerTime);
 	const float FlickerAmount = FMath::GetMappedRangeValueClamped(
 		FVector2D(-1.0f, 1.0f),

@@ -1,16 +1,19 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright HorrorProject. All Rights Reserved.
 
 #include "Game/HorrorObjectiveManager.h"
+#include "HorrorProject/HorrorProject.h"
 
 bool UHorrorObjectiveManager::RegisterNode(AHorrorObjectiveNode* Node)
 {
 	if (!Node || Node->NodeId.IsNone())
 	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("RegisterNode: Invalid node or empty NodeId"));
 		return false;
 	}
 
 	if (NodesByIdMap.Contains(Node->NodeId))
 	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("RegisterNode: Node '%s' already registered"), *Node->NodeId.ToString());
 		return false;
 	}
 
@@ -23,6 +26,13 @@ bool UHorrorObjectiveManager::UnregisterNode(AHorrorObjectiveNode* Node)
 {
 	if (!Node)
 	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("UnregisterNode: null Node"));
+		return false;
+	}
+
+	if (!NodesByIdMap.Contains(Node->NodeId))
+	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("UnregisterNode: Node '%s' not found"), *Node->NodeId.ToString());
 		return false;
 	}
 
@@ -35,6 +45,7 @@ bool UHorrorObjectiveManager::ActivateNode(FName NodeId)
 	AHorrorObjectiveNode* Node = FindNodeById(NodeId);
 	if (!Node)
 	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("ActivateNode: Node '%s' not found"), *NodeId.ToString());
 		return false;
 	}
 
@@ -52,6 +63,7 @@ bool UHorrorObjectiveManager::CompleteNode(FName NodeId, AActor* InstigatorActor
 	AHorrorObjectiveNode* Node = FindNodeById(NodeId);
 	if (!Node)
 	{
+		UE_LOG(LogHorrorProject, Warning, TEXT("CompleteNode: Node '%s' not found"), *NodeId.ToString());
 		return false;
 	}
 

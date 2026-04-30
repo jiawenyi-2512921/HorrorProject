@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright HorrorProject. All Rights Reserved.
 
 #include "UIManagerSubsystem.h"
 #include "Blueprint/UserWidget.h"
@@ -54,6 +54,12 @@ UUserWidget* UUIManagerSubsystem::CreateWidget(TSubclassOf<UUserWidget> WidgetCl
 
 void UUIManagerSubsystem::ShowWidget(FName WidgetName)
 {
+	if (bBatchUpdateActive)
+	{
+		PendingUpdates.AddUnique(WidgetName);
+		return;
+	}
+
 	if (UUserWidget* Widget = GetWidget(WidgetName))
 	{
 		if (!Widget->IsInViewport())
@@ -66,6 +72,11 @@ void UUIManagerSubsystem::ShowWidget(FName WidgetName)
 
 void UUIManagerSubsystem::HideWidget(FName WidgetName)
 {
+	if (bBatchUpdateActive)
+	{
+		PendingUpdates.Remove(WidgetName);
+	}
+
 	if (UUserWidget* Widget = GetWidget(WidgetName))
 	{
 		if (Widget->IsInViewport())
@@ -83,6 +94,7 @@ void UUIManagerSubsystem::RemoveWidget(FName WidgetName)
 		Widget->RemoveFromParent();
 		EventManager->UnregisterWidget(WidgetName);
 		ManagedWidgets.Remove(WidgetName);
+		PendingUpdates.Remove(WidgetName);
 	}
 }
 
@@ -116,7 +128,14 @@ void UUIManagerSubsystem::BatchUpdateEnd()
 
 	for (const FName& WidgetName : PendingUpdates)
 	{
-		ShowWidget(WidgetName);
+		if (UUserWidget* Widget = GetWidget(WidgetName))
+		{
+			if (!Widget->IsInViewport())
+			{
+				Widget->AddToViewport();
+				EventManager->BroadcastWidgetOpened(Widget, WidgetName);
+			}
+		}
 	}
 
 	PendingUpdates.Empty();

@@ -12,6 +12,7 @@ UENUM(BlueprintType)
 enum class ESaveGameValidationResult : uint8
 {
 	Valid,
+	NullInput,
 	CorruptedData,
 	InvalidVersion,
 	MissingRequiredData,

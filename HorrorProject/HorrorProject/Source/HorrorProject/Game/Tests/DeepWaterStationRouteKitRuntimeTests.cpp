@@ -25,6 +25,8 @@ namespace
 {
 	const FString Day1RouteAutosaveSlotName(TEXT("SM13_Day1_Autosave"));
 	constexpr int32 Day1RouteAutosaveUserIndex = 0;
+	constexpr double Day1ServiceRouteYOffsetCm = 300.0;
+	constexpr double Day1LateObjectiveMaxSpacingCm = 650.0;
 
 	AHorrorPlayerCharacter* SpawnControlledRoutePlayer(FAutomationTestBase& Test, UWorld* World, const FVector& Location)
 	{
@@ -91,6 +93,137 @@ bool FDeepWaterStationRouteKitDefaultPasswordCluesTest::RunTest(const FString& P
 	TestTrue(TEXT("Default first note should clue the anomaly room code."), IntroBody.Contains(TEXT("1831")));
 	TestTrue(TEXT("Default first note should clue the monster route hatch code."), IntroBody.Contains(TEXT("1799")));
 	TestTrue(TEXT("Default first note should clue the exit gate code."), IntroBody.Contains(TEXT("1697")));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FDeepWaterStationRouteKitLateObjectivesStayOnReachableServiceRouteTest,
+	"HorrorProject.Game.DeepWaterStation.RouteKit.LateObjectivesStayOnReachableServiceRoute",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FDeepWaterStationRouteKitLateObjectivesStayOnReachableServiceRouteTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for late objective placement coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Route kit should spawn for late objective placement coverage."), RouteKit);
+	if (!RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	TestEqual(TEXT("Default route kit should expose the full first-loop route."), RouteKit->ObjectiveNodes.Num(), 6);
+	if (RouteKit->ObjectiveNodes.Num() != 6)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FVector FirstAnomalyRecordLocation = RouteKit->ObjectiveNodes[3].RelativeTransform.GetLocation();
+	const FVector ArchiveReviewLocation = RouteKit->ObjectiveNodes[4].RelativeTransform.GetLocation();
+	const FVector ExitRouteGateLocation = RouteKit->ObjectiveNodes[5].RelativeTransform.GetLocation();
+
+	TestEqual(TEXT("Archive review should be the fifth Day 1 objective."), RouteKit->ObjectiveNodes[4].Objective, EFoundFootageInteractableObjective::ArchiveReview);
+	TestEqual(TEXT("Exit route gate should be the sixth Day 1 objective."), RouteKit->ObjectiveNodes[5].Objective, EFoundFootageInteractableObjective::ExitRouteGate);
+	TestEqual(TEXT("Archive review should sit on the reachable service route instead of the sealed straight corridor."), ArchiveReviewLocation.Y, Day1ServiceRouteYOffsetCm);
+	TestEqual(TEXT("Exit gate should sit on the reachable service route instead of the sealed straight corridor."), ExitRouteGateLocation.Y, Day1ServiceRouteYOffsetCm);
+	TestTrue(TEXT("Archive review should remain close enough to guide from the anomaly recording window."), FVector::Dist2D(FirstAnomalyRecordLocation, ArchiveReviewLocation) <= Day1LateObjectiveMaxSpacingCm);
+	TestTrue(TEXT("Exit gate should remain close enough to guide from the archive terminal."), FVector::Dist2D(ArchiveReviewLocation, ExitRouteGateLocation) <= Day1LateObjectiveMaxSpacingCm);
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FDeepWaterStationRouteKitRepairsLegacyLateObjectivePlacementsTest,
+	"HorrorProject.Game.DeepWaterStation.RouteKit.RepairsLegacyLateObjectivePlacements",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FDeepWaterStationRouteKitRepairsLegacyLateObjectivePlacementsTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for legacy late objective repair coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Route kit should spawn for legacy late objective repair coverage."), RouteKit);
+	if (!RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	TestEqual(TEXT("Default route kit should expose the full first-loop route before legacy mutation."), RouteKit->ObjectiveNodes.Num(), 6);
+	if (RouteKit->ObjectiveNodes.Num() != 6)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ObjectiveNodes[4].RelativeTransform = FTransform(FRotator::ZeroRotator, FVector(1800.0, 0.0, 80.0));
+	RouteKit->ObjectiveNodes[5].RelativeTransform = FTransform(FRotator::ZeroRotator, FVector(2200.0, 0.0, 80.0));
+
+	TestTrue(TEXT("Route kit should report repairing legacy straight-line late objective placements."), RouteKit->EnsureDefaultFirstLoopObjectiveNodes());
+	TestEqual(TEXT("Repaired archive review should move onto the service route."), RouteKit->ObjectiveNodes[4].RelativeTransform.GetLocation().Y, Day1ServiceRouteYOffsetCm);
+	TestEqual(TEXT("Repaired exit gate should move onto the service route."), RouteKit->ObjectiveNodes[5].RelativeTransform.GetLocation().Y, Day1ServiceRouteYOffsetCm);
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FDeepWaterStationRouteKitBeginPlayRepairsLegacyLateObjectiveSpawnsTest,
+	"HorrorProject.Game.DeepWaterStation.RouteKit.BeginPlayRepairsLegacyLateObjectiveSpawns",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FDeepWaterStationRouteKitBeginPlayRepairsLegacyLateObjectiveSpawnsTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for BeginPlay legacy placement coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Route kit should spawn for BeginPlay legacy placement coverage."), RouteKit);
+	if (!RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	RouteKit->ObjectiveNodes[4].RelativeTransform = FTransform(FRotator::ZeroRotator, FVector(1800.0, 0.0, 80.0));
+	RouteKit->ObjectiveNodes[5].RelativeTransform = FTransform(FRotator::ZeroRotator, FVector(2200.0, 0.0, 80.0));
+
+	RouteKit->DispatchBeginPlay();
+	const TArray<AFoundFootageObjectiveInteractable*>& SpawnedInteractables = RouteKit->GetSpawnedObjectiveInteractablesForTests();
+	TestEqual(TEXT("Route kit BeginPlay should spawn the full repaired route."), SpawnedInteractables.Num(), 6);
+	if (SpawnedInteractables.Num() != 6)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestEqual(TEXT("BeginPlay should spawn the archive terminal on the reachable service route."), SpawnedInteractables[4]->GetActorLocation().Y, Day1ServiceRouteYOffsetCm);
+	TestEqual(TEXT("BeginPlay should spawn the exit gate on the reachable service route."), SpawnedInteractables[5]->GetActorLocation().Y, Day1ServiceRouteYOffsetCm);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

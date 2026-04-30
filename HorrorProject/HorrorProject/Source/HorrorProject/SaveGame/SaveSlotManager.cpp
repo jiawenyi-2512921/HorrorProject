@@ -84,7 +84,7 @@ TArray<FSaveSlotMetadata> USaveSlotManager::GetAllSlotMetadata() const
 {
 	if (!Metadata)
 	{
-		const_cast<USaveSlotManager*>(this)->LoadMetadata();
+		LoadMetadata();
 	}
 
 	return Metadata ? Metadata->SaveSlots : TArray<FSaveSlotMetadata>();
@@ -94,7 +94,7 @@ FSaveSlotMetadata USaveSlotManager::GetSlotMetadata(int32 SlotIndex) const
 {
 	if (!Metadata)
 	{
-		const_cast<USaveSlotManager*>(this)->LoadMetadata();
+		LoadMetadata();
 	}
 
 	if (Metadata)
@@ -114,7 +114,7 @@ int32 USaveSlotManager::GetLastUsedSlot() const
 {
 	if (!Metadata)
 	{
-		const_cast<USaveSlotManager*>(this)->LoadMetadata();
+		LoadMetadata();
 	}
 
 	return Metadata ? Metadata->LastUsedSlot : 0;
@@ -135,7 +135,7 @@ FString USaveSlotManager::GetSlotName(int32 SlotIndex) const
 	return FString::Printf(TEXT("SaveSlot_%d"), SlotIndex);
 }
 
-void USaveSlotManager::LoadMetadata()
+void USaveSlotManager::LoadMetadata() const
 {
 	if (!Metadata)
 	{
@@ -144,7 +144,7 @@ void USaveSlotManager::LoadMetadata()
 
 		if (!Metadata)
 		{
-			Metadata = NewObject<USaveGameMetadata>(this);
+			Metadata = NewObject<USaveGameMetadata>(const_cast<USaveSlotManager*>(this));
 		}
 	}
 }

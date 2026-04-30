@@ -25,7 +25,7 @@ void FEvidenceCollectionSpec::Define()
 {
 	BeforeEach([this]()
 	{
-		TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+		TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 		TestActor = TestWorld->SpawnActor<AActor>();
 
 		EvidenceCollection = NewObject<UEvidenceCollectionComponent>(TestActor);

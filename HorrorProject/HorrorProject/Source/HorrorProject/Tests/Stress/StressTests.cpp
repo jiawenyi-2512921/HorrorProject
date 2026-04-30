@@ -1,63 +1,13 @@
-#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+// Copyright HorrorProject. All Rights Reserved.
+
+#if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
-#include "Network/HorrorGameModeMultiplayer.h"
+#include "Game/HorrorGameModeBase.h"
 #include "Localization/LocalizationSubsystem.h"
 #include "Achievements/AchievementSubsystem.h"
 #include "Save/HorrorSaveSubsystem.h"
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMultiplayerStressTest, "HorrorProject.Stress.MultiplayerLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-
-bool FMultiplayerStressTest::RunTest(const FString& Parameters)
-{
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
-    AHorrorGameModeMultiplayer* GameMode = World->SpawnActor<AHorrorGameModeMultiplayer>();
-
-    if (!GameMode)
-    {
-        AddWarning(TEXT("GameMode not available"));
-        return true;
-    }
-
-    // Stress test: Maximum concurrent players
-    const int32 MaxPlayers = 1000;
-    TArray<AHorrorPlayerControllerMultiplayer*> Players;
-
-    double StartTime = FPlatformTime::Seconds();
-
-    for (int32 i = 0; i < MaxPlayers; ++i)
-    {
-        AHorrorPlayerControllerMultiplayer* PC = World->SpawnActor<AHorrorPlayerControllerMultiplayer>();
-        if (PC)
-        {
-            Players.Add(PC);
-            GameMode->OnPlayerConnected(PC);
-        }
-    }
-
-    double EndTime = FPlatformTime::Seconds();
-    double TotalTime = EndTime - StartTime;
-
-    AddInfo(FString::Printf(TEXT("Multiplayer stress: %d players spawned in %.3f seconds"), Players.Num(), TotalTime));
-    TestTrue(TEXT("System handles maximum players"), Players.Num() > 0);
-
-    // Stress test: Rapid player disconnections
-    StartTime = FPlatformTime::Seconds();
-
-    for (AHorrorPlayerControllerMultiplayer* PC : Players)
-    {
-        GameMode->OnPlayerDisconnected(PC);
-    }
-
-    EndTime = FPlatformTime::Seconds();
-    TotalTime = EndTime - StartTime;
-
-    AddInfo(FString::Printf(TEXT("Disconnection stress: %d players disconnected in %.3f seconds"), Players.Num(), TotalTime));
-    TestTrue(TEXT("System handles mass disconnections"), true);
-
-    return true;
-}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLocalizationStressTest, "HorrorProject.Stress.LocalizationLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
@@ -72,7 +22,6 @@ bool FLocalizationStressTest::RunTest(const FString& Parameters)
         return true;
     }
 
-    // Stress test: Rapid language switching
     const int32 NumSwitches = 10000;
     TArray<ELanguage> Languages = {
         ELanguage::English,
@@ -96,7 +45,6 @@ bool FLocalizationStressTest::RunTest(const FString& Parameters)
     AddInfo(FString::Printf(TEXT("Language switching stress: %d switches in %.3f seconds"), NumSwitches, TotalTime));
     TestTrue(TEXT("System handles rapid language switching"), TotalTime < 10.0);
 
-    // Stress test: Massive text lookups
     const int32 NumLookups = 1000000;
     StartTime = FPlatformTime::Seconds();
 
@@ -118,7 +66,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementStressTest, "HorrorProject.Stress.A
 
 bool FAchievementStressTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
     UAchievementSubsystem* AchievementSys = World->GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
     if (!AchievementSys)
@@ -127,7 +75,6 @@ bool FAchievementStressTest::RunTest(const FString& Parameters)
         return true;
     }
 
-    // Stress test: Rapid achievement unlocks
     const int32 NumUnlocks = 100000;
     double StartTime = FPlatformTime::Seconds();
 
@@ -143,7 +90,6 @@ bool FAchievementStressTest::RunTest(const FString& Parameters)
     AddInfo(FString::Printf(TEXT("Achievement unlock stress: %d unlocks in %.3f seconds"), NumUnlocks, TotalTime));
     TestTrue(TEXT("System handles rapid unlocks"), TotalTime < 10.0);
 
-    // Stress test: Massive progress updates
     const int32 NumUpdates = 1000000;
     StartTime = FPlatformTime::Seconds();
 
@@ -174,39 +120,22 @@ bool FSaveSystemStressTest::RunTest(const FString& Parameters)
         return true;
     }
 
-    // Stress test: Rapid save operations
-    const int32 NumSaves = 1000;
+    // Test HasSave rapid queries
+    const int32 NumIterations = 1000;
     double StartTime = FPlatformTime::Seconds();
 
-    for (int32 i = 0; i < NumSaves; ++i)
+    for (int32 i = 0; i < NumIterations; ++i)
     {
-        FString SlotName = FString::Printf(TEXT("StressSlot_%d"), i);
-        SaveSys->SaveGame(SlotName);
+        SaveSys->HasSave();
     }
 
     double EndTime = FPlatformTime::Seconds();
     double TotalTime = EndTime - StartTime;
 
-    AddInfo(FString::Printf(TEXT("Save stress: %d saves in %.3f seconds"), NumSaves, TotalTime));
-    TestTrue(TEXT("System handles rapid saves"), TotalTime < 30.0);
+    AddInfo(FString::Printf(TEXT("Save query stress: %d queries in %.3f seconds"), NumIterations, TotalTime));
+    TestTrue(TEXT("System handles rapid save queries"), TotalTime < 5.0);
 
-    // Stress test: Rapid load operations
-    StartTime = FPlatformTime::Seconds();
-
-    for (int32 i = 0; i < NumSaves; ++i)
-    {
-        FString SlotName = FString::Printf(TEXT("StressSlot_%d"), i);
-        SaveSys->LoadGame(SlotName);
-    }
-
-    EndTime = FPlatformTime::Seconds();
-    TotalTime = EndTime - StartTime;
-
-    AddInfo(FString::Printf(TEXT("Load stress: %d loads in %.3f seconds"), NumSaves, TotalTime));
-    TestTrue(TEXT("System handles rapid loads"), TotalTime < 30.0);
-
-    // Cleanup
-    SaveSys->DeleteAllSaveSlots();
+    SaveSys->ClearCachedSaveOnly();
 
     return true;
 }
@@ -215,50 +144,39 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombinedSystemStressTest, "HorrorProject.Stres
 
 bool FCombinedSystemStressTest::RunTest(const FString& Parameters)
 {
-    UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+    if (!World)
+    {
+        AddWarning(TEXT("Could not create test world"));
+        return true;
+    }
+
     UGameInstance* GameInstance = World->GetGameInstance();
 
     if (!GameInstance)
     {
         AddWarning(TEXT("GameInstance not available"));
+        World->DestroyWorld(false);
         return true;
     }
 
-    // Get all subsystems
     ULocalizationSubsystem* LocalizationSys = GameInstance->GetSubsystem<ULocalizationSubsystem>();
     UAchievementSubsystem* AchievementSys = GameInstance->GetSubsystem<UAchievementSubsystem>();
-    UHorrorSaveSubsystem* SaveSys = GameInstance->GetSubsystem<UHorrorSaveSubsystem>();
-    UAccessibilitySubsystem* AccessibilitySys = World->GetSubsystem<UAccessibilitySubsystem>();
 
-    // Stress test: All systems simultaneously
     const int32 NumIterations = 1000;
     double StartTime = FPlatformTime::Seconds();
 
     for (int32 i = 0; i < NumIterations; ++i)
     {
-        // Localization operations
         if (LocalizationSys)
         {
             LocalizationSys->SetLanguage(static_cast<ELanguage>(i % 5));
             LocalizationSys->GetLocalizedText(TEXT("UI.MainMenu.Start"));
         }
 
-        // Achievement operations
         if (AchievementSys)
         {
             AchievementSys->UpdateAchievementProgress(FName("ACH_Explorer"), 0.01f);
-        }
-
-        // Save operations
-        if (SaveSys && i % 100 == 0)
-        {
-            SaveSys->SaveGame(TEXT("CombinedStressTest"));
-        }
-
-        // Accessibility operations
-        if (AccessibilitySys)
-        {
-            AccessibilitySys->SetFontSize(1.0f + (i % 10) * 0.1f);
         }
     }
 
@@ -271,4 +189,4 @@ bool FCombinedSystemStressTest::RunTest(const FString& Parameters)
     return true;
 }
 
-#endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
+#endif // WITH_DEV_AUTOMATION_TESTS

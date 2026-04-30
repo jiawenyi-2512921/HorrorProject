@@ -6,9 +6,13 @@
 #include "Player/Components/VHSEffectComponent.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Player/Components/QuantumCameraComponent.h"
+#include "Player/Components/CameraRecordingComponent.h"
+#include "Player/Components/CameraPhotoComponent.h"
 #include "Player/Components/FlashlightComponent.h"
 #include "Player/Components/FearComponent.h"
 #include "Player/Components/NoiseGeneratorComponent.h"
+#include "Player/Components/SanityComponent.h"
+#include "Player/Components/EnvironmentalStoryComponent.h"
 #include "Evidence/EvidenceCollectionComponent.h"
 
 #include "Camera/CameraComponent.h"
@@ -17,6 +21,7 @@
 #include "HorrorProject.h"
 #include "InputAction.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player/HorrorPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/SoftObjectPath.h"
 
@@ -68,10 +73,14 @@ AHorrorPlayerCharacter::AHorrorPlayerCharacter()
 	VHSEffect = CreateDefaultSubobject<UVHSEffectComponent>(TEXT("VHSEffect"));
 	NoteRecorder = CreateDefaultSubobject<UNoteRecorderComponent>(TEXT("NoteRecorder"));
 	QuantumCamera = CreateDefaultSubobject<UQuantumCameraComponent>(TEXT("QuantumCamera"));
+	CameraRecording = CreateDefaultSubobject<UCameraRecordingComponent>(TEXT("CameraRecording"));
+	CameraPhoto = CreateDefaultSubobject<UCameraPhotoComponent>(TEXT("CameraPhoto"));
 	Flashlight = CreateDefaultSubobject<UFlashlightComponent>(TEXT("Flashlight"));
 	Fear = CreateDefaultSubobject<UFearComponent>(TEXT("Fear"));
 	NoiseGenerator = CreateDefaultSubobject<UNoiseGeneratorComponent>(TEXT("NoiseGenerator"));
 	EvidenceCollection = CreateDefaultSubobject<UEvidenceCollectionComponent>(TEXT("EvidenceCollection"));
+	Sanity = CreateDefaultSubobject<USanityComponent>(TEXT("Sanity"));
+	EnvironmentalStory = CreateDefaultSubobject<UEnvironmentalStoryComponent>(TEXT("EnvironmentalStory"));
 	BindQuantumCameraDelegates();
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> InteractActionAsset(HorrorPlayerCharacterDefaults::InteractActionAssetPath);
@@ -256,6 +265,14 @@ void AHorrorPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 void AHorrorPlayerCharacter::DoInteract()
 {
+	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(GetController()))
+	{
+		if (HorrorPlayerController->TrySubmitActiveAdvancedInteractionExpectedInput())
+		{
+			return;
+		}
+	}
+
 	if (Interaction)
 	{
 		Interaction->TryInteract();
@@ -290,6 +307,10 @@ void AHorrorPlayerCharacter::DoStartRecord()
 {
 	if (QuantumCamera && QuantumCamera->StartRecording())
 	{
+		if (CameraRecording)
+		{
+			CameraRecording->StartRecording();
+		}
 		HandleQuantumCameraModeChanged(QuantumCamera->GetCameraMode());
 	}
 }
@@ -298,6 +319,10 @@ void AHorrorPlayerCharacter::DoStopRecord()
 {
 	if (QuantumCamera && QuantumCamera->StopRecording())
 	{
+		if (CameraRecording)
+		{
+			CameraRecording->StopRecording();
+		}
 		HandleQuantumCameraModeChanged(QuantumCamera->GetCameraMode());
 	}
 }
@@ -306,6 +331,10 @@ void AHorrorPlayerCharacter::DoTakePhoto()
 {
 	if (QuantumCamera && QuantumCamera->TakePhoto())
 	{
+		if (CameraPhoto)
+		{
+			CameraPhoto->TakePhoto(true);
+		}
 		HandleQuantumCameraModeChanged(QuantumCamera->GetCameraMode());
 	}
 }
@@ -314,6 +343,10 @@ void AHorrorPlayerCharacter::DoStartRewind()
 {
 	if (QuantumCamera && QuantumCamera->StartRewind())
 	{
+		if (CameraRecording)
+		{
+			CameraRecording->StartRewind();
+		}
 		HandleQuantumCameraModeChanged(QuantumCamera->GetCameraMode());
 	}
 }
@@ -322,6 +355,10 @@ void AHorrorPlayerCharacter::DoStopRewind()
 {
 	if (QuantumCamera && QuantumCamera->StopRewind())
 	{
+		if (CameraRecording)
+		{
+			CameraRecording->StopRewind();
+		}
 		HandleQuantumCameraModeChanged(QuantumCamera->GetCameraMode());
 	}
 }

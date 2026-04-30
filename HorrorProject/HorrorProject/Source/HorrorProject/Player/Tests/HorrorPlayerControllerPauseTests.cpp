@@ -6,6 +6,7 @@
 
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Game/DeepWaterStationRouteKit.h"
+#include "Game/HorrorCampaignObjectiveActor.h"
 #include "Game/HorrorFoundFootageContract.h"
 #include "Game/HorrorGameModeBase.h"
 #include "Game/HorrorEncounterDirector.h"
@@ -15,6 +16,7 @@
 #include "Interaction/DoorInteractable.h"
 #include "Misc/AutomationTest.h"
 #include "Player/HorrorPlayerCharacter.h"
+#include "Player/Components/FlashlightComponent.h"
 #include "Player/Components/NoteRecorderComponent.h"
 #include "Tests/AutomationCommon.h"
 #include "UI/Day1SliceHUD.h"
@@ -114,6 +116,53 @@ bool FHorrorPlayerControllerDay1PauseInputTest::RunTest(const FString& Parameter
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerFallbackFlashlightInputTest,
+	"HorrorProject.Player.Controller.FallbackFlashlightInput",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorPlayerControllerFallbackFlashlightInputTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for flashlight input coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>();
+	TestNotNull(TEXT("Flashlight input test should spawn a horror player controller."), PlayerController);
+	TestNotNull(TEXT("Flashlight input test should spawn a horror player character."), PlayerCharacter);
+	if (!PlayerController || !PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	World->AddController(PlayerController);
+	PlayerController->Possess(PlayerCharacter);
+
+	UFlashlightComponent* Flashlight = PlayerCharacter->GetFlashlightComponent();
+	TestNotNull(TEXT("Player character should expose a flashlight component."), Flashlight);
+	if (!Flashlight)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestFalse(TEXT("Flashlight should start off."), Flashlight->IsFlashlightOn());
+	TestTrue(TEXT("F should be consumed by the fallback flashlight input path."), PlayerController->HandleInputKeyForTests(EKeys::F));
+	TestTrue(TEXT("F should turn the flashlight on even if a map misses the Enhanced Input binding."), Flashlight->IsFlashlightOn());
+	TestTrue(TEXT("Pressing F again should be consumed."), PlayerController->HandleInputKeyForTests(EKeys::F));
+	TestFalse(TEXT("Pressing F again should turn the flashlight off."), Flashlight->IsFlashlightOn());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorPlayerControllerDay1ObjectiveNavigationTest,
 	"HorrorProject.Player.Controller.Day1ObjectiveNavigation",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -170,6 +219,79 @@ bool FHorrorPlayerControllerDay1ObjectiveNavigationTest::RunTest(const FString& 
 	TestTrue(
 		TEXT("Objective navigation should update after the first objective completes."),
 		HUD->GetObjectiveNavigationForTests().ToString().Contains(TEXT("6 米")));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerDay1ArchiveNavigationRepairsIncompleteRouteKitTest,
+	"HorrorProject.Player.Controller.Day1ArchiveNavigationRepairsIncompleteRouteKit",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorPlayerControllerDay1ArchiveNavigationRepairsIncompleteRouteKitTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for archive navigation repair coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	World->GetWorldSettings()->DefaultGameMode = AHorrorGameModeBase::StaticClass();
+	TestTrue(TEXT("Transient world should create the archive navigation game mode."), World->SetGameMode(FURL()));
+	AHorrorGameModeBase* GameMode = World->GetAuthGameMode<AHorrorGameModeBase>();
+	TestNotNull(TEXT("Archive navigation repair test should expose the game mode."), GameMode);
+	if (!GameMode)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* LegacyRouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Archive navigation repair test should spawn a legacy route kit."), LegacyRouteKit);
+	if (!LegacyRouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	LegacyRouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	LegacyRouteKit->ObjectiveNodes.RemoveAll(
+		[](const FDeepWaterStationObjectiveNode& Node)
+		{
+			return Node.Objective == EFoundFootageInteractableObjective::ArchiveReview;
+		});
+
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	ADay1SliceHUD* HUD = World->SpawnActor<ADay1SliceHUD>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>(FVector(0.0f, 0.0f, 80.0f), FRotator::ZeroRotator);
+	TestNotNull(TEXT("Archive navigation repair test should spawn a horror player controller."), PlayerController);
+	TestNotNull(TEXT("Archive navigation repair test should attach the native Day1 HUD."), HUD);
+	TestNotNull(TEXT("Archive navigation repair test should spawn a horror player character."), PlayerCharacter);
+	if (!PlayerController || !HUD || !PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	World->AddController(PlayerController);
+	PlayerController->MyHUD = HUD;
+	PlayerController->Possess(PlayerCharacter);
+	GameMode->DispatchBeginPlay();
+
+	TestTrue(TEXT("Bodycam acquisition should unlock the first note."), GameMode->TryAcquireBodycam(TEXT("Evidence.Bodycam"), true));
+	TestTrue(TEXT("First note collection should unlock anomaly capture."), GameMode->TryCollectFirstNote(TEXT("Note.Intro")));
+	TestTrue(TEXT("First anomaly candidate should be registered."), GameMode->BeginFirstAnomalyCandidate(TEXT("Evidence.Anomaly01")));
+	TestTrue(TEXT("First anomaly recording should move the tracker to archive review."), GameMode->TryRecordFirstAnomaly(true));
+
+	PlayerController->RefreshDay1HUDStateForTests();
+	const FString NavigationText = HUD->GetObjectiveNavigationForTests().ToString();
+	TestFalse(TEXT("Archive review navigation should remain visible even when an old route kit omitted the terminal node."), NavigationText.IsEmpty());
+	TestTrue(TEXT("Archive review navigation should name the archive terminal."), NavigationText.Contains(TEXT("档案终端")));
+	TestTrue(TEXT("Archive review navigation should include the terminal distance."), NavigationText.Contains(TEXT("17 米")));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -525,6 +647,69 @@ bool FHorrorPlayerControllerDay1HUDFeedbackEventsTest::RunTest(const FString& Pa
 	EventBus->Publish(HorrorDay1Tags::Day1CompletedEvent(), TEXT("Exit.Gate"), HorrorDay1Tags::Day1CompletedState(), PlayerController);
 	TestTrue(TEXT("Day1 completion should show the cut-to-black completion overlay."), HUD->IsDay1CompletionOverlayVisibleForTests());
 	TestEqual(TEXT("Day1 completion should use an explicit completion title."), HUD->GetDay1CompletionTitleForTests().ToString(), FString(TEXT("第 1 天完成")));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerRoutesAdvancedInteractionNumberKeysTest,
+	"HorrorProject.Player.Controller.RoutesAdvancedInteractionNumberKeys",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorPlayerControllerRoutesAdvancedInteractionNumberKeysTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for advanced interaction input coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>();
+	ADay1SliceHUD* HUD = World->SpawnActor<ADay1SliceHUD>();
+	AHorrorCampaignObjectiveActor* ObjectiveActor = World->SpawnActor<AHorrorCampaignObjectiveActor>();
+	TestNotNull(TEXT("Advanced input test should spawn a player controller."), PlayerController);
+	TestNotNull(TEXT("Advanced input test should spawn a player character."), PlayerCharacter);
+	TestNotNull(TEXT("Advanced input test should spawn the Day1 HUD."), HUD);
+	TestNotNull(TEXT("Advanced input test should spawn a campaign objective actor."), ObjectiveActor);
+	if (!PlayerController || !PlayerCharacter || !HUD || !ObjectiveActor)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	World->AddController(PlayerController);
+	PlayerController->MyHUD = HUD;
+	PlayerController->Possess(PlayerCharacter);
+
+	FHorrorCampaignObjectiveDefinition Objective;
+	Objective.ObjectiveId = TEXT("Test.ControllerCircuit");
+	Objective.ObjectiveType = EHorrorCampaignObjectiveType::RestorePower;
+	Objective.InteractionMode = EHorrorCampaignInteractionMode::CircuitWiring;
+	Objective.PromptText = FText::FromString(TEXT("接入控制器测试电路"));
+	Objective.CompletionText = FText::FromString(TEXT("控制器测试电路恢复。"));
+	ObjectiveActor->ConfigureObjective(TEXT("Chapter.Test"), Objective);
+	const FHitResult EmptyHit;
+	TestTrue(TEXT("Opening the circuit task should activate advanced interaction."), ObjectiveActor->Interact_Implementation(PlayerCharacter, EmptyHit));
+	PlayerController->SetActiveAdvancedInteractionObjectiveForTests(ObjectiveActor);
+
+	ObjectiveActor->Tick(0.65f);
+	const FName FirstExpectedInput = ObjectiveActor->GetExpectedAdvancedInputId();
+	TestEqual(TEXT("The first circuit target should be the blue terminal."), FirstExpectedInput, FName(TEXT("蓝色端子")));
+	TestTrue(TEXT("Digit one should be consumed by the advanced interaction panel."), PlayerController->HandleInputKeyForTests(EKeys::One));
+	TestTrue(TEXT("Digit one should advance circuit progress when the timing window is open."), ObjectiveActor->GetAdvancedInteractionProgressFraction() > 0.0f);
+
+	ObjectiveActor->Tick(0.65f);
+	TestTrue(TEXT("Digit one should be consumed even when it is the wrong animated input."), PlayerController->HandleInputKeyForTests(EKeys::One));
+	TestTrue(TEXT("Wrong animated input should create red-spark feedback."), ObjectiveActor->GetAdvancedInteractionFeedbackText().ToString().Contains(TEXT("红色火花")));
+
+	PlayerController->RefreshDay1HUDStateForTests();
+	TestTrue(TEXT("HUD should show the animated advanced interaction panel while the task is active."), HUD->IsAdvancedInteractionPanelVisibleForTests());
+	TestEqual(TEXT("HUD should receive the circuit interaction mode."), HUD->GetAdvancedInteractionModeForTests(), EHorrorCampaignInteractionMode::CircuitWiring);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

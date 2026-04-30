@@ -9,10 +9,10 @@
 UENUM(BlueprintType)
 enum class EDifficultyLevel : uint8
 {
-	Easy,
-	Normal,
-	Hard,
-	Nightmare
+	Easy UMETA(DisplayName = "简单"),
+	Normal UMETA(DisplayName = "普通"),
+	Hard UMETA(DisplayName = "困难"),
+	Nightmare UMETA(DisplayName = "噩梦")
 };
 
 /**

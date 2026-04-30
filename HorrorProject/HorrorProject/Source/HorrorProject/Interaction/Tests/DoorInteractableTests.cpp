@@ -14,7 +14,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableConstructionTest, "HorrorProject.Interaction.Door.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
@@ -29,7 +29,7 @@ bool FDoorInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableOpenCloseTest, "HorrorProject.Interaction.Door.OpenClose", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableOpenCloseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -45,7 +45,7 @@ bool FDoorInteractableOpenCloseTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableLockedTest, "HorrorProject.Interaction.Door.Locked", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableLockedTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -70,7 +70,7 @@ bool FDoorInteractableLockedTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableSaveLoadTest, "HorrorProject.Interaction.Door.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	Door->SetInteractableId(TEXT("TestDoor"));
 
@@ -95,7 +95,7 @@ bool FDoorInteractableSaveLoadTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAnimationTest, "HorrorProject.Interaction.Door.Animation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableAnimationTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -116,7 +116,7 @@ bool FDoorInteractableAnimationTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Door.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -134,7 +134,7 @@ bool FDoorInteractableMultipleInteractionsTest::RunTest(const FString& Parameter
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableNullInstigatorTest, "HorrorProject.Interaction.Door.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 
 	FHitResult Hit;
@@ -147,7 +147,7 @@ bool FDoorInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableAutoCloseTest, "HorrorProject.Interaction.Door.AutoClose", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableAutoCloseTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -165,7 +165,7 @@ bool FDoorInteractableAutoCloseTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableComponentsTest, "HorrorProject.Interaction.Door.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 
 	// Verify components exist
@@ -183,7 +183,7 @@ bool FDoorInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDoorInteractableStateTransitionsTest, "HorrorProject.Interaction.Door.StateTransitions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FDoorInteractableStateTransitionsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ADoorInteractable* Door = World->SpawnActor<ADoorInteractable>();
 
 	// Test state transitions

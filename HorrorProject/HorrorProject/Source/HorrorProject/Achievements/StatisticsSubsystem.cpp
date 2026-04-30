@@ -262,35 +262,35 @@ FString UStatisticsSubsystem::GenerateStatisticsReport() const
 {
 	FString Report;
 
-	Report += TEXT("=== PLAYER STATISTICS REPORT ===\n\n");
+	Report += TEXT("=== 玩家统计报告 ===\n\n");
 
 	// Play Time
 	const float Hours = TotalPlayTime / HorrorStatisticsSave::SecondsPerHour;
-	Report += FString::Printf(TEXT("Total Play Time: %.2f hours\n"), Hours);
+	Report += FString::Printf(TEXT("总游玩时间：%.2f 小时\n"), Hours);
 
 	// Exploration
-	Report += TEXT("\n--- EXPLORATION ---\n");
-	Report += FString::Printf(TEXT("Rooms Explored: %d\n"), PlayerStats.RoomsExplored);
-	Report += FString::Printf(TEXT("Distance Traveled: %.2f meters\n"), PlayerStats.DistanceTraveled / HorrorStatisticsSave::CentimetersPerMeter);
-	Report += FString::Printf(TEXT("Secrets Found: %d\n"), PlayerStats.SecretsFound);
+	Report += TEXT("\n--- 探索 ---\n");
+	Report += FString::Printf(TEXT("已探索房间：%d\n"), PlayerStats.RoomsExplored);
+	Report += FString::Printf(TEXT("移动距离：%.2f 米\n"), PlayerStats.DistanceTraveled / HorrorStatisticsSave::CentimetersPerMeter);
+	Report += FString::Printf(TEXT("发现秘密：%d\n"), PlayerStats.SecretsFound);
 
 	// Collection
-	Report += TEXT("\n--- COLLECTION ---\n");
-	Report += FString::Printf(TEXT("Evidence Collected: %d\n"), PlayerStats.EvidenceCollected);
-	Report += FString::Printf(TEXT("Documents Read: %d\n"), PlayerStats.DocumentsRead);
+	Report += TEXT("\n--- 收集 ---\n");
+	Report += FString::Printf(TEXT("已收集证据：%d\n"), PlayerStats.EvidenceCollected);
+	Report += FString::Printf(TEXT("已阅读文件：%d\n"), PlayerStats.DocumentsRead);
 
 	// Survival
-	Report += TEXT("\n--- SURVIVAL ---\n");
-	Report += FString::Printf(TEXT("Ghost Encounters: %d\n"), PlayerStats.GhostEncounters);
-	Report += FString::Printf(TEXT("Deaths: %d\n"), PlayerStats.Deaths);
-	Report += FString::Printf(TEXT("Time in Darkness: %.2f seconds\n"), PlayerStats.TimeInDarkness);
+	Report += TEXT("\n--- 生存 ---\n");
+	Report += FString::Printf(TEXT("异常遭遇：%d\n"), PlayerStats.GhostEncounters);
+	Report += FString::Printf(TEXT("死亡次数：%d\n"), PlayerStats.Deaths);
+	Report += FString::Printf(TEXT("黑暗中停留时间：%.2f 秒\n"), PlayerStats.TimeInDarkness);
 
 	// Custom Statistics
-	Report += TEXT("\n--- OTHER STATISTICS ---\n");
-	Report += FString::Printf(TEXT("Doors Opened: %.0f\n"), GetStatistic(FName("DoorsOpened")));
-	Report += FString::Printf(TEXT("Items Used: %.0f\n"), GetStatistic(FName("ItemsUsed")));
-	Report += FString::Printf(TEXT("Sanity Lost: %.0f\n"), GetStatistic(FName("SanityLost")));
-	Report += FString::Printf(TEXT("Jump Scares: %.0f\n"), GetStatistic(FName("JumpScares")));
+	Report += TEXT("\n--- 其他统计 ---\n");
+	Report += FString::Printf(TEXT("已打开门：%.0f\n"), GetStatistic(FName("DoorsOpened")));
+	Report += FString::Printf(TEXT("已使用物品：%.0f\n"), GetStatistic(FName("ItemsUsed")));
+	Report += FString::Printf(TEXT("理智损失：%.0f\n"), GetStatistic(FName("SanityLost")));
+	Report += FString::Printf(TEXT("惊吓次数：%.0f\n"), GetStatistic(FName("JumpScares")));
 
 	Report += TEXT("\n================================\n");
 

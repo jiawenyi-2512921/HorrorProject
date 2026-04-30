@@ -24,6 +24,8 @@ Build/Packages/
 *.log
 *.tmp
 *.bak
+__pycache__/
+*.py[cod]
 
 # Large third-party/sample content is managed outside Git by default.
 # Keep only the project-owned/lightweight runtime content in source control.
@@ -35,10 +37,18 @@ Content/*
 !Content/Bodycam_VHS_Effect/**
 !Content/Horror/
 !Content/Input/
+!Content/Movies/
+!Content/Movies/**
 !Content/DeepWaterStation/
 !Content/DeepWaterStation/**
+!Content/Fantastic_Dungeon_Pack/
+!Content/Fantastic_Dungeon_Pack/**
+!Content/ForestOfSpikes/
+!Content/ForestOfSpikes/**
 !Content/Localization/
 !Content/Localization/**
+!Content/Scrapopolis/
+!Content/Scrapopolis/**
 !Content/SoundsOfHorror/
 !Content/SoundsOfHorror/**
 !Content/Stone_Golem/

@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -46,6 +46,85 @@ struct HORRORPROJECT_API FHorrorFoundFootageProgressSnapshot
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	bool bExitUnlocked = false;
+};
+
+UENUM(BlueprintType)
+enum class EHorrorObjectiveTrackerStage : uint8
+{
+	RecoverBodycam UMETA(DisplayName="取回随身摄像机"),
+	ReadFirstNote UMETA(DisplayName="阅读第一份备忘录"),
+	FrameFirstAnomaly UMETA(DisplayName="对准第一个异常"),
+	RecordFirstAnomaly UMETA(DisplayName="记录第一个异常"),
+	ReviewArchive UMETA(DisplayName="复查档案"),
+	Escape UMETA(DisplayName="撤离"),
+	Day1Complete UMETA(DisplayName="第一天完成"),
+	CampaignObjective UMETA(DisplayName="战役目标")
+};
+
+USTRUCT(BlueprintType)
+struct HORRORPROJECT_API FHorrorObjectiveChecklistItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorObjectiveTrackerStage Stage = EHorrorObjectiveTrackerStage::RecoverBodycam;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText Label;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bComplete = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bActive = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bRequiresRecording = false;
+};
+
+USTRUCT(BlueprintType)
+struct HORRORPROJECT_API FHorrorObjectiveTrackerSnapshot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorObjectiveTrackerStage Stage = EHorrorObjectiveTrackerStage::RecoverBodycam;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText Title;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText PrimaryInstruction;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText SecondaryInstruction;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText ProgressLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	TArray<FHorrorObjectiveChecklistItem> ChecklistItems;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	int32 CompletedMilestoneCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	int32 RequiredMilestoneCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float ProgressFraction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bRequiresRecording = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bUrgent = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bExitUnlocked = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bComplete = false;
 };
 
 struct HORRORPROJECT_API FHorrorFoundFootageSaveState

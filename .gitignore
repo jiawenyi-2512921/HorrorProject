@@ -11,6 +11,8 @@ brainstorm-start.out
 *.log
 *.tmp
 *.bak
+__pycache__/
+*.py[cod]
 
 # Unreal generated state
 HorrorProject/HorrorProject/.vs/

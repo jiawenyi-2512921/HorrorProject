@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Player/Components/FearComponent.h"
+#include "Game/HorrorDirectorSubsystem.h"
+#include "Engine/World.h"
 
 UFearComponent::UFearComponent()
 {
@@ -57,6 +59,16 @@ bool UFearComponent::AddFear(float Amount, FName SourceId)
 		OnFearValueChanged.Broadcast(FearValue, GetFearPercent());
 		UpdateFearLevel();
 		StartFearDecayTimer();
+
+		// Notify HorrorDirectorSubsystem about fear-induced tension
+		if (UWorld* World = GetWorld())
+		{
+			if (UHorrorDirectorSubsystem* Director = World->GetSubsystem<UHorrorDirectorSubsystem>())
+			{
+				Director->AddTension(Amount * 0.005f, SourceId);
+			}
+		}
+
 		return true;
 	}
 

@@ -14,7 +14,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConstructionTest, "HorrorProject.Interaction.Switch.Construction", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableConstructionTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	TestNotNull("World should be created", World);
 
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
@@ -28,7 +28,7 @@ bool FSwitchInteractableConstructionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableToggleTest, "HorrorProject.Interaction.Switch.Toggle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableToggleTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -47,7 +47,7 @@ bool FSwitchInteractableToggleTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSetStateTest, "HorrorProject.Interaction.Switch.SetState", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableSetStateTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 
 	Switch->SetSwitchState(true);
@@ -62,7 +62,7 @@ bool FSwitchInteractableSetStateTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableOneTimeTest, "HorrorProject.Interaction.Switch.OneTime", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableOneTimeTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 
@@ -77,7 +77,7 @@ bool FSwitchInteractableOneTimeTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableSaveLoadTest, "HorrorProject.Interaction.Switch.SaveLoad", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableSaveLoadTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 	Switch->SetInteractableId(TEXT("TestSwitch"));
 
@@ -101,7 +101,7 @@ bool FSwitchInteractableSaveLoadTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableComponentsTest, "HorrorProject.Interaction.Switch.Components", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableComponentsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -118,7 +118,7 @@ bool FSwitchInteractableComponentsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableEventTest, "HorrorProject.Interaction.Switch.Event", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableEventTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 
 	bool bEventFired = false;
@@ -140,7 +140,7 @@ bool FSwitchInteractableEventTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableConnectedActorsTest, "HorrorProject.Interaction.Switch.ConnectedActors", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableConnectedActorsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 	AActor* ConnectedActor = World->SpawnActor<AActor>();
 
@@ -156,7 +156,7 @@ bool FSwitchInteractableConnectedActorsTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableNullInstigatorTest, "HorrorProject.Interaction.Switch.NullInstigator", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 
 	FHitResult Hit;
@@ -168,7 +168,7 @@ bool FSwitchInteractableNullInstigatorTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSwitchInteractableMultipleInteractionsTest, "HorrorProject.Interaction.Switch.MultipleInteractions", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSwitchInteractableMultipleInteractionsTest::RunTest(const FString& Parameters)
 {
-	UWorld* World = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
 	ASwitchInteractable* Switch = World->SpawnActor<ASwitchInteractable>();
 	AActor* Player = World->SpawnActor<AActor>();
 

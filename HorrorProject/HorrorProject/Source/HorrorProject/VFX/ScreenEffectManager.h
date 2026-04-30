@@ -13,12 +13,12 @@ class APlayerCameraManager;
 UENUM(BlueprintType)
 enum class ECameraShakeType : uint8
 {
-	Impact UMETA(DisplayName = "Impact Shake"),
-	Explosion UMETA(DisplayName = "Explosion Shake"),
-	Pressure UMETA(DisplayName = "Pressure Shake"),
-	Fear UMETA(DisplayName = "Fear Shake"),
-	Drowning UMETA(DisplayName = "Drowning Shake"),
-	Death UMETA(DisplayName = "Death Shake")
+	Impact UMETA(DisplayName = "冲击震动"),
+	Explosion UMETA(DisplayName = "爆炸震动"),
+	Pressure UMETA(DisplayName = "压力震动"),
+	Fear UMETA(DisplayName = "恐惧震动"),
+	Drowning UMETA(DisplayName = "溺水震动"),
+	Death UMETA(DisplayName = "死亡震动")
 };
 
 USTRUCT(BlueprintType)

@@ -19,6 +19,10 @@ class UFlashlightComponent;
 class UFearComponent;
 class UNoiseGeneratorComponent;
 class UEvidenceCollectionComponent;
+class USanityComponent;
+class UEnvironmentalStoryComponent;
+class UCameraRecordingComponent;
+class UCameraPhotoComponent;
 
 /**
  * Implements actor-level Horror Player Character behavior for the Player module.
@@ -36,10 +40,14 @@ public:
 	UVHSEffectComponent* GetVHSEffectComponent() const { return VHSEffect; }
 	UNoteRecorderComponent* GetNoteRecorderComponent() const { return NoteRecorder; }
 	UQuantumCameraComponent* GetQuantumCameraComponent() const { return QuantumCamera; }
+	UCameraRecordingComponent* GetCameraRecordingComponent() const { return CameraRecording; }
+	UCameraPhotoComponent* GetCameraPhotoComponent() const { return CameraPhoto; }
 	UFlashlightComponent* GetFlashlightComponent() const { return Flashlight; }
 	UFearComponent* GetFearComponent() const { return Fear; }
 	UNoiseGeneratorComponent* GetNoiseGeneratorComponent() const { return NoiseGenerator; }
 	UEvidenceCollectionComponent* GetEvidenceCollectionComponent() const { return EvidenceCollection; }
+	USanityComponent* GetSanityComponent() const { return Sanity; }
+	UEnvironmentalStoryComponent* GetEnvironmentalStoryComponent() const { return EnvironmentalStory; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
@@ -88,6 +96,16 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoToggleFlashlight();
 
+#if WITH_DEV_AUTOMATION_TESTS
+public:
+	void StartRecordForTests() { DoStartRecord(); }
+	void StopRecordForTests() { DoStopRecord(); }
+	void TakePhotoForTests() { DoTakePhoto(); }
+	void StartRewindForTests() { DoStartRewind(); }
+	void StopRewindForTests() { DoStopRewind(); }
+protected:
+#endif
+
 	UFUNCTION(BlueprintImplementableEvent, Category="Input", meta=(DisplayName="打开档案"))
 	void BP_OpenArchive();
 
@@ -135,6 +153,12 @@ private:
 	TObjectPtr<UQuantumCameraComponent> QuantumCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UCameraRecordingComponent> CameraRecording;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UCameraPhotoComponent> CameraPhoto;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UFlashlightComponent> Flashlight;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
@@ -145,4 +169,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UEvidenceCollectionComponent> EvidenceCollection;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<USanityComponent> Sanity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UEnvironmentalStoryComponent> EnvironmentalStory;
 };

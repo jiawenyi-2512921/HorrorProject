@@ -10,7 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementSystemTest, "HorrorProject.Achievem
 bool FAchievementSystemTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));
@@ -122,7 +122,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAchievementEventsTest, "HorrorProject.Achievem
 bool FAchievementEventsTest::RunTest(const FString& Parameters)
 {
 	// Create test world
-	UWorld* TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+	UWorld* TestWorld = UWorld::CreateWorld(EWorldType::Game, false);
 	if (!TestWorld)
 	{
 		AddError(TEXT("Failed to create test world"));

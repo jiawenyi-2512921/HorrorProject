@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright HorrorProject. All Rights Reserved.
 
 #pragma once
 
@@ -8,18 +8,18 @@
 
 class UHorrorSaveGame;
 
-USTRUCT()
 struct FSaveGameMigrationStep
 {
-	GENERATED_BODY()
-
 	int32 FromVersion = 0;
 	int32 ToVersion = 0;
 	TFunction<bool(UHorrorSaveGame*)> MigrationFunction;
 };
 
+DECLARE_LOG_CATEGORY_EXTERN(LogSaveMigration, Log, All);
+
 /**
- * Defines Save Game Migration behavior for the SaveGame module.
+ * Save game version migration system.
+ * Manages sequential migration steps from older save formats to the current version.
  */
 UCLASS()
 class HORRORPROJECT_API USaveGameMigration : public UObject
@@ -27,7 +27,7 @@ class HORRORPROJECT_API USaveGameMigration : public UObject
 	GENERATED_BODY()
 
 public:
-	static constexpr int32 CurrentSaveVersion = 1;
+	static constexpr int32 CurrentSaveVersion = 2;
 
 	UFUNCTION(BlueprintCallable, Category="SaveGame")
 	bool MigrateSaveGame(UHorrorSaveGame* SaveGame);

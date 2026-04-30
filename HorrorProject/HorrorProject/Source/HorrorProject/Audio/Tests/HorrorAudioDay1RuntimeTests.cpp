@@ -7,6 +7,18 @@
 #include "Game/HorrorFoundFootageContract.h"
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
+#include "UObject/UnrealType.h"
+
+namespace
+{
+	float ReadReflectedFloatProperty(const UObject* Object, FName PropertyName)
+	{
+		const FFloatProperty* FloatProperty = Object
+			? FindFProperty<FFloatProperty>(Object->GetClass(), PropertyName)
+			: nullptr;
+		return FloatProperty ? FloatProperty->GetPropertyValue_InContainer(Object) : 0.0f;
+	}
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorAudioDay1DefaultMappingsTest,
@@ -43,14 +55,32 @@ bool FHorrorAudioDay1DefaultMappingsTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Encounter reveal should have a default sound mapping."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Revealed")), false)));
 	TestTrue(TEXT("Golem full chase should have a default pressure feedback mapping."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Golem.FullChase")), false)));
 	TestTrue(TEXT("Encounter resolution should have a default pressure-release feedback mapping."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Resolved")), false)));
+	TestTrue(TEXT("Campaign objective completion should have default feedback audio."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ObjectiveCompleted")), false)));
+	TestTrue(TEXT("Campaign chapter completion should have default transition audio."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ChapterCompleted")), false)));
+	TestTrue(TEXT("Campaign ambush starts should have default pressure audio."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.AmbushStarted")), false)));
+	TestTrue(TEXT("Campaign boss weak points should have default impact audio."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossWeakPoint")), false)));
+	TestTrue(TEXT("Campaign boss attacks should have default scare audio."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossAttack")), false)));
+	TestTrue(TEXT("The user-provided default horror ambience should be configured as its own layer."), AudioSubsystem->HasDefaultHorrorAmbienceForTests());
+	TestTrue(TEXT("Default horror ambience should use the imported MainTitles asset."), AudioSubsystem->GetDefaultHorrorAmbienceSoundPathForTests().Contains(TEXT("/Game/Horror/Audio/MainTitles")));
+	const float DefaultAmbienceBaseVolume = ReadReflectedFloatProperty(AudioSubsystem, TEXT("DefaultHorrorAmbienceVolume"));
+	const float DefaultAmbienceEffectiveVolume = DefaultAmbienceBaseVolume * AudioSubsystem->GetCategoryVolume(EHorrorAudioCategory::Music);
+	TestTrue(TEXT("Default horror ambience should start at a clearly audible music volume."), DefaultAmbienceEffectiveVolume >= 0.45f);
 	TestEqual(TEXT("Bodycam acquisition should resolve as interaction audio."), AudioSubsystem->GetEventMappingCategoryForTests(HorrorFoundFootageTags::BodycamAcquiredEvent()), EHorrorAudioCategory::Interaction);
 	TestEqual(TEXT("First anomaly should resolve as anomaly audio."), AudioSubsystem->GetEventMappingCategoryForTests(HorrorFoundFootageTags::FirstAnomalyRecordedEvent()), EHorrorAudioCategory::Anomaly);
 	TestEqual(TEXT("Encounter reveal should resolve as escape audio."), AudioSubsystem->GetEventMappingCategoryForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Revealed")), false)), EHorrorAudioCategory::Escape);
 	TestEqual(TEXT("Golem full chase should resolve as escape audio."), AudioSubsystem->GetEventMappingCategoryForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Golem.FullChase")), false)), EHorrorAudioCategory::Escape);
+	TestEqual(TEXT("Campaign ambush starts should resolve as escape audio."), AudioSubsystem->GetEventMappingCategoryForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.AmbushStarted")), false)), EHorrorAudioCategory::Escape);
+	TestEqual(TEXT("Campaign boss attacks should resolve as escape audio."), AudioSubsystem->GetEventMappingCategoryForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossAttack")), false)), EHorrorAudioCategory::Escape);
 	TestEqual(TEXT("Door opened should resolve as site audio."), AudioSubsystem->GetEventMappingCategoryForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Interaction.Door.Opened")), false)), EHorrorAudioCategory::Site);
 	TestEqual(TEXT("Day1 completion should resolve as escape audio."), AudioSubsystem->GetEventMappingCategoryForTests(HorrorDay1Tags::Day1CompletedEvent()), EHorrorAudioCategory::Escape);
 	TestEqual(TEXT("Player failure should resolve as anomaly audio."), AudioSubsystem->GetEventMappingCategoryForTests(HorrorDay1Tags::PlayerFailureEvent()), EHorrorAudioCategory::Anomaly);
-	TestTrue(TEXT("Default Day1 audio should register all critical gameplay feedback mappings."), AudioSubsystem->GetEventMappingCountForTests() >= 12);
+	TestTrue(TEXT("Default Day1 audio should register all critical gameplay feedback mappings."), AudioSubsystem->GetEventMappingCountForTests() >= 17);
+
+	const int32 EventMappingCountBeforeAmbience = AudioSubsystem->GetEventMappingCountForTests();
+	TestTrue(TEXT("Default horror ambience should start without replacing event sounds."), AudioSubsystem->StartDefaultHorrorAmbience());
+	TestEqual(TEXT("Default horror ambience should own the current ambient zone."), AudioSubsystem->GetCurrentZoneId(), AudioSubsystem->GetDefaultHorrorAmbienceZoneIdForTests());
+	TestEqual(TEXT("Starting ambience should preserve all original trigger-event mappings."), AudioSubsystem->GetEventMappingCountForTests(), EventMappingCountBeforeAmbience);
+	TestTrue(TEXT("Objective completion trigger audio should remain available after ambience starts."), AudioSubsystem->HasEventMappingForTests(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ObjectiveCompleted")), false)));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -99,6 +129,10 @@ bool FHorrorAudioDay1StageTransitionsTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Encounter reveal tag should be accepted."), AudioSubsystem->HandleDay1Event(EncounterRevealedTag, TEXT("Encounter.GolemReveal01")));
 	TestEqual(TEXT("Encounter reveal should enter chase audio."), AudioSubsystem->GetDay1AudioStage(), EHorrorDay1AudioStage::Chase);
 	TestEqual(TEXT("Chase stage should map to escape audio."), AudioSubsystem->GetDay1AudioStageCategory(), EHorrorAudioCategory::Escape);
+
+	const FGameplayTag CampaignAmbushStartedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.AmbushStarted")), false);
+	TestTrue(TEXT("Campaign ambush start should be accepted."), AudioSubsystem->HandleDay1Event(CampaignAmbushStartedTag, TEXT("Forest.HoldSpikeCircle")));
+	TestEqual(TEXT("Campaign ambush should enter chase audio."), AudioSubsystem->GetDay1AudioStage(), EHorrorDay1AudioStage::Chase);
 
 	const FGameplayTag EncounterResolvedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Encounter.Resolved")), false);
 	TestTrue(TEXT("Encounter resolved tag should be accepted."), AudioSubsystem->HandleDay1Event(EncounterResolvedTag, TEXT("Encounter.GolemReveal01")));
