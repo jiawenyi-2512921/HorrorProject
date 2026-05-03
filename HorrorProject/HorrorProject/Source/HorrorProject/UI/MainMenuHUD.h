@@ -27,7 +27,7 @@ protected:
 	TObjectPtr<UTexture2D> BackgroundTexture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|MainMenu")
-	FName FirstChapterMapName = TEXT("LVL_Showcase_01");
+	FName FirstChapterMapName = TEXT("/Game/DeepWaterStation/Maps/DemoMap_VerticalSlice_Day1");
 
 private:
 	struct FMenuButton
