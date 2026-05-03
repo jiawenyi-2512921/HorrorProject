@@ -36,8 +36,10 @@ void UMainMenuWidget::OnNewGameClicked()
 		}
 	}
 
-	// 加载第一章
-	UGameplayStatics::OpenLevel(this, FName(FirstChapterMapName));
+	// 加载第一章 - 使用绝对路径确保正确加载
+	const FString FirstChapterPath = FirstChapterMapName.ToString();
+	UE_LOG(LogHorrorProject, Log, TEXT("主菜单：正在加载第一章地图：%s"), *FirstChapterPath);
+	UGameplayStatics::OpenLevel(this, FName(*FirstChapterPath), true);
 }
 
 void UMainMenuWidget::OnContinueGameClicked()
