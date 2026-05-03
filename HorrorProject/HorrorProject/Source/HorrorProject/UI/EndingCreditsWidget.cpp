@@ -54,6 +54,17 @@ void UEndingCreditsWidget::StartCreditsRoll()
 	// 计算总高度
 	TArray<FString> Lines = GetCreditsLines();
 	TotalCreditsHeight = Lines.Num() * 40.0f; // 每行40像素
+
+	// 播放结局音乐
+	if (EndingMusic)
+	{
+		UGameplayStatics::PlaySound2D(this, EndingMusic);
+		UE_LOG(LogTemp, Log, TEXT("EndingCredits: 开始播放结局音乐"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EndingCredits: 未设置结局音乐"));
+	}
 }
 
 TArray<FString> UEndingCreditsWidget::GetCreditsLines() const

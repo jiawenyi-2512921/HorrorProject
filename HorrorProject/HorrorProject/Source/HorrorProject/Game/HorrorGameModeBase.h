@@ -328,6 +328,7 @@ private:
 	bool TryRecoverFromCampaignFailure(FName FailureCause);
 	void QueueCampaignAutoTravelIfNeeded();
 	void ExecuteCampaignAutoTravel();
+	void TriggerFinalEndingSequence();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Bootstrap", meta=(AllowPrivateAccess="true"))
 	bool bAutoGrantBodycamOnPlayerBeginPlay = false;
@@ -434,6 +435,7 @@ private:
 	TArray<AHorrorCampaignObjectiveActor*> RuntimeCampaignObjectiveActorViews;
 	FHorrorCampaignProgress CampaignProgress;
 	FTimerHandle CampaignAutoTravelTimerHandle;
+	FTimerHandle FinalEndingTimerHandle;
 	bool bCampaignAutoTravelQueued = false;
 	FName ActiveCampaignAmbushSourceId = NAME_None;
 	FName CampaignNavigationFocusObjectiveId = NAME_None;

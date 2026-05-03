@@ -13,6 +13,8 @@
 #include "Game/HorrorEventBusSubsystem.h"
 #include "Game/HorrorMapChain.h"
 #include "Game/HorrorMapChainExit.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/EndingCreditsWidget.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/ExponentialHeightFog.h"
@@ -27,6 +29,7 @@
 #include "Components/LocalLightComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/HUD.h"
 #include "HorrorProject.h"
 #include "Kismet/GameplayStatics.h"
 #include "LevelSequenceActor.h"
@@ -574,6 +577,11 @@ AHorrorGameModeBase::AHorrorGameModeBase()
 void AHorrorGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	CachedMapPackageName = FHorrorMapChain::NormalizeMapPackageName(MapName);
+
+	PlayerControllerClass = AHorrorPlayerController::StaticClass();
+	DefaultPawnClass = AHorrorPlayerCharacter::StaticClass();
+	HUDClass = ADay1SliceHUD::StaticClass();
+
 	Super::InitGame(MapName, Options, ErrorMessage);
 }
 
@@ -2167,7 +2175,7 @@ bool AHorrorGameModeBase::TryCompleteCampaignObjective(FName ChapterId, FName Ob
 			if (CampaignProgress.IsChapterComplete())
 			{
 				Metadata.ObjectiveHint = Chapter && Chapter->bIsFinalChapter
-					? NSLOCTEXT("HorrorGameMode", "CampaignObjectiveFinalHint", "终章已完成，前往结局出口。")
+					? NSLOCTEXT("HorrorGameMode", "CampaignObjectiveFinalHint", "黑盒回放即将开始……")
 					: NSLOCTEXT("HorrorGameMode", "CampaignObjectiveChapterExitHint", "章节目标已完成，出口已开启。");
 			}
 			else if (NextObjectiveAfterCompletion)
@@ -2242,7 +2250,7 @@ bool AHorrorGameModeBase::TryCompleteCampaignObjective(FName ChapterId, FName Ob
 	{
 		ShowCampaignMessage(
 			Chapter && Chapter->bIsFinalChapter
-				? NSLOCTEXT("HorrorGameMode", "FinalChapterComplete", "终章完成，黑盒出口已开启。")
+				? NSLOCTEXT("HorrorGameMode", "FinalChapterComplete", "真相归档，黑盒关闭。")
 				: NSLOCTEXT("HorrorGameMode", "ChapterComplete", "章节完成，出口已开启。"),
 			FLinearColor(0.45f, 0.9f, 1.0f),
 			4.0f);
@@ -2257,7 +2265,22 @@ bool AHorrorGameModeBase::TryCompleteCampaignObjective(FName ChapterId, FName Ob
 					InstigatorActor ? InstigatorActor : this);
 			}
 		}
-		QueueCampaignAutoTravelIfNeeded();
+		if (Chapter && Chapter->bIsFinalChapter)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				World->GetTimerManager().SetTimer(
+					FinalEndingTimerHandle,
+					this,
+					&AHorrorGameModeBase::TriggerFinalEndingSequence,
+					3.0f,
+					false);
+			}
+		}
+		else
+		{
+			QueueCampaignAutoTravelIfNeeded();
+		}
 	}
 	else
 	{
@@ -4396,6 +4419,52 @@ void AHorrorGameModeBase::ExecuteCampaignAutoTravel()
 
 	const FString TravelOptions = FHorrorMapChain::BuildTravelOptionsForConfiguredGameMode();
 	UGameplayStatics::OpenLevel(World, FName(*NextMapPackageName), true, TravelOptions);
+}
+
+void AHorrorGameModeBase::TriggerFinalEndingSequence()
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	if (AHUD* HUD = PlayerController->GetHUD())
+	{
+		HUD->bShowHUD = false;
+	}
+
+	UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_EndingCredits.WBP_EndingCredits_C"));
+	if (WidgetClass)
+	{
+		if (UUserWidget* CreditsWidget = CreateWidget<UUserWidget>(PlayerController, WidgetClass))
+		{
+			CreditsWidget->AddToViewport(100);
+			if (UFunction* StartFunc = CreditsWidget->FindFunction(FName("StartCreditsRoll")))
+			{
+				CreditsWidget->ProcessEvent(StartFunc, nullptr);
+			}
+		}
+	}
+	else
+	{
+		if (UEndingCreditsWidget* CreditsWidget = CreateWidget<UEndingCreditsWidget>(PlayerController, UEndingCreditsWidget::StaticClass()))
+		{
+			CreditsWidget->AddToViewport(100);
+			CreditsWidget->StartCreditsRoll();
+		}
+	}
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	PlayerController->SetInputMode(InputMode);
+	PlayerController->bShowMouseCursor = false;
 }
 
 void AHorrorGameModeBase::SanitizeImportedMapChainRuntime()
