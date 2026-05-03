@@ -20,6 +20,7 @@ namespace HorrorGolemDefaults
 	inline constexpr float ChaseTriggeredStartDistanceCm = 2000.0f;
 	inline constexpr float ChaseTriggeredSpeedMultiplier = 0.7f;
 	inline constexpr float ChaseTriggeredBaseSpeedCmPerSecond = 220.0f;
+	inline constexpr float ChaseTriggeredMinReadableSeconds = 1.25f;
 	inline constexpr float FullChaseMinDistanceCm = 1000.0f;
 	inline constexpr float FullChaseMaxDistanceCm = 2500.0f;
 	inline constexpr float FullChaseSpeedCmPerSecond = 260.0f;
@@ -109,6 +110,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase3", meta=(ClampMin="0.0", Units="cm/s"))
 	float ChaseTriggered_BaseSpeed = HorrorGolemDefaults::ChaseTriggeredBaseSpeedCmPerSecond;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase3", meta=(ClampMin="0.0", Units="s"))
+	float ChaseTriggered_MinReadableSeconds = HorrorGolemDefaults::ChaseTriggeredMinReadableSeconds;
+
 	// Phase 4: Full Chase (10-25m, 100% speed + destruction)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Golem|Phase4", meta=(ClampMin="0.0", Units="cm"))
 	float FullChase_MinDistance = HorrorGolemDefaults::FullChaseMinDistanceCm;
@@ -177,6 +181,8 @@ private:
 	FVector LastPatrolLocation = FVector::ZeroVector;
 	bool bPatrolPaused = false;
 	float PatrolPauseTimer = 0.0f;
+	FVector LastRequestedMoveDestination = FVector::ZeroVector;
+	float LastMoveRequestWorldSeconds = -100000.0f;
 
 	void UpdateStateMachine(float DeltaTime);
 	void UpdateDistantSightingState(float DistanceToTarget, float DeltaTime);

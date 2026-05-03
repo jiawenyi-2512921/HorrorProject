@@ -25,6 +25,11 @@ public:
 	FString GetCurrentMapPackageNameForTests() const { return CurrentMapPackageName; }
 	FString GetNextMapPackageNameForTests() const { return NextMapPackageName; }
 	bool IsFinalExitForTests() const { return bFinalExit; }
+#if WITH_DEV_AUTOMATION_TESTS
+	bool CanUseExitForTests(AActor* InstigatorActor) const { return CanUseExit(InstigatorActor); }
+	FText GetLabelTextForTests() const;
+	FText GetFinalEndingMessageForTests() const;
+#endif
 
 protected:
 	virtual void BeginPlay() override;

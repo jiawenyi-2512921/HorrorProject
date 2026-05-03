@@ -10,14 +10,15 @@ namespace
 	{
 		return Metadata.TrailerBeatId.IsNone()
 			&& Metadata.ObjectiveHint.IsEmpty()
-			&& Metadata.DebugLabel.IsEmpty();
-	}
-
-	// Performance optimization: Use hash-based key instead of string concatenation
-	FName MakeEventSourceMetadataKey(FGameplayTag EventTag, FName SourceId)
-	{
-		const uint32 Hash = HashCombine(GetTypeHash(EventTag), GetTypeHash(SourceId));
-		return FName(*FString::Printf(TEXT("EventKey_%u"), Hash));
+			&& Metadata.DebugLabel.IsEmpty()
+			&& Metadata.FeedbackSeverity == EHorrorObjectiveFeedbackSeverity::Info
+			&& !Metadata.bRetryable
+			&& FMath::IsNearlyEqual(Metadata.DisplaySeconds, 5.0f)
+			&& Metadata.FailureCause.IsNone()
+			&& Metadata.RecoveryAction.IsNone()
+			&& Metadata.AdvancedOutcomeKind == EHorrorAdvancedInteractionOutcomeKind::Ignored
+			&& Metadata.AdvancedFaultId.IsNone()
+			&& Metadata.AttemptIndex <= 0;
 	}
 }
 
@@ -35,34 +36,39 @@ bool UHorrorEventBusSubsystem::Publish(FGameplayTag EventTag, FName SourceId, FG
 	Message.SourceId = SourceId;
 	Message.SourceObject = SourceObject;
 	Message.WorldSeconds = World->GetTimeSeconds();
-	const FName EventSourceMetadataKey = MakeEventSourceMetadataKey(EventTag, SourceId);
+	const FHorrorEventSourceMetadataKey EventSourceMetadataKey(EventTag, SourceId);
 	if (const FHorrorObjectiveMessageMetadata* EventMetadata = ObjectiveMetadataByEventAndSourceId.Find(EventSourceMetadataKey))
 	{
 		Message.TrailerBeatId = EventMetadata->TrailerBeatId;
 		Message.ObjectiveHint = EventMetadata->ObjectiveHint;
 		Message.DebugLabel = EventMetadata->DebugLabel;
+		Message.FeedbackSeverity = EventMetadata->FeedbackSeverity;
+		Message.bRetryable = EventMetadata->bRetryable;
+		Message.DisplaySeconds = FMath::Max(0.1f, EventMetadata->DisplaySeconds);
+		Message.FailureCause = EventMetadata->FailureCause;
+		Message.RecoveryAction = EventMetadata->RecoveryAction;
+		Message.AdvancedOutcomeKind = EventMetadata->AdvancedOutcomeKind;
+		Message.AdvancedFaultId = EventMetadata->AdvancedFaultId;
+		Message.AttemptIndex = FMath::Max(0, EventMetadata->AttemptIndex);
 	}
 	else if (const FHorrorObjectiveMessageMetadata* SourceMetadata = ObjectiveMetadataBySourceId.Find(SourceId))
 	{
 		Message.TrailerBeatId = SourceMetadata->TrailerBeatId;
 		Message.ObjectiveHint = SourceMetadata->ObjectiveHint;
 		Message.DebugLabel = SourceMetadata->DebugLabel;
-	}
-
-	// Ring buffer: overwrite oldest entry when full
-	if (History.Num() == 0)
-	{
-		History.Reserve(HistoryCapacity);
+		Message.FeedbackSeverity = SourceMetadata->FeedbackSeverity;
+		Message.bRetryable = SourceMetadata->bRetryable;
+		Message.DisplaySeconds = FMath::Max(0.1f, SourceMetadata->DisplaySeconds);
+		Message.FailureCause = SourceMetadata->FailureCause;
+		Message.RecoveryAction = SourceMetadata->RecoveryAction;
+		Message.AdvancedOutcomeKind = SourceMetadata->AdvancedOutcomeKind;
+		Message.AdvancedFaultId = SourceMetadata->AdvancedFaultId;
+		Message.AttemptIndex = FMath::Max(0, SourceMetadata->AttemptIndex);
 	}
 
 	FHorrorEventMessage HistoryMessage = Message;
 	HistoryMessage.SourceObject = nullptr; // Prevent GC issues from holding UObject refs in history
-
-	if (History.Num() >= HistoryCapacity)
-	{
-		History.RemoveAt(0, 1, EAllowShrinking::No);
-	}
-	History.Add(MoveTemp(HistoryMessage));
+	AppendHistoryMessage(MoveTemp(HistoryMessage));
 	OnEventPublished.Broadcast(Message);
 	OnEventPublishedNative.Broadcast(Message);
 	return true;
@@ -75,7 +81,8 @@ FHorrorEventPublishedNativeDelegate& UHorrorEventBusSubsystem::GetOnEventPublish
 
 const TArray<FHorrorEventMessage>& UHorrorEventBusSubsystem::GetHistory() const
 {
-	return History;
+	RebuildOrderedHistoryView();
+	return OrderedHistoryView;
 }
 
 void UHorrorEventBusSubsystem::RegisterObjectiveMetadata(FName SourceId, const FHorrorObjectiveMessageMetadata& Metadata)
@@ -107,7 +114,7 @@ void UHorrorEventBusSubsystem::RegisterObjectiveMetadata(FGameplayTag EventTag, 
 		return;
 	}
 
-	const FName EventSourceMetadataKey = MakeEventSourceMetadataKey(EventTag, SourceId);
+	const FHorrorEventSourceMetadataKey EventSourceMetadataKey(EventTag, SourceId);
 	ObjectiveMetadataByEventAndSourceId.Add(EventSourceMetadataKey, Metadata);
 }
 
@@ -128,7 +135,7 @@ void UHorrorEventBusSubsystem::UnregisterObjectiveMetadata(FGameplayTag EventTag
 		return;
 	}
 
-	const FName EventSourceMetadataKey = MakeEventSourceMetadataKey(EventTag, SourceId);
+	const FHorrorEventSourceMetadataKey EventSourceMetadataKey(EventTag, SourceId);
 	ObjectiveMetadataByEventAndSourceId.Remove(EventSourceMetadataKey);
 }
 
@@ -150,7 +157,7 @@ bool UHorrorEventBusSubsystem::GetObjectiveMetadataForTests(FGameplayTag EventTa
 		return false;
 	}
 
-	const FName EventSourceMetadataKey = MakeEventSourceMetadataKey(EventTag, SourceId);
+	const FHorrorEventSourceMetadataKey EventSourceMetadataKey(EventTag, SourceId);
 	if (const FHorrorObjectiveMessageMetadata* Metadata = ObjectiveMetadataByEventAndSourceId.Find(EventSourceMetadataKey))
 	{
 		OutMetadata = *Metadata;
@@ -162,7 +169,11 @@ bool UHorrorEventBusSubsystem::GetObjectiveMetadataForTests(FGameplayTag EventTa
 
 void UHorrorEventBusSubsystem::ResetForTests()
 {
-	History.Reset();
+	HistoryRing.Reset();
+	OrderedHistoryView.Reset();
+	bOrderedHistoryViewDirty = true;
+	HistoryStartIndex = 0;
+	HistoryCount = 0;
 	ObjectiveMetadataBySourceId.Reset();
 	ObjectiveMetadataByEventAndSourceId.Reset();
 	OnEventPublishedNative.Clear();
@@ -172,10 +183,72 @@ void UHorrorEventBusSubsystem::ResetForTests()
 #if WITH_DEV_AUTOMATION_TESTS
 void UHorrorEventBusSubsystem::SetHistoryCapacityForTests(int32 NewHistoryCapacity)
 {
-	HistoryCapacity = FMath::Max(1, NewHistoryCapacity);
-	if (History.Num() > HistoryCapacity)
+	const int32 ClampedCapacity = FMath::Max(1, NewHistoryCapacity);
+	if (ClampedCapacity == HistoryCapacity)
 	{
-		History.RemoveAt(0, History.Num() - HistoryCapacity, EAllowShrinking::No);
+		return;
 	}
+
+	RebuildOrderedHistoryView();
+	HistoryCapacity = ClampedCapacity;
+	if (OrderedHistoryView.Num() > HistoryCapacity)
+	{
+		OrderedHistoryView.RemoveAt(0, OrderedHistoryView.Num() - HistoryCapacity, EAllowShrinking::No);
+	}
+
+	HistoryRing = OrderedHistoryView;
+	HistoryRing.Reserve(HistoryCapacity);
+	HistoryStartIndex = 0;
+	HistoryCount = HistoryRing.Num();
+	bOrderedHistoryViewDirty = true;
 }
 #endif
+
+void UHorrorEventBusSubsystem::AppendHistoryMessage(FHorrorEventMessage&& Message)
+{
+	EnsureHistoryRingCapacity();
+	if (HistoryRing.Num() < HistoryCapacity)
+	{
+		HistoryRing.Add(MoveTemp(Message));
+		HistoryCount = HistoryRing.Num();
+		bOrderedHistoryViewDirty = true;
+		return;
+	}
+
+	const int32 WriteIndex = HistoryStartIndex;
+	HistoryRing[WriteIndex] = MoveTemp(Message);
+	HistoryStartIndex = (HistoryStartIndex + 1) % HistoryCapacity;
+	HistoryCount = HistoryCapacity;
+	bOrderedHistoryViewDirty = true;
+}
+
+void UHorrorEventBusSubsystem::EnsureHistoryRingCapacity()
+{
+	HistoryCapacity = FMath::Max(1, HistoryCapacity);
+	if (HistoryRing.Max() < HistoryCapacity)
+	{
+		HistoryRing.Reserve(HistoryCapacity);
+	}
+}
+
+void UHorrorEventBusSubsystem::RebuildOrderedHistoryView() const
+{
+	if (!bOrderedHistoryViewDirty)
+	{
+		return;
+	}
+
+	OrderedHistoryView.Reset(HistoryCount);
+	if (HistoryCount <= 0 || HistoryRing.Num() <= 0)
+	{
+		bOrderedHistoryViewDirty = false;
+		return;
+	}
+
+	for (int32 Offset = 0; Offset < HistoryCount; ++Offset)
+	{
+		const int32 SourceIndex = (HistoryStartIndex + Offset) % HistoryRing.Num();
+		OrderedHistoryView.Add(HistoryRing[SourceIndex]);
+	}
+	bOrderedHistoryViewDirty = false;
+}

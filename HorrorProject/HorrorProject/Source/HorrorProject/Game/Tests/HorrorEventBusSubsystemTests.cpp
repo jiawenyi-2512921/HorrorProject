@@ -1,4 +1,4 @@
-#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR && HORRORPROJECT_ENABLE_LEGACY_AUTOMATION_TESTS
+#if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 // Copyright Epic Games, Inc. All Rights Reserved.
 
@@ -57,6 +57,28 @@ namespace
 		}
 
 		return GameMode;
+	}
+
+	int32 CountHistoryEventsByTag(const UHorrorEventBusSubsystem& EventBus, FGameplayTag EventTag)
+	{
+		int32 MatchCount = 0;
+		for (const FHorrorEventMessage& Message : EventBus.GetHistory())
+		{
+			if (Message.EventTag == EventTag)
+			{
+				++MatchCount;
+			}
+		}
+		return MatchCount;
+	}
+
+	const FHorrorEventMessage* FindHistoryEventByTag(const UHorrorEventBusSubsystem& EventBus, FGameplayTag EventTag)
+	{
+		return EventBus.GetHistory().FindByPredicate(
+			[EventTag](const FHorrorEventMessage& Message)
+			{
+				return Message.EventTag == EventTag;
+			});
 	}
 }
 
@@ -119,10 +141,15 @@ bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 	BodycamMetadata.TrailerBeatId = TEXT("Beat.BodycamAcquire");
 	BodycamMetadata.ObjectiveHint = FText::FromString(TEXT("Recover the bodycam."));
 	BodycamMetadata.DebugLabel = FText::FromString(TEXT("Bodycam Pickup"));
+	BodycamMetadata.FeedbackSeverity = EHorrorObjectiveFeedbackSeverity::Success;
+	BodycamMetadata.bRetryable = false;
+	BodycamMetadata.DisplaySeconds = 4.25f;
 	EventBus->RegisterObjectiveMetadata(TEXT("BodycamPickup"), BodycamMetadata);
 	FHorrorObjectiveMessageMetadata StoredMetadata;
 	TestTrue(TEXT("EventBus should retain registered objective metadata by source id."), EventBus->GetObjectiveMetadataForTests(TEXT("BodycamPickup"), StoredMetadata));
 	TestEqual(TEXT("Stored metadata should preserve trailer beat id."), StoredMetadata.TrailerBeatId, FName(TEXT("Beat.BodycamAcquire")));
+	TestEqual(TEXT("Stored metadata should preserve feedback severity."), StoredMetadata.FeedbackSeverity, EHorrorObjectiveFeedbackSeverity::Success);
+	TestTrue(TEXT("Stored metadata should preserve display duration."), FMath::IsNearlyEqual(StoredMetadata.DisplaySeconds, 4.25f));
 	BroadcastCount = 0;
 	TestTrue(
 		TEXT("Metadata direct publish should succeed."),
@@ -139,8 +166,12 @@ bool FHorrorEventBusDirectPublishTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("Metadata history should carry trailer beat id."), MetadataHistory[0].TrailerBeatId, FName(TEXT("Beat.BodycamAcquire")));
 		TestEqual(TEXT("Metadata history should carry objective hint."), MetadataHistory[0].ObjectiveHint.ToString(), FString(TEXT("Recover the bodycam.")));
 		TestEqual(TEXT("Metadata history should carry debug label."), MetadataHistory[0].DebugLabel.ToString(), FString(TEXT("Bodycam Pickup")));
+		TestEqual(TEXT("Metadata history should carry feedback severity."), MetadataHistory[0].FeedbackSeverity, EHorrorObjectiveFeedbackSeverity::Success);
+		TestFalse(TEXT("Metadata history should carry retryable flag."), MetadataHistory[0].bRetryable);
+		TestTrue(TEXT("Metadata history should carry display duration."), FMath::IsNearlyEqual(MetadataHistory[0].DisplaySeconds, 4.25f));
 	}
 	TestEqual(TEXT("Metadata native delegate should carry trailer beat id."), LastMessage.TrailerBeatId, FName(TEXT("Beat.BodycamAcquire")));
+	TestEqual(TEXT("Metadata native delegate should carry feedback severity."), LastMessage.FeedbackSeverity, EHorrorObjectiveFeedbackSeverity::Success);
 
 	EventBus->ResetForTests();
 	FHorrorObjectiveMessageMetadata SourceFallbackMetadata;
@@ -311,6 +342,103 @@ bool FHorrorEventBusHistoryCapacityTest::RunTest(const FString& Parameters)
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorEventBusHistoryCapacityPreservesChronologicalViewTest,
+	"HorrorProject.Game.EventBus.HistoryCapacityPreservesChronologicalView",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorEventBusHistoryCapacityPreservesChronologicalViewTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	UHorrorEventBusSubsystem* EventBus = nullptr;
+	if (!CreateEventBusTestWorld(*this, TestWorld, World, EventBus))
+	{
+		return false;
+	}
+
+	EventBus->SetHistoryCapacityForTests(3);
+	TestTrue(TEXT("Capacity publish 1 should succeed."), EventBus->Publish(HorrorFoundFootageTags::BodycamAcquiredEvent(), TEXT("One"), HorrorFoundFootageTags::BodycamAcquiredState(), World));
+	TestTrue(TEXT("Capacity publish 2 should succeed."), EventBus->Publish(HorrorFoundFootageTags::FirstNoteCollectedEvent(), TEXT("Two"), HorrorFoundFootageTags::FirstNoteCollectedState(), World));
+	TestTrue(TEXT("Capacity publish 3 should succeed."), EventBus->Publish(HorrorFoundFootageTags::FirstAnomalyRecordedEvent(), TEXT("Three"), HorrorFoundFootageTags::FirstAnomalyRecordedState(), World));
+	TestTrue(TEXT("Capacity publish 4 should succeed."), EventBus->Publish(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("Four"), HorrorFoundFootageTags::ArchiveReviewedState(), World));
+	TestTrue(TEXT("Capacity publish 5 should succeed."), EventBus->Publish(HorrorFoundFootageTags::ExitUnlockedEvent(), TEXT("Five"), HorrorFoundFootageTags::ExitUnlockedState(), World));
+
+	const TArray<FHorrorEventMessage>& History = EventBus->GetHistory();
+	TestEqual(TEXT("Chronological history view should keep configured capacity."), History.Num(), 3);
+	if (History.Num() == 3)
+	{
+		TestEqual(TEXT("Chronological view should expose the oldest retained message first."), History[0].SourceId, FName(TEXT("Three")));
+		TestEqual(TEXT("Chronological view should expose the middle retained message second."), History[1].SourceId, FName(TEXT("Four")));
+		TestEqual(TEXT("Chronological view should expose the newest retained message last."), History[2].SourceId, FName(TEXT("Five")));
+	}
+
+	const TArray<FHorrorEventMessage>& CachedHistory = EventBus->GetHistory();
+	TestEqual(TEXT("Repeated chronological history reads should be stable."), CachedHistory.Num(), History.Num());
+	if (CachedHistory.Num() == 3)
+	{
+		TestEqual(TEXT("Repeated chronological view should keep the newest retained message last."), CachedHistory[2].SourceId, FName(TEXT("Five")));
+	}
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorEventBusEventSpecificMetadataIsolationTest,
+	"HorrorProject.Game.EventBus.EventSpecificMetadataUsesStructuredKeys",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorEventBusEventSpecificMetadataIsolationTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	UHorrorEventBusSubsystem* EventBus = nullptr;
+	if (!CreateEventBusTestWorld(*this, TestWorld, World, EventBus))
+	{
+		return false;
+	}
+
+	FHorrorObjectiveMessageMetadata ArchiveMetadata;
+	ArchiveMetadata.TrailerBeatId = TEXT("Beat.Archive.Only");
+	ArchiveMetadata.ObjectiveHint = FText::FromString(TEXT("只用于档案复查事件。"));
+	ArchiveMetadata.FeedbackSeverity = EHorrorObjectiveFeedbackSeverity::Success;
+	EventBus->RegisterObjectiveMetadata(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("SharedTerminal"), ArchiveMetadata);
+
+	FHorrorObjectiveMessageMetadata ExitMetadata;
+	ExitMetadata.TrailerBeatId = TEXT("Beat.Exit.Only");
+	ExitMetadata.ObjectiveHint = FText::FromString(TEXT("只用于出口解锁事件。"));
+	ExitMetadata.FeedbackSeverity = EHorrorObjectiveFeedbackSeverity::Critical;
+	EventBus->RegisterObjectiveMetadata(HorrorFoundFootageTags::ExitUnlockedEvent(), TEXT("SharedTerminal"), ExitMetadata);
+
+	FHorrorObjectiveMessageMetadata StoredArchiveMetadata;
+	FHorrorObjectiveMessageMetadata StoredExitMetadata;
+	TestTrue(TEXT("Archive-specific metadata should be retrievable by exact event/source pair."), EventBus->GetObjectiveMetadataForTests(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("SharedTerminal"), StoredArchiveMetadata));
+	TestTrue(TEXT("Exit-specific metadata should be retrievable by exact event/source pair."), EventBus->GetObjectiveMetadataForTests(HorrorFoundFootageTags::ExitUnlockedEvent(), TEXT("SharedTerminal"), StoredExitMetadata));
+	TestEqual(TEXT("Archive metadata should not be replaced by another event for the same source."), StoredArchiveMetadata.TrailerBeatId, FName(TEXT("Beat.Archive.Only")));
+	TestEqual(TEXT("Exit metadata should stay isolated from archive metadata."), StoredExitMetadata.TrailerBeatId, FName(TEXT("Beat.Exit.Only")));
+
+	TestTrue(TEXT("Archive publish should succeed."), EventBus->Publish(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("SharedTerminal"), HorrorFoundFootageTags::ArchiveReviewedState(), World));
+	TestTrue(TEXT("Exit publish should succeed."), EventBus->Publish(HorrorFoundFootageTags::ExitUnlockedEvent(), TEXT("SharedTerminal"), HorrorFoundFootageTags::ExitUnlockedState(), World));
+
+	const TArray<FHorrorEventMessage>& History = EventBus->GetHistory();
+	TestEqual(TEXT("Isolated metadata publishes should produce two history entries."), History.Num(), 2);
+	if (History.Num() == 2)
+	{
+		TestEqual(TEXT("Archive event should carry only archive metadata."), History[0].TrailerBeatId, FName(TEXT("Beat.Archive.Only")));
+		TestEqual(TEXT("Archive event should preserve archive severity."), History[0].FeedbackSeverity, EHorrorObjectiveFeedbackSeverity::Success);
+		TestEqual(TEXT("Exit event should carry only exit metadata."), History[1].TrailerBeatId, FName(TEXT("Beat.Exit.Only")));
+		TestEqual(TEXT("Exit event should preserve exit severity."), History[1].FeedbackSeverity, EHorrorObjectiveFeedbackSeverity::Critical);
+	}
+
+	EventBus->UnregisterObjectiveMetadata(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("SharedTerminal"));
+	TestFalse(TEXT("Removing archive metadata should not leave an archive override behind."), EventBus->GetObjectiveMetadataForTests(HorrorFoundFootageTags::ArchiveReviewedEvent(), TEXT("SharedTerminal"), StoredArchiveMetadata));
+	TestTrue(TEXT("Removing archive metadata should not remove exit metadata for the same source."), EventBus->GetObjectiveMetadataForTests(HorrorFoundFootageTags::ExitUnlockedEvent(), TEXT("SharedTerminal"), StoredExitMetadata));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorEventBusGameModeObjectivePublishTest,
 	"HorrorProject.Game.EventBus.GameModeObjectiveEventsPublishOnce",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -327,40 +455,45 @@ bool FHorrorEventBusGameModeObjectivePublishTest::RunTest(const FString& Paramet
 	}
 
 	TestTrue(TEXT("Bodycam objective should record through GameMode."), GameMode->TryAcquireBodycam(TEXT("BodycamPickup"), true));
-	TestEqual(TEXT("Bodycam objective should publish one event."), EventBus->GetHistory().Num(), 1);
+	TestEqual(TEXT("Bodycam objective event should publish once."), CountHistoryEventsByTag(*EventBus, HorrorFoundFootageTags::BodycamAcquiredEvent()), 1);
+	const int32 HistoryCountAfterBodycam = EventBus->GetHistory().Num();
 	TestFalse(TEXT("Duplicate bodycam objective should be rejected."), GameMode->TryAcquireBodycam(TEXT("BodycamPickup"), true));
-	TestEqual(TEXT("Duplicate bodycam objective should not publish again."), EventBus->GetHistory().Num(), 1);
-	if (EventBus->GetHistory().Num() >= 1)
+	TestEqual(TEXT("Duplicate bodycam objective should not publish new events."), EventBus->GetHistory().Num(), HistoryCountAfterBodycam);
+	if (const FHorrorEventMessage* BodycamMessage = FindHistoryEventByTag(*EventBus, HorrorFoundFootageTags::BodycamAcquiredEvent()))
 	{
-		TestEqual(TEXT("Bodycam publish should carry the objective event."), EventBus->GetHistory()[0].EventTag, HorrorFoundFootageTags::BodycamAcquiredEvent());
-		TestEqual(TEXT("Bodycam publish should carry the objective state."), EventBus->GetHistory()[0].StateTag, HorrorFoundFootageTags::BodycamAcquiredState());
+		TestEqual(TEXT("Bodycam publish should carry the objective state."), BodycamMessage->StateTag, HorrorFoundFootageTags::BodycamAcquiredState());
 	}
 
 	TestTrue(TEXT("First note objective should record through GameMode."), GameMode->TryCollectFirstNote(TEXT("Note01")));
-	TestEqual(TEXT("First note objective should publish one new event."), EventBus->GetHistory().Num(), 2);
+	TestEqual(TEXT("First note objective event should publish once."), CountHistoryEventsByTag(*EventBus, HorrorFoundFootageTags::FirstNoteCollectedEvent()), 1);
+	const int32 HistoryCountAfterFirstNote = EventBus->GetHistory().Num();
 	TestFalse(TEXT("Duplicate first note objective should be rejected."), GameMode->TryCollectFirstNote(TEXT("Note01")));
-	TestEqual(TEXT("Duplicate first note objective should not publish again."), EventBus->GetHistory().Num(), 2);
+	TestEqual(TEXT("Duplicate first note objective should not publish new events."), EventBus->GetHistory().Num(), HistoryCountAfterFirstNote);
 
 	TestTrue(TEXT("First anomaly candidate should register through GameMode."), GameMode->BeginFirstAnomalyCandidate(TEXT("Anomaly01")));
 	TestFalse(TEXT("Non-recording first anomaly should be rejected."), GameMode->TryRecordFirstAnomaly(false));
-	TestEqual(TEXT("Rejected first anomaly recording should not publish."), EventBus->GetHistory().Num(), 2);
+	TestEqual(TEXT("Rejected first anomaly recording should not publish new events."), EventBus->GetHistory().Num(), HistoryCountAfterFirstNote);
 	TestTrue(TEXT("Recording first anomaly should record through GameMode."), GameMode->TryRecordFirstAnomaly(true));
-	TestEqual(TEXT("Recording first anomaly should publish one new event."), EventBus->GetHistory().Num(), 3);
+	TestEqual(TEXT("First anomaly objective event should publish once."), CountHistoryEventsByTag(*EventBus, HorrorFoundFootageTags::FirstAnomalyRecordedEvent()), 1);
+	const int32 HistoryCountAfterFirstAnomaly = EventBus->GetHistory().Num();
 	TestFalse(TEXT("Duplicate first anomaly recording should be rejected."), GameMode->TryRecordFirstAnomaly(true));
-	TestEqual(TEXT("Duplicate first anomaly recording should not publish again."), EventBus->GetHistory().Num(), 3);
+	TestEqual(TEXT("Duplicate first anomaly recording should not publish new events."), EventBus->GetHistory().Num(), HistoryCountAfterFirstAnomaly);
 
 	TestTrue(TEXT("Archive review should record through GameMode."), GameMode->TryReviewArchive(TEXT("ArchiveTerminal")));
-	TestEqual(TEXT("Archive review should publish its event and automatic exit unlock."), EventBus->GetHistory().Num(), 5);
+	TestEqual(TEXT("Archive review objective event should publish once."), CountHistoryEventsByTag(*EventBus, HorrorFoundFootageTags::ArchiveReviewedEvent()), 1);
+	TestEqual(TEXT("Full found-footage sequence should publish one exit unlock objective event."), CountHistoryEventsByTag(*EventBus, HorrorFoundFootageTags::ExitUnlockedEvent()), 1);
+	const int32 HistoryCountAfterArchive = EventBus->GetHistory().Num();
 	TestFalse(TEXT("Duplicate archive review should be rejected."), GameMode->TryReviewArchive(TEXT("ArchiveTerminal")));
-	TestEqual(TEXT("Duplicate archive review should not publish again."), EventBus->GetHistory().Num(), 5);
+	TestEqual(TEXT("Duplicate archive review should not publish new events."), EventBus->GetHistory().Num(), HistoryCountAfterArchive);
 
-	const TArray<FHorrorEventMessage>& History = EventBus->GetHistory();
-	if (History.Num() >= 5)
+	if (const FHorrorEventMessage* ArchiveMessage = FindHistoryEventByTag(*EventBus, HorrorFoundFootageTags::ArchiveReviewedEvent()))
 	{
-		TestEqual(TEXT("Final explicit objective publish should be archive reviewed."), History[3].EventTag, HorrorFoundFootageTags::ArchiveReviewedEvent());
-		TestEqual(TEXT("Full found-footage sequence should publish Event.Exit.Unlocked."), History[4].EventTag, HorrorFoundFootageTags::ExitUnlockedEvent());
-		TestEqual(TEXT("Exit unlock publish should carry the exit-unlocked state."), History[4].StateTag, HorrorFoundFootageTags::ExitUnlockedState());
-		TestEqual(TEXT("Exit unlock publish should preserve the contract source id."), History[4].SourceId, FName(TEXT("FoundFootageContract")));
+		TestEqual(TEXT("Archive publish should carry the archive-reviewed state."), ArchiveMessage->StateTag, HorrorFoundFootageTags::ArchiveReviewedState());
+	}
+	if (const FHorrorEventMessage* ExitMessage = FindHistoryEventByTag(*EventBus, HorrorFoundFootageTags::ExitUnlockedEvent()))
+	{
+		TestEqual(TEXT("Exit unlock publish should carry the exit-unlocked state."), ExitMessage->StateTag, HorrorFoundFootageTags::ExitUnlockedState());
+		TestEqual(TEXT("Exit unlock publish should preserve the contract source id."), ExitMessage->SourceId, FName(TEXT("FoundFootageContract")));
 	}
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));

@@ -25,6 +25,7 @@ void UFlashlightComponent::BeginPlay()
 	if (BoundSpotLight)
 	{
 		BaseIntensity = BoundSpotLight->Intensity;
+		BoundSpotLight->SetIntensity(GetEffectiveBaseIntensity());
 	}
 
 	UpdateLightState();
@@ -108,6 +109,7 @@ bool UFlashlightComponent::BindSpotLight(USpotLightComponent* SpotLight)
 
 	BoundSpotLight = SpotLight;
 	BaseIntensity = SpotLight->Intensity;
+	BoundSpotLight->SetIntensity(GetEffectiveBaseIntensity());
 	UpdateLightState();
 
 	return true;
@@ -120,7 +122,12 @@ void UFlashlightComponent::UpdateLightState()
 		return;
 	}
 
-	BoundSpotLight->SetVisibility(bFlashlightOn && !IsBatteryDepleted());
+	const bool bVisible = bFlashlightOn && !IsBatteryDepleted();
+	BoundSpotLight->SetVisibility(bVisible);
+	if (bVisible)
+	{
+		BoundSpotLight->SetIntensity(GetEffectiveBaseIntensity());
+	}
 }
 
 void UFlashlightComponent::UpdateBatteryDrain(float DeltaTime)
@@ -156,9 +163,10 @@ void UFlashlightComponent::UpdateFlickerEffect(float DeltaTime)
 	}
 
 	const float BatteryPercent = GetBatteryPercent();
+	const float EffectiveBaseIntensity = GetEffectiveBaseIntensity();
 	if (BatteryPercent > FlickerThresholdPercent)
 	{
-		BoundSpotLight->SetIntensity(BaseIntensity);
+		BoundSpotLight->SetIntensity(EffectiveBaseIntensity);
 		return;
 	}
 
@@ -170,8 +178,13 @@ void UFlashlightComponent::UpdateFlickerEffect(float DeltaTime)
 		FlickerNoise
 	);
 
-	const float FlickerIntensity = BaseIntensity * FlickerAmount * (BatteryPercent / FlickerThresholdPercent);
+	const float FlickerIntensity = EffectiveBaseIntensity * FlickerAmount * (BatteryPercent / FlickerThresholdPercent);
 	BoundSpotLight->SetIntensity(FlickerIntensity);
+}
+
+float UFlashlightComponent::GetEffectiveBaseIntensity() const
+{
+	return FMath::Max(0.0f, BaseIntensity) * FMath::Clamp(LightIntensityScale, 0.05f, 1.0f);
 }
 
 bool UFlashlightComponent::TryAutoBindSpotLight()

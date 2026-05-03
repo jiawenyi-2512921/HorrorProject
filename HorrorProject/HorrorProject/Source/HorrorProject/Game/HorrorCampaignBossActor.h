@@ -7,6 +7,8 @@
 #include "HorrorCampaignBossActor.generated.h"
 
 class UPointLightComponent;
+class UAnimationAsset;
+class UMaterialInterface;
 class UNiagaraComponent;
 class USceneComponent;
 class USkeletalMeshComponent;
@@ -33,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	void ConfigureChasePressure(float InMoveSpeed, float InEngageRadius, float InAttackRadius, float InFearPressureRadius, float InActorScale);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	void ConfigureChasePressureWithFearRate(float InMoveSpeed, float InEngageRadius, float InAttackRadius, float InFearPressureRadius, float InFearPressurePerSecond, float InActorScale);
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	bool RegisterWeakPointResolved();
@@ -98,10 +103,10 @@ protected:
 	int32 RequiredWeakPointCount = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Horror|Campaign|Pressure", meta=(ClampMin="0.0", Units="cm"))
-	float FearPressureRadius = 2400.0f;
+	float FearPressureRadius = 1500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Horror|Campaign|Pressure", meta=(ClampMin="0.0"))
-	float FearPressurePerSecond = 9.0f;
+	float FearPressurePerSecond = 1.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Horror|Campaign|Pressure", meta=(ClampMin="0.0"))
 	float WeakPointFearPressureBonus = 0.35f;
@@ -129,6 +134,16 @@ protected:
 
 private:
 	void ApplyBossVisuals();
+	void ApplyBossAnimation();
+	float CalculateBossAnimationPlayRate() const;
+	UMaterialInterface* ResolveBossMaterial() const;
+	FText ResolveProfiledBossName(FName InChapterId, const FText& RequestedName) const;
+	FColor ResolveBossStateColor() const;
+	bool HasClearAttackLineToActor(AActor* TargetActor) const;
+	bool HasClearMovementLineToLocation(const FVector& TargetLocation, const AActor* TargetActor) const;
+	bool TryGetMovementLineBlockHit(const FVector& TargetLocation, const AActor* TargetActor, FHitResult& OutHit) const;
+	bool TryResolveNavigableMoveTarget(const FVector& TargetLocation, FVector& OutMoveTarget) const;
+	bool TryResolveCornerSidestepMoveTarget(const FVector& TargetLocation, const AActor* TargetActor, const FHitResult& BlockHit, float StepDistance, FVector& OutMoveTarget) const;
 	void ApplyBossPressureToPlayerPawns(float DeltaTime);
 	void UpdateBossMovementAndAttacks(float DeltaTime);
 	float GetWeakPointPressureMultiplier() const;
@@ -144,4 +159,22 @@ private:
 
 	UPROPERTY(Transient)
 	float LastBossAttackWorldSeconds = -100000.0f;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAnimationAsset> IdleAnimation;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAnimationAsset> RunAnimation;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInterface> DefaultGolemMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInterface> DeepWaterGolemMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInterface> ForestGolemMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInterface> DungeonGolemMaterial;
 };

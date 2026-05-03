@@ -7,6 +7,7 @@
 #include "Game/HorrorAnomalyDirector.h"
 #include "Game/HorrorCampaign.h"
 #include "Game/HorrorFoundFootageContract.h"
+#include "Game/HorrorObjectiveNavigationTypes.h"
 #include "HorrorGameModeBase.generated.h"
 
 class ADeepWaterStationRouteKit;
@@ -42,7 +43,7 @@ struct HORRORPROJECT_API FHorrorCampaignAmbushThreatTuning
 	float ActorScale = 1.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Campaign|Ambush", meta=(ClampMin="0.0", Units="cm/s"))
-	float MoveSpeed = 180.0f;
+	float MoveSpeed = 150.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Campaign|Ambush", meta=(ClampMin="0.0", Units="cm"))
 	float EngageRadius = 3800.0f;
@@ -51,7 +52,10 @@ struct HORRORPROJECT_API FHorrorCampaignAmbushThreatTuning
 	float AttackRadius = 120.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Campaign|Ambush", meta=(ClampMin="0.0", Units="cm"))
-	float FearPressureRadius = 1500.0f;
+	float FearPressureRadius = 1200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Campaign|Ambush", meta=(ClampMin="0.0"))
+	float FearPressurePerSecond = 1.2f;
 };
 
 /**
@@ -137,6 +141,8 @@ public:
 	FHorrorFoundFootageSaveState ExportFoundFootageSaveState() const;
 	void ImportFoundFootageSaveState(const FHorrorFoundFootageSaveState& SaveState);
 	void ImportPendingFirstAnomalyCandidate(FName SourceId);
+	FHorrorCampaignSaveState ExportCampaignSaveState() const;
+	void ImportCampaignSaveState(const FHorrorCampaignSaveState& SaveState);
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Objectives")
 	void SyncFoundFootageRuntimeStateToPlayer();
@@ -152,6 +158,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	bool CanCompleteCampaignObjective(FName ChapterId, FName ObjectiveId) const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool CanExposeCampaignObjective(FName ChapterId, FName ObjectiveId) const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FText BuildCampaignObjectiveLockReasonText(FName ChapterId, FName ObjectiveId) const;
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	bool TryCompleteCampaignObjective(FName ChapterId, FName ObjectiveId, AActor* InstigatorActor);
@@ -171,11 +183,35 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	bool IsCampaignBossDefeated() const { return CampaignProgress.IsBossDefeated(); }
 
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	bool SetCampaignNavigationFocusObjective(FName ChapterId, FName ObjectiveId);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	bool ClearCampaignNavigationFocusObjective();
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	bool CycleCampaignNavigationFocus(int32 Direction);
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FName GetCampaignNavigationFocusObjectiveId() const { return CampaignNavigationFocusObjectiveId; }
+
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	bool TryGetCurrentCampaignObjectiveWorldLocation(FVector& OutLocation) const;
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool BuildCurrentCampaignObjectiveNavigationState(const APawn* ViewerPawn, FHorrorObjectiveNavigationState& OutState) const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool ShouldExposeCampaignObjectivesToHUD() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool IsDay1FoundFootageFlowActive() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	FText GetCurrentCampaignObjectivePromptText() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FText GetCurrentCampaignObjectiveBeatText() const;
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	FText GetCurrentCampaignObjectiveActionText() const;
@@ -186,8 +222,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	bool StartCampaignAmbushThreat(FName SourceId, AActor* ThreatAnchor);
 
+	bool StartCampaignAmbushThreatFromTransform(FName SourceId, const FTransform& ThreatAnchorTransform);
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	void StopCampaignAmbushThreat(FName SourceId);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	bool AbortActiveCampaignPursuitForRecovery(FName FailureCause, AActor* InstigatorActor);
 
 	static bool ClearImportedMapCameraFade(APlayerController* PlayerController);
 
@@ -197,8 +238,11 @@ public:
 
 	const FHorrorCampaignChapterDefinition* GetCurrentCampaignChapterDefinition() const;
 	const TArray<AHorrorCampaignObjectiveActor*>& GetRuntimeCampaignObjectivesForTests() const { return RuntimeCampaignObjectiveActorViews; }
+	FTransform ResolveCampaignObjectiveTransformForTests(const FHorrorCampaignObjectiveDefinition& Objective) const { return ResolveCampaignObjectiveTransform(Objective); }
 
 	void ResetCampaignProgressForChapterForTests(FName ChapterId);
+	void AddRuntimeCampaignObjectiveForTests(AHorrorCampaignObjectiveActor* ObjectiveActor) { RuntimeCampaignObjectiveActorViews.Add(ObjectiveActor); }
+	void ResetRuntimeCampaignObjectiveViewsForTests() { RuntimeCampaignObjectiveActorViews.Reset(); }
 
 	UFUNCTION(BlueprintCallable, Category="Horror|Save")
 	bool SaveDay1Checkpoint(FName CheckpointId);
@@ -252,15 +296,26 @@ private:
 	void SanitizeImportedMapChainRuntime();
 	void StopImportedMapShowcaseSequences();
 	void RestoreLeadPlayerViewAndInput();
+	FString GetCurrentNormalizedMapPackageName() const;
 	bool ShouldAutoSpawnLegacyRouteKitInCurrentMap() const;
 	FTransform ResolveCampaignRuntimeAnchorTransform() const;
 	FTransform ResolveCampaignObjectiveTransform(const FHorrorCampaignObjectiveDefinition& Objective) const;
+	FTransform ResolveSafeCampaignObjectiveTransform(const FHorrorCampaignObjectiveDefinition& Objective) const;
 	FTransform ResolveCampaignBossTransform() const;
+	const AHorrorCampaignObjectiveActor* FindRuntimeCampaignObjectiveActor(FName ChapterId, FName ObjectiveId) const;
+	const AHorrorCampaignObjectiveActor* FindCurrentCampaignObjectiveActor() const;
+	const FHorrorCampaignObjectiveDefinition* ResolveCampaignNavigationObjective() const;
+	TArray<const FHorrorCampaignObjectiveDefinition*> GetAvailableCampaignNavigationFocusObjectives() const;
+	bool IsCampaignNavigationFocusObjectiveValid(FName ObjectiveId) const;
+	void RefreshCampaignNavigationFocus();
+	bool IsWorldExposedCampaignObjective(FName ChapterId, FName ObjectiveId) const;
 	void ClearCampaignRuntimeActors();
 	void SpawnCampaignObjectives(const FHorrorCampaignChapterDefinition& Chapter);
 	void SpawnCampaignBossIfNeeded(const FHorrorCampaignChapterDefinition& Chapter);
 	void RefreshCampaignObjectiveActors();
+	void ApplyCampaignObjectiveReward(const FHorrorCampaignObjectiveDefinition& Objective, AActor* InstigatorActor);
 	FTransform ResolveCampaignAmbushThreatTransform(const AActor* ThreatAnchor) const;
+	FTransform ResolveCampaignAmbushThreatTransformFromAnchor(const FTransform& AnchorTransform) const;
 	FHorrorCampaignAtmosphereTuning ResolveCampaignAtmosphereTuningForMap(const FString& MapPackageName) const;
 	FHorrorCampaignAmbushThreatTuning ResolveCampaignAmbushThreatTuningForMap(const FString& MapPackageName) const;
 	bool ShouldSanitizeImportedMapVisualObstructions(const FString& MapPackageName) const;
@@ -365,7 +420,7 @@ private:
 	bool bSpawnCampaignAmbushThreats = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Campaign|Ambush", meta=(AllowPrivateAccess="true"))
-	FVector RuntimeCampaignAmbushThreatOffset = FVector(-2400.0f, 850.0f, 100.0f);
+	FVector RuntimeCampaignAmbushThreatOffset = FVector(-1650.0f, 650.0f, 100.0f);
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<AHorrorCampaignObjectiveActor>> RuntimeCampaignObjectiveActors;
@@ -381,6 +436,7 @@ private:
 	FTimerHandle CampaignAutoTravelTimerHandle;
 	bool bCampaignAutoTravelQueued = false;
 	FName ActiveCampaignAmbushSourceId = NAME_None;
+	FName CampaignNavigationFocusObjectiveId = NAME_None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Save", meta=(AllowPrivateAccess="true"))
 	bool bAutosaveOnObjectiveMilestone = true;
@@ -397,6 +453,13 @@ private:
 	UPROPERTY(Transient)
 	bool bDay1Complete = false;
 
+	UPROPERTY(Transient)
+	FString CachedMapPackageName;
+
 	FHorrorFoundFootageContract FoundFootageContract;
 	FHorrorAnomalyDirector AnomalyDirector;
+
+	mutable FVector CachedNavReachabilityTarget = FVector::ZeroVector;
+	mutable bool bCachedNavReachable = false;
+	mutable double CachedNavReachabilityWorldTime = -1.0;
 };

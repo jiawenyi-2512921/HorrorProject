@@ -6,11 +6,13 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "InputAction.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ControlSettings.h"
 #include "GameSettingsSubsystem.h"
 #include "HorrorProject.h"
+#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
@@ -24,6 +26,10 @@ namespace
 	constexpr float MinimumJumpZVelocity = 520.0f;
 	constexpr float MinimumMaxStepHeight = 55.0f;
 	const FName FirstPersonCameraSocketName(TEXT("head"));
+	constexpr TCHAR JumpActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Jump.IA_Jump");
+	constexpr TCHAR MoveActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Move.IA_Move");
+	constexpr TCHAR LookActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Look.IA_Look");
+	constexpr TCHAR MouseLookActionAssetPath[] = TEXT("/Game/Input/Actions/IA_MouseLook.IA_MouseLook");
 }
 
 AHorrorProjectCharacter::AHorrorProjectCharacter()
@@ -63,6 +69,28 @@ AHorrorProjectCharacter::AHorrorProjectCharacter()
 	GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakeDeceleration;
 	GetCharacterMovement()->AirControl = 0.5f;
 	ConfigureJumpMovementDefaults();
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> JumpActionAsset(JumpActionAssetPath);
+	static ConstructorHelpers::FObjectFinder<UInputAction> MoveActionAsset(MoveActionAssetPath);
+	static ConstructorHelpers::FObjectFinder<UInputAction> LookActionAsset(LookActionAssetPath);
+	static ConstructorHelpers::FObjectFinder<UInputAction> MouseLookActionAsset(MouseLookActionAssetPath);
+
+	if (JumpActionAsset.Succeeded())
+	{
+		JumpAction = JumpActionAsset.Object;
+	}
+	if (MoveActionAsset.Succeeded())
+	{
+		MoveAction = MoveActionAsset.Object;
+	}
+	if (LookActionAsset.Succeeded())
+	{
+		LookAction = LookActionAsset.Object;
+	}
+	if (MouseLookActionAsset.Succeeded())
+	{
+		MouseLookAction = MouseLookActionAsset.Object;
+	}
 }
 
 void AHorrorProjectCharacter::BeginPlay()

@@ -9,14 +9,17 @@
 #include "Components/SpotLightComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
+#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
 	const FVector FlashlightRelativeLocation(30.0f, 17.5f, -5.0f);
 	const FRotator FlashlightRelativeRotation(-18.6f, -1.3f, 5.26f);
-	constexpr float FlashlightAttenuationRadius = 1050.0f;
+	constexpr float FlashlightIntensityLumens = 950.0f;
+	constexpr float FlashlightAttenuationRadius = 1150.0f;
 	constexpr float FlashlightInnerConeAngle = 18.7f;
 	constexpr float FlashlightOuterConeAngle = 45.24f;
+	constexpr TCHAR SprintActionAssetPath[] = TEXT("/Game/Variant_Horror/Input/IA_Sprint.IA_Sprint");
 }
 
 AHorrorCharacter::AHorrorCharacter()
@@ -26,11 +29,18 @@ AHorrorCharacter::AHorrorCharacter()
 	SpotLight->SetupAttachment(GetFirstPersonCameraComponent());
 
 	SpotLight->SetRelativeLocationAndRotation(FlashlightRelativeLocation, FlashlightRelativeRotation);
-	SpotLight->Intensity = 0.5;
 	SpotLight->SetIntensityUnits(ELightUnits::Lumens);
+	SpotLight->SetIntensity(FlashlightIntensityLumens);
 	SpotLight->AttenuationRadius = FlashlightAttenuationRadius;
 	SpotLight->InnerConeAngle = FlashlightInnerConeAngle;
 	SpotLight->OuterConeAngle = FlashlightOuterConeAngle;
+	SpotLight->SetVisibility(false);
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> SprintActionAsset(SprintActionAssetPath);
+	if (SprintActionAsset.Succeeded())
+	{
+		SprintAction = SprintActionAsset.Object;
+	}
 }
 
 void AHorrorCharacter::BeginPlay()

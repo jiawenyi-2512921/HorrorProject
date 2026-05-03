@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Game/HorrorEventBusSubsystem.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/Day1SliceHUD.h"
 #include "HorrorPlayerController.generated.h"
@@ -19,6 +20,7 @@ class UControlSettings;
 class UHorrorAudioSettings;
 class UGraphicsSettings;
 class UNoteRecorderComponent;
+class UFlashlightComponent;
 class AHorrorGameModeBase;
 class AHorrorCampaignObjectiveActor;
 class AHorrorPlayerCharacter;
@@ -26,6 +28,18 @@ class AFoundFootageObjectiveInteractable;
 struct FKey;
 struct FInputKeyEventArgs;
 struct FHorrorEventMessage;
+
+struct FHorrorObjectiveNotification
+{
+	FText Title;
+	FText Hint;
+	EHorrorObjectiveFeedbackSeverity Severity = EHorrorObjectiveFeedbackSeverity::Info;
+	bool bRetryable = false;
+	int32 Priority = 0;
+	float DisplaySeconds = 5.0f;
+	FName SourceId = NAME_None;
+	FGameplayTag EventTag;
+};
 
 /**
  *  Player Controller for a first person horror game
@@ -68,7 +82,8 @@ public:
 	void ResetDay1ModalInputState();
 
 	void ShowPlayerMessage(const FText& MessageText, const FLinearColor& MessageColor = FLinearColor::White, float DisplaySeconds = 2.5f);
-	bool TrySubmitActiveAdvancedInteractionExpectedInput();
+	bool TryPromptActiveAdvancedInteractionSelection();
+	void NotifyAdvancedInteractionObjectiveOpened(AHorrorCampaignObjectiveActor* ObjectiveActor);
 
 	bool IsAwaitingDoorPassword() const { return PendingPasswordDoor.IsValid(); }
 	FString GetDoorPasswordBufferForTests() const { return DoorPasswordBuffer; }
@@ -88,6 +103,11 @@ public:
 	int32 GetNoteRecordedFeedbackCountForTests() const { return NoteRecordedFeedbackCountForTests; }
 	int32 GetDefaultMappingContextCountForTests() const { return DefaultMappingContexts.Num(); }
 	int32 GetMobileExcludedMappingContextCountForTests() const { return MobileExcludedMappingContexts.Num(); }
+	int32 GetQueuedObjectiveNotificationCountForTests() const { return ObjectiveNotificationQueue.Num(); }
+	bool ShouldPrioritizeCampaignNavigationForTests(const AHorrorGameModeBase* HorrorGameMode) const;
+	int32 GetFirstAnomalyFallbackWorldScanCountForTests() const { return FirstAnomalyFallbackWorldScanCountForTests; }
+	int32 GetCachedFirstAnomalyFallbackCandidateCountForTests() const;
+	void ExpireFirstAnomalyFallbackCacheForTests();
 #endif
 
 protected:
@@ -134,21 +154,44 @@ private:
 	void BindObjectiveEventBus();
 	void UnbindObjectiveEventBus();
 	void HandleObjectiveEventPublished(const FHorrorEventMessage& Message);
+	UFlashlightComponent* EnsurePawnFlashlight(APawn* PawnToPrepare) const;
+	bool TogglePawnFlashlight();
 	void BindPawnNoteRecorder(APawn* PawnOverride = nullptr);
 	void UnbindPawnNoteRecorder();
 	UFUNCTION()
 	void HandlePawnNoteRecorded(FName NoteId, int32 TotalRecordedNotes);
 	bool UpdateDay1RuntimeState(float DeltaSeconds);
-	void RefreshDay1HUDState();
+	void RefreshDay1HUDState(bool bForceFullRefresh = true);
+	void RefreshDay1HUDRealtimeState(
+		ADay1SliceHUD& Day1HUD,
+		const AHorrorPlayerCharacter* HorrorPlayerCharacter,
+		const AHorrorGameModeBase* HorrorGameMode) const;
+	void RefreshDay1HUDObjectiveState(
+		ADay1SliceHUD& Day1HUD,
+		const AHorrorPlayerCharacter* HorrorPlayerCharacter,
+		const AHorrorGameModeBase* HorrorGameMode);
 	void RefreshAdvancedInteractionHUD(ADay1SliceHUD& Day1HUD, const AHorrorPlayerCharacter* HorrorPlayerCharacter);
 	void RefreshInteractionPrompt();
+	bool ShouldPrioritizeCampaignNavigation(const AHorrorGameModeBase* HorrorGameMode) const;
 	void RefreshAnomalyCaptureHUD(ADay1SliceHUD& Day1HUD, const AHorrorPlayerCharacter* HorrorPlayerCharacter, const AHorrorGameModeBase* HorrorGameMode);
 	AHorrorCampaignObjectiveActor* ResolveActiveAdvancedInteractionObjective(const AHorrorPlayerCharacter* HorrorPlayerCharacter = nullptr);
-	AFoundFootageObjectiveInteractable* ResolveFocusedFirstAnomalyTarget(const AHorrorPlayerCharacter& HorrorPlayerCharacter) const;
+	AFoundFootageObjectiveInteractable* ResolveFocusedFirstAnomalyTarget(const AHorrorPlayerCharacter& HorrorPlayerCharacter);
+	AFoundFootageObjectiveInteractable* ResolveFocusedFirstAnomalyTargetFromCandidates(
+		const AHorrorPlayerCharacter& HorrorPlayerCharacter,
+		TConstArrayView<AFoundFootageObjectiveInteractable*> Candidates) const;
 	bool IsFocusedFirstAnomalyTarget(const AFoundFootageObjectiveInteractable* ObjectiveActor) const;
+	bool IsFirstAnomalyFallbackCacheFresh(const UWorld* World) const;
+	void RefreshFirstAnomalyFallbackCandidateCache(UWorld* World);
+	void ClearFirstAnomalyFallbackCandidateCache();
 	bool TryAutoCaptureFocusedAnomaly(float DeltaSeconds);
 	FText BuildObjectivePrompt() const;
+	bool TryHandleCampaignNavigationFocusKey(const FKey& Key);
 	bool TryHandleAdvancedInteractionKey(const FKey& Key);
+	int32 ResolveObjectiveNotificationPriority(const FHorrorEventMessage& Message) const;
+	bool ShouldSuppressObjectiveToastForPriority(const ADay1SliceHUD& Day1HUD, int32 IncomingPriority) const;
+	void EnqueueObjectiveNotification(const FHorrorObjectiveNotification& Notification);
+	void ShowObjectiveNotificationNow(ADay1SliceHUD& Day1HUD, const FHorrorObjectiveNotification& Notification);
+	bool TryFlushQueuedObjectiveNotification(ADay1SliceHUD& Day1HUD, float ElapsedSeconds = 0.0f);
 	void ClearDoorPasswordEntry();
 	void CancelDoorPasswordEntry();
 	void ShowDoorPasswordPrompt() const;
@@ -186,10 +229,17 @@ private:
 	TWeakObjectPtr<UNoteRecorderComponent> BoundNoteRecorder;
 	FDelegateHandle NoteRecordedHandle;
 	TWeakObjectPtr<AFoundFootageObjectiveInteractable> LockedAnomalyTarget;
+	TArray<TWeakObjectPtr<AFoundFootageObjectiveInteractable>> CachedFirstAnomalyFallbackCandidates;
 	TWeakObjectPtr<AHorrorCampaignObjectiveActor> ActiveAdvancedInteractionObjective;
 	float FocusedAnomalyLockSeconds = 0.0f;
+	float Day1HUDFullRefreshAccumulatorSeconds = 0.0f;
+	float LastFirstAnomalyFallbackScanWorldSeconds = -1000000.0f;
+	int32 ActiveObjectiveToastPriority = 0;
+	float ActiveObjectiveToastExpireWorldSeconds = -1.0f;
+	TArray<FHorrorObjectiveNotification> ObjectiveNotificationQueue;
 #if WITH_DEV_AUTOMATION_TESTS
 	int32 NoteRecordedFeedbackCountForTests = 0;
+	int32 FirstAnomalyFallbackWorldScanCountForTests = 0;
 #endif
 
 };

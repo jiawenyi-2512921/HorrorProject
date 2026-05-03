@@ -52,15 +52,19 @@ void UHorrorDirectorSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 void UHorrorDirectorSubsystem::SetDirectorEnabled(bool bEnabled)
 {
 	bDirectorEnabled = bEnabled;
+	UWorld* World = GetWorld();
 	if (!bEnabled)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(UpdateTimerHandle);
+		if (World)
+		{
+			World->GetTimerManager().ClearTimer(UpdateTimerHandle);
+		}
 		DirectorState = EHorrorDirectorState::Idle;
 		OnDirectorStateChanged.Broadcast(DirectorState, TensionValue);
 	}
-	else if (GetWorld())
+	else if (World)
 	{
-		GetWorld()->GetTimerManager().SetTimer(UpdateTimerHandle, [this]()
+		World->GetTimerManager().SetTimer(UpdateTimerHandle, [this]()
 		{
 			if (UWorld* World = GetWorld())
 			{

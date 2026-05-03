@@ -46,6 +46,9 @@ public:
 	bool IsAvailableForInteraction() const { return bAvailableForInteraction; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool IsPresentationVisible() const { return bPresentationVisible; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	int32 GetRequiredInteractionCount() const { return RequiredInteractionCount; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
@@ -54,8 +57,31 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	EHorrorCampaignInteractionMode GetInteractionMode() const { return ObjectiveDefinition.InteractionMode; }
 
+	const FHorrorCampaignObjectiveDefinition& GetObjectiveDefinitionForPresentation() const { return ObjectiveDefinition; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	int32 GetObjectiveBeatCount() const { return ObjectiveDefinition.ObjectiveBeats.Num(); }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	int32 GetCurrentObjectiveBeatIndex() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FText GetCurrentObjectiveBeatLabel() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FText GetCurrentObjectiveBeatDetail() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool IsCurrentObjectiveBeatUrgent() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	bool DoesCurrentObjectiveBeatRequireRecording() const;
+
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
 	bool IsAdvancedInteractionActive() const { return bAdvancedInteractionActive; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
+	bool IsObjectiveFailedRetryable() const { return bObjectiveFailedRetryable; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
 	float GetAdvancedInteractionProgressFraction() const { return AdvancedInteractionProgressFraction; }
@@ -65,6 +91,15 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
 	float GetAdvancedInteractionTimingFraction() const { return AdvancedInteractionTimingFraction; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
+	float GetAdvancedInteractionStabilityFraction() const { return AdvancedInteractionStabilityFraction; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
+	int32 GetAdvancedInteractionComboCount() const { return AdvancedInteractionComboCount; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
+	int32 GetAdvancedInteractionMistakeCount() const { return AdvancedInteractionMistakeCount; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
 	bool IsAdvancedInteractionTimingWindowOpen() const;
@@ -78,8 +113,29 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
 	FHorrorAdvancedInteractionHUDState BuildAdvancedInteractionHUDState() const;
 
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Advanced Interaction")
+	FHorrorAdvancedInteractionOutcome GetLastAdvancedInteractionOutcome() const { return LastAdvancedInteractionOutcome; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
+	FHorrorCampaignObjectiveRuntimeState BuildObjectiveRuntimeState() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Save")
+	bool HasPersistentObjectiveRuntimeState() const;
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Save")
+	FHorrorCampaignObjectiveSaveState ExportObjectiveSaveState() const;
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign|Save")
+	void ImportObjectiveSaveState(const FHorrorCampaignObjectiveSaveState& SaveState, AActor* RestoredInstigator);
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign|Advanced Interaction")
 	bool SubmitAdvancedInteractionInput(FName InputId, AActor* InstigatorActor);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign|Advanced Interaction")
+	bool SubmitAdvancedInteractionCommand(const FHorrorAdvancedInteractionInputCommand& Command, AActor* InstigatorActor);
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign|Advanced Interaction")
+	bool PromptForExplicitAdvancedInteractionSelection();
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	bool IsTimedObjectiveActive() const { return bTimedObjectiveActive; }
@@ -93,14 +149,28 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	bool HasActiveEscapeDestination() const { return bTimedObjectiveActive && bTimedObjectiveUsesEscapeDestination; }
 
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Relic")
+	bool IsRecoverRelicAwaitingDelivery() const { return bRecoverRelicAwaitingDelivery; }
+
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	FVector GetActiveEscapeDestinationWorldLocation() const { return TimedObjectiveEscapeDestinationLocation; }
+
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Relic")
+	FVector GetRecoverRelicDeliveryWorldLocation() const { return RecoverRelicDeliveryLocation; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Campaign")
 	float GetEscapeCompletionRadius() const { return FMath::Max(50.0f, ObjectiveDefinition.EscapeCompletionRadius); }
 
+	UFUNCTION(BlueprintPure, Category="Horror|Campaign|Relic")
+	float GetRecoverRelicDeliveryCompletionRadius() const { return FMath::Max(50.0f, ObjectiveDefinition.RelicDeliveryCompletionRadius); }
+
+	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
+	bool AbortTimedObjectiveForRecovery(AActor* InstigatorActor, FName FailureCause, FText FailureTitle, FText RetryHint);
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Campaign")
 	void RefreshObjectiveState();
+
+	bool IsRecoverRelicAwaitingDeliveryForTests() const { return bRecoverRelicAwaitingDelivery; }
 
 	UBoxComponent* GetInteractionBoundsForTests() const { return InteractionBounds.Get(); }
 
@@ -131,24 +201,110 @@ protected:
 private:
 	bool IsTimedSurvivalObjective() const;
 	bool UsesAdvancedInteraction() const;
+	bool IsAuthoredCampaignObjective() const;
+	const FHorrorCampaignObjectiveBeat* GetCurrentObjectiveBeat() const;
+	FText BuildObjectiveLockReasonText() const;
 	bool HasConfiguredEscapeDestination() const;
-	FVector ResolveEscapeDestinationWorldLocation() const;
+	bool IsCarryReturnRelicObjective() const;
+	bool HasConfiguredRelicDeliveryAnchor() const;
+	FVector ResolveEscapeDestinationWorldLocation(AActor* InstigatorActor = nullptr) const;
+	FVector ResolveRecoverRelicDeliveryWorldLocation(AActor* InstigatorActor = nullptr) const;
+	float ResolveRecoverRelicDeliveryDistanceMeters(AActor* InstigatorActor = nullptr) const;
+	float ResolveRecoverRelicRouteDistanceMeters() const;
+	bool BeginRecoverRelicDelivery(AActor* InstigatorActor);
+	FTransform ResolveAmbushThreatAnchorTransform(AActor* InstigatorActor) const;
 	bool HasTimedObjectiveReachedEscapeDestination() const;
+	float GetAdvancedInteractionSuccessProgress() const;
+	float GetAdvancedInteractionCueCycleSeconds() const;
+	float GetAdvancedInteractionTimingWindowStart() const;
+	float GetAdvancedInteractionTimingWindowEnd() const;
+	float GetAdvancedInteractionFailureProgressPenalty() const;
+	float GetAdvancedInteractionFailureStabilityDamage() const;
+	float GetAdvancedInteractionSuccessStabilityRecovery() const;
+	float GetAdvancedInteractionFailurePauseSeconds() const;
+	float GetAdvancedInteractionRetryAssistFraction() const;
+	bool IsSignalTuningMode() const;
+	bool IsSpectralScanMode() const;
+	bool IsGearCalibrationMode() const;
+	bool IsCircuitHazardInput(FName InputId) const;
+	bool IsSignalTuningConfirmInput(FName InputId) const;
+	bool IsSignalTuningAdjustInput(FName InputId) const;
+	bool IsSpectralScanFilterAligned() const;
+	float ResolveSpectralScanTargetFocus() const;
+	float ResolveInitialSignalTuningBalance() const;
+	void AdjustSpectralScanFilter(FName InputId);
+	void AdjustSpectralScanFilterByAxis(float AxisValue, float HoldSeconds);
+	void AdjustSignalTuningBalance(FName InputId);
+	void AdjustSignalTuningBalanceByAxis(float AxisValue, float HoldSeconds);
+	bool IsSignalTuningBalanceAligned() const;
+	bool IsSpectralScanConfidenceReady() const;
 	void StartAdvancedInteraction();
 	void ResetAdvancedInteractionState();
 	void ResetAdvancedInteractionCue();
 	void AdvanceExpectedAdvancedInput();
+	FName ResolveGearCalibrationInputForStep(int32 StepIndex) const;
+	void MarkAdvancedInteractionSuccess();
+	void MarkAdvancedInteractionFailure(float StabilityDamage);
+	void SetAdvancedInteractionFault(FName FaultId);
+	void ClearAdvancedInteractionFault();
+	void ResetLastAdvancedInteractionOutcome();
+	void RecordAdvancedInteractionOutcome(
+		EHorrorAdvancedInteractionOutcomeKind Kind,
+		FName InputId,
+		EHorrorAdvancedInteractionFeedbackState FeedbackState,
+		bool bConsumesInput,
+		bool bAdvancesProgress,
+		bool bRetryable = false,
+		FName FailureCause = NAME_None,
+		FName RecoveryAction = NAME_None,
+		FName FaultId = NAME_None);
+	bool RecordAdvancedInteractionFailureOutcomeAfterFeedback(
+		EHorrorAdvancedInteractionOutcomeKind FailureKind,
+		FName InputId,
+		FName FailureFaultId,
+		AActor* InstigatorActor);
+	TArray<FHorrorAdvancedInteractionInputOption> BuildAdvancedInteractionInputOptions() const;
+	TArray<FHorrorAdvancedInteractionStepTrackItem> BuildAdvancedInteractionStepTrack() const;
+	FText BuildAdvancedInteractionPhaseText() const;
+	FText BuildExpectedAdvancedInputLabel() const;
+	FText BuildAdvancedInteractionDeviceStatusLabel() const;
+	FText BuildAdvancedInteractionRiskLabel() const;
+	FText BuildAdvancedInteractionRhythmLabel() const;
+	FText BuildAdvancedInteractionNextActionLabel() const;
+	FText BuildAdvancedInteractionFailureRecoveryLabel() const;
+	FText BuildGearCalibrationChainLabel() const;
+	float BuildAdvancedInteractionPerformanceGrade() const;
+	float BuildAdvancedInteractionInputPrecision() const;
+	float BuildAdvancedInteractionDeviceLoad() const;
+	float BuildAdvancedInteractionRouteFlow() const;
+	float BuildAdvancedInteractionHazardPressure() const;
+	float BuildAdvancedInteractionTargetAlignment() const;
+	int32 BuildAdvancedInteractionActiveInputSlot() const;
+	EHorrorAdvancedInteractionFeedbackState GetAdvancedInteractionFeedbackState() const;
+	FText BuildMultiStepPhaseText() const;
 	void ApplyAdvancedInteractionTimingFailure();
 	void ApplyAdvancedInteractionWrongInputFailure();
+	FText BuildAdvancedInteractionPausedText(bool bExplicitSelection) const;
+	FText BuildStandardInteractionDeviceStatusLabel() const;
+	FText BuildStandardInteractionNextActionLabel() const;
+	FText BuildStandardInteractionFailureRecoveryLabel() const;
+	FName GetAdvancedInteractionFailureCause() const;
+	bool TryHandleAdvancedInteractionFailureExhausted(AActor* InstigatorActor);
 	bool CompleteAdvancedInteraction(AActor* InstigatorActor);
 	FText BuildAdvancedInteractionPromptText() const;
+	EHorrorAdvancedInteractionOutcomeKind ResolveAdvancedInteractionEventOutcomeKind(bool bSuccess) const;
+	void PublishAdvancedInteractionFeedbackEvent(bool bSuccess, AActor* InstigatorActor) const;
+	void PublishObjectiveFailedEvent(AActor* InstigatorActor, const FText& FailureTitle, const FText& RetryHint, FName FailureCause, FName RecoveryAction) const;
 	void StartTimedObjective(AActor* InstigatorActor);
+	void FailTimedObjective(AActor* InstigatorActor);
 	void UpdateTimedObjective(float DeltaTime);
 	void UpdateAdvancedInteraction(float DeltaTime);
+	void RefreshRuntimeTickState();
 	bool CompleteObjective(AActor* InstigatorActor);
 	void PublishAmbushStartedEvent(AActor* InstigatorActor) const;
 	void ApplyObjectiveVisuals();
 	void ApplyCompletedVisuals();
+	void ApplyHiddenLockedVisuals();
 	FColor GetObjectiveColor() const;
 
 	UPROPERTY(Transient)
@@ -156,6 +312,9 @@ private:
 
 	UPROPERTY(Transient)
 	bool bAvailableForInteraction = true;
+
+	UPROPERTY(Transient)
+	bool bPresentationVisible = true;
 
 	UPROPERTY(Transient)
 	int32 RequiredInteractionCount = 1;
@@ -188,7 +347,58 @@ private:
 	FText AdvancedInteractionFeedbackText;
 
 	UPROPERTY(Transient)
+	float AdvancedInteractionStabilityFraction = 1.0f;
+
+	UPROPERTY(Transient)
+	float SignalTuningBalanceFraction = 0.5f;
+
+	UPROPERTY(Transient)
+	float SignalTuningTargetBalanceFraction = 0.5f;
+
+	UPROPERTY(Transient)
+	float SpectralScanConfidenceFraction = 0.0f;
+
+	UPROPERTY(Transient)
+	float SpectralScanNoiseFraction = 0.0f;
+
+	UPROPERTY(Transient)
+	float SpectralScanFilterFocusFraction = 0.5f;
+
+	UPROPERTY(Transient)
+	float SpectralScanTargetFocusFraction = 0.5f;
+
+	UPROPERTY(Transient)
+	int32 AdvancedInteractionComboCount = 0;
+
+	UPROPERTY(Transient)
+	int32 AdvancedInteractionMistakeCount = 0;
+
+	UPROPERTY(Transient)
+	bool bAdvancedInteractionRecentSuccess = false;
+
+	UPROPERTY(Transient)
+	bool bAdvancedInteractionRecentFailure = false;
+
+	UPROPERTY(Transient)
+	FName LastAdvancedInteractionFaultId = NAME_None;
+
+	UPROPERTY(Transient)
+	FHorrorAdvancedInteractionOutcome LastAdvancedInteractionOutcome;
+
+	UPROPERTY(Transient)
 	float AdvancedInteractionPauseRemainingSeconds = 0.0f;
+
+	UPROPERTY(Transient)
+	int32 ObjectiveFailureAttemptCount = 0;
+
+	UPROPERTY(Transient)
+	bool bObjectiveFailedRetryable = false;
+
+	UPROPERTY(Transient)
+	FName LastObjectiveFailureCause = NAME_None;
+
+	UPROPERTY(Transient)
+	FName LastObjectiveRecoveryAction = NAME_None;
 
 	UPROPERTY(Transient)
 	bool bTimedObjectiveActive = false;
@@ -203,7 +413,19 @@ private:
 	bool bTimedObjectiveUsesEscapeDestination = false;
 
 	UPROPERTY(Transient)
+	bool bRecoverRelicAwaitingDelivery = false;
+
+	UPROPERTY(Transient)
 	FVector TimedObjectiveEscapeDestinationLocation = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	FVector RecoverRelicDeliveryLocation = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	bool bHasTimedObjectiveOriginTransform = false;
+
+	UPROPERTY(Transient)
+	FTransform TimedObjectiveOriginTransform = FTransform::Identity;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<AActor> TimedObjectiveInstigator;

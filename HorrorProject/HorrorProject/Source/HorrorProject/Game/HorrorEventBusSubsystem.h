@@ -3,9 +3,43 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Game/HorrorAdvancedInteractionTypes.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "HorrorEventBusSubsystem.generated.h"
+
+struct FHorrorEventSourceMetadataKey
+{
+	FHorrorEventSourceMetadataKey() = default;
+	FHorrorEventSourceMetadataKey(FGameplayTag InEventTag, FName InSourceId)
+		: EventTag(InEventTag)
+		, SourceId(InSourceId)
+	{
+	}
+
+	FGameplayTag EventTag;
+	FName SourceId = NAME_None;
+
+	friend bool operator==(const FHorrorEventSourceMetadataKey& Left, const FHorrorEventSourceMetadataKey& Right)
+	{
+		return Left.EventTag == Right.EventTag && Left.SourceId == Right.SourceId;
+	}
+};
+
+FORCEINLINE uint32 GetTypeHash(const FHorrorEventSourceMetadataKey& Key)
+{
+	return HashCombine(GetTypeHash(Key.EventTag), GetTypeHash(Key.SourceId));
+}
+
+UENUM(BlueprintType)
+enum class EHorrorObjectiveFeedbackSeverity : uint8
+{
+	Info,
+	Success,
+	Warning,
+	Failure,
+	Critical
+};
 
 USTRUCT(BlueprintType)
 struct HORRORPROJECT_API FHorrorObjectiveMessageMetadata
@@ -20,6 +54,30 @@ struct HORRORPROJECT_API FHorrorObjectiveMessageMetadata
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
 	FText DebugLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	EHorrorObjectiveFeedbackSeverity FeedbackSeverity = EHorrorObjectiveFeedbackSeverity::Info;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	bool bRetryable = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	float DisplaySeconds = 5.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName FailureCause = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName RecoveryAction = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	EHorrorAdvancedInteractionOutcomeKind AdvancedOutcomeKind = EHorrorAdvancedInteractionOutcomeKind::Ignored;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName AdvancedFaultId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	int32 AttemptIndex = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -50,6 +108,30 @@ struct HORRORPROJECT_API FHorrorEventMessage
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
 	FText DebugLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	EHorrorObjectiveFeedbackSeverity FeedbackSeverity = EHorrorObjectiveFeedbackSeverity::Info;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	bool bRetryable = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	float DisplaySeconds = 5.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName FailureCause = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName RecoveryAction = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	EHorrorAdvancedInteractionOutcomeKind AdvancedOutcomeKind = EHorrorAdvancedInteractionOutcomeKind::Ignored;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	FName AdvancedFaultId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Events")
+	int32 AttemptIndex = 0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHorrorEventPublishedDynamicDelegate, const FHorrorEventMessage&, Message);
@@ -90,14 +172,22 @@ private:
 	int32 HistoryCapacity = DefaultHistoryCapacity;
 
 	UPROPERTY(Transient)
-	TArray<FHorrorEventMessage> History;
+	TArray<FHorrorEventMessage> HistoryRing;
+
+	mutable TArray<FHorrorEventMessage> OrderedHistoryView;
+	mutable bool bOrderedHistoryViewDirty = true;
+	int32 HistoryStartIndex = 0;
+	int32 HistoryCount = 0;
 
 	UPROPERTY(Transient)
 	TMap<FName, FHorrorObjectiveMessageMetadata> ObjectiveMetadataBySourceId;
 
-	UPROPERTY(Transient)
-	TMap<FName, FHorrorObjectiveMessageMetadata> ObjectiveMetadataByEventAndSourceId;
+	TMap<FHorrorEventSourceMetadataKey, FHorrorObjectiveMessageMetadata> ObjectiveMetadataByEventAndSourceId;
 
 	FHorrorEventPublishedNativeDelegate OnEventPublishedNative;
+
+	void AppendHistoryMessage(FHorrorEventMessage&& Message);
+	void EnsureHistoryRingCapacity();
+	void RebuildOrderedHistoryView() const;
 
 };

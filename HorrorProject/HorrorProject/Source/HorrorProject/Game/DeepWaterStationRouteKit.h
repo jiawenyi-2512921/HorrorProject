@@ -79,6 +79,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Route")
 	int32 SpawnObjectiveNodes();
 
+	const TArray<AFoundFootageObjectiveInteractable*>& GetSpawnedObjectiveInteractables() const { return SpawnedObjectiveInteractableViews; }
+
 	const TArray<AFoundFootageObjectiveInteractable*>& GetSpawnedObjectiveInteractablesForTests() const { return SpawnedObjectiveInteractableViews; }
 
 	UFUNCTION(BlueprintPure, Category="Horror|Route")
@@ -180,4 +182,5 @@ private:
 		const FDeepWaterStationObjectiveNode& ObjectiveNode,
 		int32 NodeIndex,
 		TArray<FText>& ValidationErrors) const;
+	void ValidateArchiveRevealEscapeBudget(TArray<FText>& ValidationErrors) const;
 };

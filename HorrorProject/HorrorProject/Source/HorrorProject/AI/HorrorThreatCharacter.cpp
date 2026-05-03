@@ -17,6 +17,9 @@ namespace
 	const FVector DefaultGolemMeshRelativeLocation(0.0f, 0.0f, -DefaultThreatCapsuleHalfHeightCm);
 	const FRotator DefaultGolemMeshRelativeRotation(0.0f, -90.0f, 0.0f);
 	const FVector DefaultGolemMeshRelativeScale(1.0f, 1.0f, 1.0f);
+	constexpr float ThreatRunAnimationReferenceSpeedCmPerSecond = 180.0f;
+	constexpr float ThreatRunAnimationMinPlayRate = 0.72f;
+	constexpr float ThreatRunAnimationMaxPlayRate = 1.85f;
 }
 
 void UHorrorThreatDelegateProbe::HandleThreatActiveChanged(bool bIsActive)
@@ -56,7 +59,7 @@ AHorrorThreatCharacter::AHorrorThreatCharacter()
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	ApplyThreatAnimation(IdleAnimation);
+	ApplyThreatAnimation(IdleAnimation, 1.0f);
 
 	GolemBehavior = CreateDefaultSubobject<UHorrorGolemBehaviorComponent>(TEXT("GolemBehavior"));
 }
@@ -69,7 +72,9 @@ bool AHorrorThreatCharacter::ActivateThreat()
 	}
 
 	bThreatActive = true;
-	ApplyThreatAnimation(RunAnimation);
+	const UHorrorGolemBehaviorComponent* Behavior = GetGolemBehavior();
+	const float ChaseSpeed = Behavior ? Behavior->FullChase_Speed : HorrorGolemDefaults::FullChaseSpeedCmPerSecond;
+	ApplyThreatAnimation(RunAnimation, CalculateThreatRunAnimationPlayRate(ChaseSpeed));
 	OnThreatActiveChanged.Broadcast(bThreatActive);
 	return true;
 }
@@ -83,7 +88,7 @@ bool AHorrorThreatCharacter::DeactivateThreat()
 
 	bThreatActive = false;
 	ClearDetectedTarget();
-	ApplyThreatAnimation(IdleAnimation);
+	ApplyThreatAnimation(IdleAnimation, 1.0f);
 	OnThreatActiveChanged.Broadcast(bThreatActive);
 	return true;
 }
@@ -143,12 +148,33 @@ UHorrorGolemBehaviorComponent* AHorrorThreatCharacter::GetGolemBehavior() const
 	return GolemBehavior ? GolemBehavior.Get() : FindComponentByClass<UHorrorGolemBehaviorComponent>();
 }
 
-void AHorrorThreatCharacter::ApplyThreatAnimation(UAnimationAsset* AnimationAsset)
+void AHorrorThreatCharacter::SetThreatMovementAnimationSpeed(float MovementSpeedCmPerSecond)
+{
+	if (!bThreatActive)
+	{
+		return;
+	}
+
+	ApplyThreatAnimation(RunAnimation, CalculateThreatRunAnimationPlayRate(MovementSpeedCmPerSecond));
+}
+
+float AHorrorThreatCharacter::CalculateThreatRunAnimationPlayRate(float MovementSpeedCmPerSecond) const
+{
+	const float ReferenceSpeed = FMath::Max(1.0f, ThreatRunAnimationReferenceSpeedCmPerSecond);
+	return FMath::Clamp(
+		FMath::Max(0.0f, MovementSpeedCmPerSecond) / ReferenceSpeed,
+		ThreatRunAnimationMinPlayRate,
+		ThreatRunAnimationMaxPlayRate);
+}
+
+void AHorrorThreatCharacter::ApplyThreatAnimation(UAnimationAsset* AnimationAsset, float PlayRate)
 {
 	if (!GetMesh() || !AnimationAsset)
 	{
 		return;
 	}
 
-	GetMesh()->OverrideAnimationData(AnimationAsset, true, true);
+	const float SafePlayRate = FMath::Max(UE_SMALL_NUMBER, PlayRate);
+	GetMesh()->OverrideAnimationData(AnimationAsset, true, true, 0.0f, SafePlayRate);
+	GetMesh()->SetPlayRate(SafePlayRate);
 }

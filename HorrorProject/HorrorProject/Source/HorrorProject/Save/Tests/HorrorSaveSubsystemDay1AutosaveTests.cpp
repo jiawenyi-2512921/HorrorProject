@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "AI/HorrorThreatCharacter.h"
 #include "Game/HorrorEncounterDirector.h"
+#include "Game/HorrorCampaign.h"
+#include "Game/HorrorCampaignObjectiveActor.h"
 #include "Game/HorrorFoundFootageContract.h"
 #include "Game/HorrorGameModeBase.h"
 #include "GameFramework/PlayerController.h"
@@ -143,6 +145,75 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	"HorrorProject.Save.Subsystem.RestoresDay1CompletionState",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorSaveSubsystemRestoresDay1CompletionCampaignRuntimeTest,
+	"HorrorProject.Save.Subsystem.RestoresDay1CompletionCampaignRuntime",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorSaveSubsystemRestoresDay1CompletionCampaignRuntimeTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	AHorrorGameModeBase* GameMode = CreateDay1AutosaveTestGameMode(*this, TestWorld, World);
+	if (!GameMode || !World)
+	{
+		return false;
+	}
+
+	FString ErrorMessage;
+	GameMode->InitGame(TEXT("/Game/DeepWaterStation/Maps/DemoMap_VerticalSlice_Day1"), TEXT(""), ErrorMessage);
+
+	AHorrorPlayerCharacter* PlayerCharacter = SpawnDay1AutosaveTestPlayer(*this, World);
+	if (!PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	UHorrorSaveSubsystem* SaveSubsystem = World->GetGameInstance()
+		? World->GetGameInstance()->GetSubsystem<UHorrorSaveSubsystem>()
+		: nullptr;
+	TestNotNull(TEXT("Day1 completion campaign runtime restore test should expose save subsystem."), SaveSubsystem);
+	if (!SaveSubsystem)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestTrue(TEXT("Bodycam acquisition should record before completion runtime snapshot."), GameMode->TryAcquireBodycam(TEXT("BodycamPickup"), true));
+	TestTrue(TEXT("First note should record before completion runtime snapshot."), GameMode->TryCollectFirstNote(TEXT("NoteIntro")));
+	TestTrue(TEXT("First anomaly candidate should register before completion runtime snapshot."), GameMode->BeginFirstAnomalyCandidate(TEXT("Anomaly01")));
+	TestTrue(TEXT("First anomaly should record before completion runtime snapshot."), GameMode->TryRecordFirstAnomaly(true));
+	TestTrue(TEXT("Archive review should unlock the exit before completion runtime snapshot."), GameMode->TryReviewArchive(TEXT("ArchiveTerminal")));
+	TestTrue(TEXT("Exit use should complete Day1 before completion runtime snapshot."), GameMode->TryCompleteDay1(TEXT("Exit.ServiceDoor")));
+
+	UHorrorSaveGame* Snapshot = SaveSubsystem->CreateCheckpointSnapshot(World, TEXT("Checkpoint.Day1.Complete.Runtime"));
+	TestNotNull(TEXT("Day1 completion campaign runtime restore test should create a checkpoint snapshot."), Snapshot);
+	if (!Snapshot)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GameMode->ImportDay1CompleteState(false);
+	GameMode->ResetRuntimeCampaignObjectiveViewsForTests();
+	TestFalse(TEXT("Day1 completion state should be clear before runtime checkpoint restore."), GameMode->IsDay1Complete());
+	TestEqual(TEXT("Runtime objective views should be empty before runtime checkpoint restore."), GameMode->GetRuntimeCampaignObjectivesForTests().Num(), 0);
+
+	TestTrue(TEXT("Completion runtime snapshot should apply."), SaveSubsystem->ApplyCheckpointSnapshot(World, Snapshot));
+	TestTrue(TEXT("Completion runtime snapshot should restore Day1 completion state."), GameMode->IsDay1Complete());
+	TestEqual(TEXT("Completion runtime snapshot should activate the DeepWater campaign chapter."), GameMode->GetCurrentCampaignChapterId(), FName(TEXT("Chapter.DeepWaterStationFinale")));
+	TestTrue(TEXT("Completion runtime snapshot should spawn campaign runtime objectives."), GameMode->GetRuntimeCampaignObjectivesForTests().Num() > 0);
+	TestTrue(TEXT("Completion runtime snapshot should expose campaign HUD after runtime spawn."), GameMode->ShouldExposeCampaignObjectivesToHUD());
+
+	const FHorrorObjectiveTrackerSnapshot Tracker = GameMode->BuildObjectiveTrackerSnapshot();
+	TestEqual(TEXT("Completion runtime snapshot tracker should switch to campaign objectives."), Tracker.Stage, EHorrorObjectiveTrackerStage::CampaignObjective);
+	TestFalse(TEXT("Completion runtime snapshot tracker should expose a concrete objective id."), Tracker.ActiveObjectiveId.IsNone());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
 bool FHorrorSaveSubsystemRestoresDay1CompletionStateTest::RunTest(const FString& Parameters)
 {
 	FTestWorldWrapper TestWorld;
@@ -189,6 +260,198 @@ bool FHorrorSaveSubsystemRestoresDay1CompletionStateTest::RunTest(const FString&
 	TestFalse(TEXT("Day1 completion state should be clear before checkpoint restore."), GameMode->IsDay1Complete());
 	TestTrue(TEXT("Completion snapshot should apply."), SaveSubsystem->ApplyCheckpointSnapshot(World, Snapshot));
 	TestTrue(TEXT("Completion snapshot should restore Day1 completion state."), GameMode->IsDay1Complete());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorSaveSubsystemSnapshotsCampaignProgressTest,
+	"HorrorProject.Save.Subsystem.SnapshotsCampaignProgress",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorSaveSubsystemSnapshotsCampaignProgressTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	AHorrorGameModeBase* GameMode = CreateDay1AutosaveTestGameMode(*this, TestWorld, World);
+	if (!GameMode || !World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerCharacter* PlayerCharacter = SpawnDay1AutosaveTestPlayer(*this, World);
+	if (!PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	UHorrorSaveSubsystem* SaveSubsystem = World->GetGameInstance()
+		? World->GetGameInstance()->GetSubsystem<UHorrorSaveSubsystem>()
+		: nullptr;
+	TestNotNull(TEXT("Campaign snapshot test should expose save subsystem."), SaveSubsystem);
+	if (!SaveSubsystem)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FHorrorCampaignChapterDefinition* ForestChapter = FHorrorCampaign::FindChapterById(TEXT("Chapter.ForestOfSpikes"));
+	TestNotNull(TEXT("Campaign snapshot test should use the forest chapter."), ForestChapter);
+	if (!ForestChapter || ForestChapter->Objectives.Num() < 2)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GameMode->ResetCampaignProgressForChapterForTests(ForestChapter->ChapterId);
+	const FHorrorCampaignObjectiveDefinition* BeaconObjective = FHorrorCampaign::FindObjectiveById(
+		*ForestChapter,
+		TEXT("Forest.AlignSpikeBeacon"));
+	const FHorrorCampaignObjectiveDefinition* PursuitObjective = FHorrorCampaign::FindObjectiveById(
+		*ForestChapter,
+		TEXT("Forest.HoldSpikeCircle"));
+	TestNotNull(TEXT("Campaign snapshot test should find the forest beacon objective."), BeaconObjective);
+	TestNotNull(TEXT("Campaign snapshot test should find the forest pursuit objective."), PursuitObjective);
+	if (!BeaconObjective || !PursuitObjective)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestTrue(
+		TEXT("Campaign snapshot should capture a completed dependency-free objective."),
+		GameMode->TryCompleteCampaignObjective(ForestChapter->ChapterId, BeaconObjective->ObjectiveId, PlayerCharacter));
+
+	UHorrorSaveGame* Snapshot = SaveSubsystem->CreateCheckpointSnapshot(World, TEXT("Checkpoint.Campaign.Forest"));
+	TestNotNull(TEXT("Campaign progress snapshot should be created."), Snapshot);
+	if (!Snapshot)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestEqual(TEXT("Snapshot should remember the active campaign chapter."), Snapshot->CampaignChapterId, ForestChapter->ChapterId);
+	TestTrue(
+		TEXT("Snapshot should store completed campaign objective ids."),
+		Snapshot->CompletedCampaignObjectiveIds.Contains(BeaconObjective->ObjectiveId));
+
+	GameMode->ResetCampaignProgressForChapterForTests(ForestChapter->ChapterId);
+	TestFalse(
+		TEXT("Campaign progress should be reset before restore."),
+		GameMode->CanCompleteCampaignObjective(ForestChapter->ChapterId, PursuitObjective->ObjectiveId));
+
+	TestTrue(TEXT("Campaign snapshot should apply."), SaveSubsystem->ApplyCheckpointSnapshot(World, Snapshot));
+	TestEqual(TEXT("Restored campaign chapter should match the snapshot."), GameMode->GetCurrentCampaignChapterId(), ForestChapter->ChapterId);
+	TestEqual(TEXT("Restored campaign completed objective count should match."), GameMode->GetCampaignCompletedObjectiveCount(), 1);
+	TestTrue(
+		TEXT("Restored dependency completion should unlock the pursuit objective."),
+		GameMode->CanCompleteCampaignObjective(ForestChapter->ChapterId, PursuitObjective->ObjectiveId));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorSaveSubsystemSnapshotsCampaignObjectiveRuntimeStateTest,
+	"HorrorProject.Save.Subsystem.SnapshotsCampaignObjectiveRuntimeState",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorSaveSubsystemSnapshotsCampaignObjectiveRuntimeStateTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	AHorrorGameModeBase* GameMode = CreateDay1AutosaveTestGameMode(*this, TestWorld, World);
+	if (!GameMode || !World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerCharacter* PlayerCharacter = SpawnDay1AutosaveTestPlayer(*this, World);
+	if (!PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	UHorrorSaveSubsystem* SaveSubsystem = World->GetGameInstance()
+		? World->GetGameInstance()->GetSubsystem<UHorrorSaveSubsystem>()
+		: nullptr;
+	TestNotNull(TEXT("Campaign runtime snapshot test should expose save subsystem."), SaveSubsystem);
+	if (!SaveSubsystem)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FHorrorCampaignChapterDefinition* DeepWaterChapter = FHorrorCampaign::FindChapterById(TEXT("Chapter.DeepWaterStationFinale"));
+	TestNotNull(TEXT("Campaign runtime snapshot test should use the deep water chapter."), DeepWaterChapter);
+	if (!DeepWaterChapter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FHorrorCampaignObjectiveDefinition* BootObjective = FHorrorCampaign::FindObjectiveById(
+		*DeepWaterChapter,
+		TEXT("DeepWater.BootDryDock"));
+	TestNotNull(TEXT("Campaign runtime snapshot test should find the boot objective."), BootObjective);
+	if (!BootObjective)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GameMode->ResetCampaignProgressForChapterForTests(DeepWaterChapter->ChapterId);
+	AHorrorCampaignObjectiveActor* SourceObjectiveActor = World->SpawnActor<AHorrorCampaignObjectiveActor>();
+	TestNotNull(TEXT("Campaign runtime snapshot test should spawn a source objective actor."), SourceObjectiveActor);
+	if (!SourceObjectiveActor)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	SourceObjectiveActor->ConfigureObjective(DeepWaterChapter->ChapterId, *BootObjective);
+	GameMode->AddRuntimeCampaignObjectiveForTests(SourceObjectiveActor);
+
+	const FHitResult Hit;
+	TestTrue(TEXT("Source boot objective should open its advanced panel before snapshot."), SourceObjectiveActor->Interact_Implementation(PlayerCharacter, Hit));
+	SourceObjectiveActor->Tick(0.65f);
+	TestTrue(TEXT("Source boot objective should accept a correct circuit input before snapshot."), SourceObjectiveActor->SubmitAdvancedInteractionInput(SourceObjectiveActor->GetExpectedAdvancedInputId(), PlayerCharacter));
+
+	UHorrorSaveGame* Snapshot = SaveSubsystem->CreateCheckpointSnapshot(World, TEXT("Checkpoint.Campaign.RuntimeCircuit"));
+	TestNotNull(TEXT("Campaign runtime snapshot should be created."), Snapshot);
+	if (!Snapshot)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	TestEqual(TEXT("Snapshot should store one campaign objective runtime state."), Snapshot->CampaignObjectiveRuntimeStates.Num(), 1);
+	TestEqual(TEXT("Snapshot runtime state should identify the boot objective."), Snapshot->CampaignObjectiveRuntimeStates[0].ObjectiveId, BootObjective->ObjectiveId);
+	TestTrue(TEXT("Snapshot runtime state should preserve active advanced interaction."), Snapshot->CampaignObjectiveRuntimeStates[0].bAdvancedInteractionActive);
+	TestTrue(TEXT("Snapshot runtime state should preserve advanced progress."), Snapshot->CampaignObjectiveRuntimeStates[0].AdvancedInteractionProgressFraction > 0.0f);
+
+	const FHorrorCampaignObjectiveSaveState SavedObjectiveState = Snapshot->CampaignObjectiveRuntimeStates[0];
+	SourceObjectiveActor->Destroy();
+	GameMode->ResetRuntimeCampaignObjectiveViewsForTests();
+	AHorrorCampaignObjectiveActor* RestoredObjectiveActor = World->SpawnActor<AHorrorCampaignObjectiveActor>();
+	TestNotNull(TEXT("Campaign runtime restore test should spawn a replacement objective actor."), RestoredObjectiveActor);
+	if (!RestoredObjectiveActor)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RestoredObjectiveActor->ConfigureObjective(DeepWaterChapter->ChapterId, *BootObjective);
+	GameMode->AddRuntimeCampaignObjectiveForTests(RestoredObjectiveActor);
+	TestTrue(TEXT("Campaign runtime snapshot should apply."), SaveSubsystem->ApplyCheckpointSnapshot(World, Snapshot));
+
+	const FHorrorCampaignObjectiveRuntimeState RestoredRuntimeState = RestoredObjectiveActor->BuildObjectiveRuntimeState();
+	TestEqual(TEXT("Checkpoint restore should reopen the advanced circuit window."), RestoredRuntimeState.Status, EHorrorCampaignObjectiveRuntimeStatus::AdvancedInteractionActive);
+	TestEqual(TEXT("Checkpoint restore should preserve advanced progress."), RestoredRuntimeState.AdvancedInteraction.ProgressFraction, SavedObjectiveState.AdvancedInteractionProgressFraction);
+	TestEqual(TEXT("Checkpoint restore should preserve expected input."), RestoredRuntimeState.AdvancedInteraction.ExpectedInputId, SavedObjectiveState.ExpectedAdvancedInputId);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

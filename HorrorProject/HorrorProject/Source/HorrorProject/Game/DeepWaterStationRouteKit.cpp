@@ -2,6 +2,7 @@
 
 #include "Game/DeepWaterStationRouteKit.h"
 
+#include "AI/HorrorGolemBehaviorComponent.h"
 #include "AI/HorrorThreatCharacter.h"
 #include "Components/SceneComponent.h"
 #include "Containers/Set.h"
@@ -36,6 +37,15 @@ constexpr float ArchiveReviewXOffsetCm = 1650.0f;
 constexpr float ExitRouteGateXOffsetCm = 2050.0f;
 constexpr float MainCorridorYOffsetCm = 0.0f;
 constexpr float ServiceRouteYOffsetCm = 300.0f;
+constexpr float ArchiveRevealThreatBackstepCm = 1200.0f;
+constexpr float ArchiveRevealThreatSideStepCm = 420.0f;
+constexpr float ArchiveRevealMinThreatBehindRouteCm = 250.0f;
+constexpr float ArchiveRevealMinThreatSideOffsetCm = 320.0f;
+constexpr float ArchiveRevealMinThreatDistanceCm = 950.0f;
+constexpr float ArchiveRevealMaxThreatDistanceCm = 2300.0f;
+constexpr float ArchiveRevealMinEscapeAdvantageSeconds = 1.0f;
+constexpr float ConservativePlayerEscapeSpeedCmPerSecond = 450.0f;
+constexpr float MaxLateObjectiveSpacingCm = 650.0f;
 
 constexpr FFirstLoopObjectiveSpec FirstLoopObjectiveSpecs[] = {
 	{
@@ -215,6 +225,17 @@ bool DeepWaterObjectiveRequiresNoteMetadata(EFoundFootageInteractableObjective O
 	return Objective == EFoundFootageInteractableObjective::FirstNote;
 }
 
+const FDeepWaterStationObjectiveNode* FindObjectiveNode(
+	const TArray<FDeepWaterStationObjectiveNode>& ObjectiveNodes,
+	EFoundFootageInteractableObjective Objective)
+{
+	return ObjectiveNodes.FindByPredicate(
+		[Objective](const FDeepWaterStationObjectiveNode& Node)
+		{
+			return Node.Objective == Objective;
+		});
+}
+
 bool IsLegacyStraightLineLateObjectivePlacement(const FDeepWaterStationObjectiveNode& Node)
 {
 	const FVector Location = Node.RelativeTransform.GetLocation();
@@ -227,6 +248,26 @@ bool IsLegacyStraightLineLateObjectivePlacement(const FDeepWaterStationObjective
 		return Location.Equals(FVector(2200.0, 0.0, HorrorRouteKitDefaults::ObjectiveHeightCm), KINDA_SMALL_NUMBER);
 	}
 	return false;
+}
+
+FVector BuildReadableArchiveThreatLocation(
+	const FVector& ArchiveLocation,
+	const FVector& ExitLocation,
+	const FVector& FallbackWorldLocation)
+{
+	FVector ExitDirection = ExitLocation - ArchiveLocation;
+	ExitDirection.Z = 0.0f;
+	if (ExitDirection.IsNearlyZero())
+	{
+		ExitDirection = FVector::ForwardVector;
+	}
+	ExitDirection.Normalize();
+
+	const FVector SideDirection(-ExitDirection.Y, ExitDirection.X, 0.0f);
+	return ArchiveLocation
+		- ExitDirection * ArchiveRevealThreatBackstepCm
+		+ SideDirection * ArchiveRevealThreatSideStepCm
+		+ FVector(0.0f, 0.0f, FallbackWorldLocation.Z - ArchiveLocation.Z);
 }
 }
 
@@ -348,6 +389,7 @@ bool ADeepWaterStationRouteKit::ValidateObjectiveNodes(TArray<FText>& Validation
 	ValidateRouteKitClassSettings(ValidationErrors);
 	ValidateObjectiveRouteOrder(ValidationErrors);
 	ValidateObjectiveNodeDefinitions(ValidationErrors);
+	ValidateArchiveRevealEscapeBudget(ValidationErrors);
 
 	return ValidationErrors.IsEmpty();
 }
@@ -496,6 +538,88 @@ void ADeepWaterStationRouteKit::ValidateObjectiveNodeRequirements(
 	}
 }
 
+void ADeepWaterStationRouteKit::ValidateArchiveRevealEscapeBudget(TArray<FText>& ValidationErrors) const
+{
+	const FDeepWaterStationObjectiveNode* ArchiveNode = FindObjectiveNode(ObjectiveNodes, EFoundFootageInteractableObjective::ArchiveReview);
+	const FDeepWaterStationObjectiveNode* ExitNode = FindObjectiveNode(ObjectiveNodes, EFoundFootageInteractableObjective::ExitRouteGate);
+	const FDeepWaterStationObjectiveNode* RecordNode = FindObjectiveNode(ObjectiveNodes, EFoundFootageInteractableObjective::FirstAnomalyRecord);
+	if (!ArchiveNode || !ExitNode)
+	{
+		return;
+	}
+
+	const FVector ArchiveLocation = ArchiveNode->RelativeTransform.GetLocation();
+	const FVector ExitLocation = ExitNode->RelativeTransform.GetLocation();
+	if (!FMath::IsNearlyEqual(ArchiveLocation.Y, ServiceRouteYOffsetCm, 1.0f)
+		|| !FMath::IsNearlyEqual(ExitLocation.Y, ServiceRouteYOffsetCm, 1.0f))
+	{
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("Archive reveal escape nodes must stay on the service route lane.")));
+	}
+
+	if (RecordNode)
+	{
+		const float RecordToArchiveDistance = FVector::Dist2D(RecordNode->RelativeTransform.GetLocation(), ArchiveLocation);
+		if (RecordToArchiveDistance > MaxLateObjectiveSpacingCm)
+		{
+			ValidationErrors.Add(FText::Format(
+				FText::AsCultureInvariant(TEXT("Archive review is too far from the anomaly recording window ({0} cm).")),
+				FText::AsNumber(FMath::RoundToInt(RecordToArchiveDistance))));
+		}
+	}
+
+	const float ArchiveToExitDistance = FVector::Dist2D(ArchiveLocation, ExitLocation);
+	if (ArchiveToExitDistance > MaxLateObjectiveSpacingCm)
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::AsCultureInvariant(TEXT("Exit gate is too far from the archive terminal ({0} cm).")),
+			FText::AsNumber(FMath::RoundToInt(ArchiveToExitDistance))));
+	}
+
+	FVector ExitDirection = ExitLocation - ArchiveLocation;
+	ExitDirection.Z = 0.0f;
+	if (ExitDirection.IsNearlyZero())
+	{
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("Archive reveal escape route needs a non-zero archive-to-exit direction.")));
+		return;
+	}
+	ExitDirection.Normalize();
+
+	const FVector SideDirection(-ExitDirection.Y, ExitDirection.X, 0.0f);
+	const FVector ThreatLocation = BuildReadableArchiveThreatLocation(
+		ArchiveLocation,
+		ExitLocation,
+		EncounterThreatRelativeTransform.GetLocation());
+	const FVector ThreatOffset = ThreatLocation - ArchiveLocation;
+	const float ForwardProjection = FVector::DotProduct(ThreatOffset, ExitDirection);
+	const float SideProjection = FMath::Abs(FVector::DotProduct(ThreatOffset, SideDirection));
+	const float ThreatToArchiveDistance = FVector::Dist2D(ThreatLocation, ArchiveLocation);
+	const float ThreatToExitDistance = FVector::Dist2D(ThreatLocation, ExitLocation);
+	const float PlayerEscapeSeconds = ArchiveToExitDistance / ConservativePlayerEscapeSpeedCmPerSecond;
+	const float ThreatCatchupSeconds = ThreatToExitDistance / HorrorGolemDefaults::FullChaseSpeedCmPerSecond;
+
+	if (ForwardProjection > -ArchiveRevealMinThreatBehindRouteCm)
+	{
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("Archive reveal threat must spawn behind the exit route, not between archive and exit.")));
+	}
+
+	if (SideProjection < ArchiveRevealMinThreatSideOffsetCm)
+	{
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("Archive reveal threat needs a readable side offset from the escape line.")));
+	}
+
+	if (ThreatToArchiveDistance < ArchiveRevealMinThreatDistanceCm || ThreatToArchiveDistance > ArchiveRevealMaxThreatDistanceCm)
+	{
+		ValidationErrors.Add(FText::Format(
+			FText::AsCultureInvariant(TEXT("Archive reveal threat distance is outside the readable pressure band ({0} cm).")),
+			FText::AsNumber(FMath::RoundToInt(ThreatToArchiveDistance))));
+	}
+
+	if (ThreatCatchupSeconds - PlayerEscapeSeconds < ArchiveRevealMinEscapeAdvantageSeconds)
+	{
+		ValidationErrors.Add(FText::AsCultureInvariant(TEXT("Archive reveal escape route does not leave enough time for the player to beat the golem to the exit.")));
+	}
+}
+
 int32 ADeepWaterStationRouteKit::SpawnObjectiveNodes()
 {
 	if (!SpawnedObjectiveInteractables.IsEmpty())
@@ -598,6 +722,23 @@ AHorrorEncounterDirector* ADeepWaterStationRouteKit::GetSpawnedEncounterDirector
 bool ADeepWaterStationRouteKit::TriggerEncounterReveal(AActor* PlayerActor)
 {
 	AHorrorEncounterDirector* EncounterDirector = SpawnEncounterDirector();
+	if (EncounterDirector && PlayerActor)
+	{
+		FVector ArchiveLocation = PlayerActor->GetActorLocation();
+		FVector ExitLocation = FVector::ZeroVector;
+		TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective::ArchiveReview, ArchiveLocation);
+		if (TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective::ExitRouteGate, ExitLocation))
+		{
+			const FTransform ThreatWorldTransform(
+				EncounterThreatRelativeTransform.GetRotation().Rotator(),
+				BuildReadableArchiveThreatLocation(
+					ArchiveLocation,
+					ExitLocation,
+					(EncounterThreatRelativeTransform * EncounterDirector->GetActorTransform()).GetLocation()),
+				EncounterThreatRelativeTransform.GetScale3D());
+			EncounterDirector->ThreatRelativeTransform = ThreatWorldTransform.GetRelativeTransform(EncounterDirector->GetActorTransform());
+		}
+	}
 	return EncounterDirector && EncounterDirector->TriggerReveal(PlayerActor);
 }
 

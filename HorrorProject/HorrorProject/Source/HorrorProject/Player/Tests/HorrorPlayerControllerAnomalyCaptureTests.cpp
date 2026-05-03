@@ -5,6 +5,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 #include "Camera/CameraComponent.h"
+#include "Game/DeepWaterStationRouteKit.h"
 #include "Game/FoundFootageObjectiveInteractable.h"
 #include "Game/HorrorGameModeBase.h"
 #include "GameFramework/PlayerState.h"
@@ -132,6 +133,87 @@ bool FHorrorPlayerControllerAutoCapturesFocusedAnomalyWhileRecordingTest::RunTes
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerAutoCapturesRouteKitAnomalyWhileRecordingTest,
+	"HorrorProject.Player.Controller.AutoCapturesRouteKitAnomalyWhileRecording",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorPlayerControllerAutoCapturesRouteKitAnomalyWhileRecordingTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for route-kit anomaly auto-capture."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	World->GetWorldSettings()->DefaultGameMode = AHorrorGameModeBase::StaticClass();
+	TestTrue(TEXT("Transient world should create the Day1 game mode for route-kit anomaly auto-capture."), World->SetGameMode(FURL()));
+	AHorrorGameModeBase* GameMode = World->GetAuthGameMode<AHorrorGameModeBase>();
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	ADay1SliceHUD* HUD = World->SpawnActor<ADay1SliceHUD>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>(FVector::ZeroVector, FRotator::ZeroRotator);
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Route-kit auto-capture should expose the game mode."), GameMode);
+	TestNotNull(TEXT("Route-kit auto-capture should spawn a player controller."), PlayerController);
+	TestNotNull(TEXT("Route-kit auto-capture should attach the native Day1 HUD."), HUD);
+	TestNotNull(TEXT("Route-kit auto-capture should spawn a player character."), PlayerCharacter);
+	TestNotNull(TEXT("Route-kit auto-capture should spawn a route kit."), RouteKit);
+	if (!GameMode || !PlayerController || !HUD || !PlayerCharacter || !RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	World->AddController(PlayerController);
+	PlayerController->MyHUD = HUD;
+	PlayerController->Possess(PlayerCharacter);
+	PlayerController->SetControlRotation(FRotator::ZeroRotator);
+
+	const UCameraComponent* FirstPersonCamera = PlayerCharacter->GetFirstPersonCameraComponent();
+	UQuantumCameraComponent* QuantumCamera = PlayerCharacter->GetQuantumCameraComponent();
+	UInventoryComponent* Inventory = PlayerCharacter->GetInventoryComponent();
+	TestNotNull(TEXT("Route-kit auto-capture player should expose a first-person camera."), FirstPersonCamera);
+	TestNotNull(TEXT("Route-kit auto-capture player should expose quantum camera."), QuantumCamera);
+	TestNotNull(TEXT("Route-kit auto-capture player should expose inventory."), Inventory);
+	if (!FirstPersonCamera || !QuantumCamera || !Inventory)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ObjectiveInteractableClass = AFoundFootageObjectiveInteractable::StaticClass();
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	TestEqual(TEXT("Route kit should spawn the default Day1 objective actors."), RouteKit->SpawnObjectiveNodes(), 6);
+	const TArray<AFoundFootageObjectiveInteractable*>& SpawnedInteractables = RouteKit->GetSpawnedObjectiveInteractablesForTests();
+	TestTrue(TEXT("Route kit should expose the first anomaly candidate in its spawned objective cache."), SpawnedInteractables.IsValidIndex(2));
+	TestTrue(TEXT("Route kit should expose the first anomaly recording node in its spawned objective cache."), SpawnedInteractables.IsValidIndex(3));
+	if (!SpawnedInteractables.IsValidIndex(2) || !SpawnedInteractables.IsValidIndex(3))
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	AFoundFootageObjectiveInteractable* AnomalyCandidate = SpawnedInteractables[2];
+	AnomalyCandidate->SetActorLocation(FirstPersonCamera->GetComponentLocation() + FirstPersonCamera->GetForwardVector() * 220.0f);
+	AnomalyCandidate->RefreshVisualDefaults();
+
+	TestTrue(TEXT("Bodycam acquisition should unlock route-kit anomaly capture."), GameMode->TryAcquireBodycam(TEXT("Evidence.Bodycam"), true));
+	TestTrue(TEXT("First note collection should unlock route-kit anomaly capture."), GameMode->TryCollectFirstNote(TEXT("Note.Intro")));
+	TestTrue(TEXT("Route-kit anomaly candidate should become pending before recording starts."), GameMode->BeginFirstAnomalyCandidate(TEXT("Evidence.Anomaly01")));
+	TestTrue(TEXT("Route-kit auto-capture camera should start recording."), QuantumCamera->StartRecording());
+
+	TestFalse(TEXT("Route-kit focused anomaly should require a sustained lock before completing."), PlayerController->UpdateDay1RuntimeStateForTests(0.25f));
+	TestTrue(TEXT("Route-kit focused anomaly should complete after a sustained recording lock."), PlayerController->UpdateDay1RuntimeStateForTests(1.0f));
+	TestTrue(TEXT("Route-kit focused anomaly should be recorded through the cached objective list."), GameMode->HasRecordedFirstAnomaly());
+	TestTrue(TEXT("Route-kit focused anomaly should write evidence to inventory."), Inventory->HasCollectedEvidenceId(TEXT("Evidence.Anomaly01")));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorPlayerControllerAnomalyCaptureLosesProgressWhenFocusBreaksTest,
 	"HorrorProject.Player.Controller.AnomalyCaptureLosesProgressWhenFocusBreaks",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -201,6 +283,117 @@ bool FHorrorPlayerControllerAnomalyCaptureLosesProgressWhenFocusBreaksTest::RunT
 		TEXT("Breaking focus should return the capture HUD to search guidance."),
 		HUD->GetAnomalyCaptureStatusForTests().ToString(),
 		FString(TEXT("搜索异常信号。")));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerFirstAnomalyFallbackScanCachesWorldResultsTest,
+	"HorrorProject.Player.Controller.FirstAnomalyFallbackScanCachesWorldResults",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorPlayerControllerFirstAnomalyFallbackScanCachesWorldResultsTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for first anomaly fallback cache coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	World->GetWorldSettings()->DefaultGameMode = AHorrorGameModeBase::StaticClass();
+	TestTrue(TEXT("Transient world should create the Day1 game mode for first anomaly fallback cache coverage."), World->SetGameMode(FURL()));
+	AHorrorGameModeBase* GameMode = World->GetAuthGameMode<AHorrorGameModeBase>();
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	ADay1SliceHUD* HUD = World->SpawnActor<ADay1SliceHUD>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>(FVector::ZeroVector, FRotator::ZeroRotator);
+	AFoundFootageObjectiveInteractable* InitialAnomaly = World->SpawnActor<AFoundFootageObjectiveInteractable>();
+	TestNotNull(TEXT("Fallback cache test should expose the game mode."), GameMode);
+	TestNotNull(TEXT("Fallback cache test should spawn a player controller."), PlayerController);
+	TestNotNull(TEXT("Fallback cache test should attach the native Day1 HUD."), HUD);
+	TestNotNull(TEXT("Fallback cache test should spawn a player character."), PlayerCharacter);
+	TestNotNull(TEXT("Fallback cache test should spawn an initial anomaly."), InitialAnomaly);
+	if (!GameMode || !PlayerController || !HUD || !PlayerCharacter || !InitialAnomaly)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	World->AddController(PlayerController);
+	PlayerController->MyHUD = HUD;
+	PlayerController->Possess(PlayerCharacter);
+	PlayerController->SetControlRotation(FRotator::ZeroRotator);
+
+	const UCameraComponent* FirstPersonCamera = PlayerCharacter->GetFirstPersonCameraComponent();
+	TestNotNull(TEXT("Fallback cache player should expose a first-person camera."), FirstPersonCamera);
+	if (!FirstPersonCamera)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FName InitialAnomalyId(TEXT("Evidence.FallbackAnomaly01"));
+	InitialAnomaly->Objective = EFoundFootageInteractableObjective::FirstAnomalyCandidate;
+	InitialAnomaly->SourceId = InitialAnomalyId;
+	InitialAnomaly->EvidenceMetadata.EvidenceId = InitialAnomalyId;
+	InitialAnomaly->DebugLabel = FText::FromString(TEXT("兜底异常 01"));
+	InitialAnomaly->SetActorLocation(FirstPersonCamera->GetComponentLocation() + FirstPersonCamera->GetForwardVector() * 220.0f);
+	if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(InitialAnomaly->GetRootComponent()))
+	{
+		RootPrimitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	TestTrue(TEXT("Bodycam acquisition should unlock fallback anomaly capture."), GameMode->TryAcquireBodycam(TEXT("Evidence.Bodycam"), true));
+	TestTrue(TEXT("First note collection should unlock fallback anomaly capture."), GameMode->TryCollectFirstNote(TEXT("Note.Intro")));
+	TestTrue(TEXT("Fallback anomaly should become pending before runtime updates."), GameMode->BeginFirstAnomalyCandidate(InitialAnomalyId));
+
+	TestEqual(TEXT("Fallback world scans should start at zero."), PlayerController->GetFirstAnomalyFallbackWorldScanCountForTests(), 0);
+	TestFalse(TEXT("Fallback cache warm-up should not complete without recording."), PlayerController->UpdateDay1RuntimeStateForTests(0.016f));
+	TestEqual(TEXT("Auto-capture and HUD refresh should share one fallback world scan per cache window."), PlayerController->GetFirstAnomalyFallbackWorldScanCountForTests(), 1);
+	TestTrue(TEXT("Fallback cache should retain the initial anomaly candidate."), PlayerController->GetCachedFirstAnomalyFallbackCandidateCountForTests() >= 1);
+	TestEqual(
+		TEXT("Fallback-resolved anomaly should still show capture guidance."),
+		HUD->GetAnomalyCaptureStatusForTests().ToString(),
+		FString(TEXT("异常已对准，开启录像锁定。")));
+
+	InitialAnomaly->SetActorLocation(FirstPersonCamera->GetComponentLocation() - FirstPersonCamera->GetForwardVector() * 320.0f);
+
+	AFoundFootageObjectiveInteractable* FreshAnomaly = World->SpawnActor<AFoundFootageObjectiveInteractable>();
+	TestNotNull(TEXT("Fallback cache test should spawn a fresh anomaly."), FreshAnomaly);
+	if (!FreshAnomaly)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FName FreshAnomalyId(TEXT("Evidence.FallbackAnomaly02"));
+	FreshAnomaly->Objective = EFoundFootageInteractableObjective::FirstAnomalyCandidate;
+	FreshAnomaly->SourceId = FreshAnomalyId;
+	FreshAnomaly->EvidenceMetadata.EvidenceId = FreshAnomalyId;
+	FreshAnomaly->DebugLabel = FText::FromString(TEXT("兜底异常 02"));
+	FreshAnomaly->SetActorLocation(FirstPersonCamera->GetComponentLocation() + FirstPersonCamera->GetForwardVector() * 240.0f);
+	if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(FreshAnomaly->GetRootComponent()))
+	{
+		RootPrimitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	TestFalse(TEXT("A fresh anomaly should not force another world scan inside the cache window."), PlayerController->UpdateDay1RuntimeStateForTests(0.016f));
+	TestEqual(TEXT("Fallback scan count should stay stable inside the cache window."), PlayerController->GetFirstAnomalyFallbackWorldScanCountForTests(), 1);
+	TestEqual(
+		TEXT("Cached fallback candidates should keep HUD in search mode until the cache refreshes."),
+		HUD->GetAnomalyCaptureStatusForTests().ToString(),
+		FString(TEXT("搜索异常信号。")));
+
+	PlayerController->ExpireFirstAnomalyFallbackCacheForTests();
+	TestFalse(TEXT("Expired fallback cache should refresh without recording."), PlayerController->UpdateDay1RuntimeStateForTests(0.016f));
+	TestEqual(TEXT("Expired fallback cache should allow exactly one more world scan."), PlayerController->GetFirstAnomalyFallbackWorldScanCountForTests(), 2);
+	TestEqual(
+		TEXT("Refreshed fallback cache should resolve the newly visible anomaly."),
+		HUD->GetAnomalyCaptureStatusForTests().ToString(),
+		FString(TEXT("异常已对准，开启录像锁定。")));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

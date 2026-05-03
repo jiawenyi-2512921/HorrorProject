@@ -118,8 +118,10 @@ bool FHorrorThreatDefaultsWireStoneGolemRuntimeTest::RunTest(const FString& Para
 	TestEqual(TEXT("Inactive threat should default to Stone Golem idle animation."), Threat->GetMesh()->AnimationData.AnimToPlay.Get(), IdleAnimation);
 	TestTrue(TEXT("Activating the threat should succeed before animation mode coverage."), Threat->ActivateThreat());
 	TestEqual(TEXT("Active threat should switch to Stone Golem run animation."), Threat->GetMesh()->AnimationData.AnimToPlay.Get(), RunAnimation);
+	TestTrue(TEXT("Active threat should scale run animation playback to chase speed instead of sliding at a fixed loop."), Threat->GetMesh()->GetPlayRate() > 1.0f);
 	TestTrue(TEXT("Deactivating the threat should succeed before animation mode coverage."), Threat->DeactivateThreat());
 	TestEqual(TEXT("Inactive threat should return to Stone Golem idle animation."), Threat->GetMesh()->AnimationData.AnimToPlay.Get(), IdleAnimation);
+	TestEqual(TEXT("Inactive threat idle playback should reset to a natural rate."), Threat->GetMesh()->GetPlayRate(), 1.0f);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -326,8 +328,8 @@ bool FHorrorThreatCloseStalkingUsesFallbackWhenPatrolDirectionDegeneratesTest::R
 		TEXT("Degenerate close stalking fallback should still push movement input when no patrol point/path direction is available."),
 		Threat->GetPendingMovementInputVector().SizeSquared() > 0.0f);
 	TestTrue(
-		TEXT("Degenerate close stalking fallback should visibly move the golem instead of appearing stuck."),
-		FVector::Dist2D(Threat->GetActorLocation(), InitialLocation) > 0.0f);
+		TEXT("Degenerate close stalking fallback should avoid teleport-style transform pushes while movement is queued."),
+		FVector::Dist2D(Threat->GetActorLocation(), InitialLocation) <= KINDA_SMALL_NUMBER);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -337,6 +339,193 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FHorrorThreatUsesDirectChaseFallbackWithoutNavMeshTest,
 	"HorrorProject.AI.Threat.Day1.DirectChaseFallbackWithoutNavMesh",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorThreatChaseTriggeredStageIsPlayerReadableTest,
+	"HorrorProject.AI.Threat.Day1.ChaseTriggeredStageIsPlayerReadable",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorThreatChaseTriggeredDoesNotEnterFullChaseInsideMinDistanceTest,
+	"HorrorProject.AI.Threat.Day1.ChaseTriggeredDoesNotEnterFullChaseInsideMinDistance",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorThreatChaseTriggeredCanStillEnterFinalImpactInsideAttackDistanceTest,
+	"HorrorProject.AI.Threat.Day1.ChaseTriggeredCanStillEnterFinalImpactInsideAttackDistance",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorThreatChaseTriggeredDoesNotEnterFullChaseInsideMinDistanceTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for close chase trigger threshold coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AHorrorThreatCharacter* Threat = World->SpawnActor<AHorrorThreatCharacter>(FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>(FVector(800.0f, 0.0f, 0.0f), FRotator::ZeroRotator, SpawnParameters);
+	TestNotNull(TEXT("Threat should spawn for close chase trigger threshold coverage."), Threat);
+	TestNotNull(TEXT("Player target should spawn for close chase trigger threshold coverage."), PlayerCharacter);
+	UHorrorGolemBehaviorComponent* GolemBehavior = Threat ? Threat->GetGolemBehavior() : nullptr;
+	TestNotNull(TEXT("Threat should expose golem behavior for close chase trigger threshold coverage."), GolemBehavior);
+	if (!Threat || !PlayerCharacter || !GolemBehavior)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	UCharacterMovementComponent* Movement = Threat->GetCharacterMovement();
+	TestNotNull(TEXT("Threat should expose movement for close chase trigger threshold coverage."), Movement);
+	if (!Movement)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GolemBehavior->ActivateBehavior(PlayerCharacter);
+	GolemBehavior->ForceStateTransition(EGolemEncounterState::ChaseTriggered);
+
+	for (int32 TickIndex = 0; TickIndex < 16; ++TickIndex)
+	{
+		GolemBehavior->TickComponent(0.1f, LEVELTICK_All, nullptr);
+	}
+
+	TestEqual(
+		TEXT("Chase triggered should not escalate to full chase while the golem is already inside the configured minimum full-chase distance."),
+		GolemBehavior->GetCurrentState(),
+		EGolemEncounterState::ChaseTriggered);
+	TestTrue(
+		TEXT("Close chase trigger should keep the readable speed ramp instead of switching to full chase speed."),
+		FMath::IsNearlyEqual(
+			Movement->MaxWalkSpeed,
+			GolemBehavior->ChaseTriggered_BaseSpeed * GolemBehavior->ChaseTriggered_SpeedMultiplier,
+			0.01f));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+bool FHorrorThreatChaseTriggeredCanStillEnterFinalImpactInsideAttackDistanceTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	UWorld* World = nullptr;
+	AHorrorGameModeBase* GameMode = CreateThreatRuntimeGameMode(*this, TestWorld, World);
+	if (!GameMode || !World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerCharacter* PlayerCharacter = SpawnThreatRuntimePlayer(*this, World);
+	if (!PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerCharacter->SetActorLocation(FVector(400.0f, 0.0f, 0.0f));
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AHorrorThreatCharacter* Threat = World->SpawnActor<AHorrorThreatCharacter>(FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+	UHorrorGolemBehaviorComponent* GolemBehavior = Threat ? Threat->GetGolemBehavior() : nullptr;
+	TestNotNull(TEXT("Threat should spawn for close final impact threshold coverage."), Threat);
+	TestNotNull(TEXT("Threat should expose golem behavior for close final impact threshold coverage."), GolemBehavior);
+	if (!Threat || !GolemBehavior)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GolemBehavior->ActivateBehavior(PlayerCharacter);
+	GolemBehavior->ForceStateTransition(EGolemEncounterState::ChaseTriggered);
+
+	for (int32 TickIndex = 0; TickIndex < 16; ++TickIndex)
+	{
+		GolemBehavior->TickComponent(0.1f, LEVELTICK_All, nullptr);
+	}
+
+	TestEqual(
+		TEXT("Chase triggered should still resolve into final impact when the target is inside the configured attack distance."),
+		GameMode->GetLastPlayerFailureCause(),
+		FName(TEXT("Death.Golem.FinalImpact")));
+	TestFalse(TEXT("Final impact should deactivate golem behavior after the close-range attack resolves."), GolemBehavior->IsBehaviorActive());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+bool FHorrorThreatChaseTriggeredStageIsPlayerReadableTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for readable chase trigger coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AHorrorThreatCharacter* Threat = World->SpawnActor<AHorrorThreatCharacter>(FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>(FVector(1400.0f, 0.0f, 0.0f), FRotator::ZeroRotator, SpawnParameters);
+	TestNotNull(TEXT("Threat should spawn for readable chase trigger coverage."), Threat);
+	TestNotNull(TEXT("Player target should spawn for readable chase trigger coverage."), PlayerCharacter);
+	UHorrorGolemBehaviorComponent* GolemBehavior = Threat ? Threat->GetGolemBehavior() : nullptr;
+	TestNotNull(TEXT("Threat should expose golem behavior for readable chase trigger coverage."), GolemBehavior);
+	if (!Threat || !PlayerCharacter || !GolemBehavior)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	UCharacterMovementComponent* Movement = Threat->GetCharacterMovement();
+	TestNotNull(TEXT("Threat should expose movement for readable chase trigger coverage."), Movement);
+	if (!Movement)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	GolemBehavior->ActivateBehavior(PlayerCharacter);
+	GolemBehavior->ForceStateTransition(EGolemEncounterState::ChaseTriggered);
+
+	GolemBehavior->TickComponent(0.1f, LEVELTICK_All, nullptr);
+	TestEqual(
+		TEXT("Chase triggered should remain readable instead of immediately escalating to full chase."),
+		GolemBehavior->GetCurrentState(),
+		EGolemEncounterState::ChaseTriggered);
+	TestTrue(
+		TEXT("Readable chase trigger should use the configured 70 percent speed ramp."),
+		FMath::IsNearlyEqual(
+			Movement->MaxWalkSpeed,
+			GolemBehavior->ChaseTriggered_BaseSpeed * GolemBehavior->ChaseTriggered_SpeedMultiplier,
+			0.01f));
+	const float TriggeredRunPlayRate = Threat->GetMesh()->GetPlayRate();
+	TestTrue(
+		TEXT("Readable chase trigger should slow animation playback to match the 70 percent speed ramp."),
+		TriggeredRunPlayRate > 0.7f && TriggeredRunPlayRate < 1.0f);
+
+	for (int32 TickIndex = 0; TickIndex < 14; ++TickIndex)
+	{
+		GolemBehavior->TickComponent(0.1f, LEVELTICK_All, nullptr);
+	}
+	TestEqual(
+		TEXT("Chase triggered should still escalate to full chase after the readable ramp window."),
+		GolemBehavior->GetCurrentState(),
+		EGolemEncounterState::FullChase);
+	GolemBehavior->TickComponent(0.1f, LEVELTICK_All, nullptr);
+	TestTrue(
+		TEXT("Full chase should speed animation playback back up to match the faster pursuit phase."),
+		Threat->GetMesh()->GetPlayRate() > TriggeredRunPlayRate);
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
 
 bool FHorrorThreatUsesDirectChaseFallbackWithoutNavMeshTest::RunTest(const FString& Parameters)
 {
@@ -373,8 +562,14 @@ bool FHorrorThreatUsesDirectChaseFallbackWithoutNavMeshTest::RunTest(const FStri
 		TEXT("Without navmesh, golem chase should still push direct movement input toward the player."),
 		Threat->GetPendingMovementInputVector().SizeSquared() > 0.0f);
 	TestTrue(
-		TEXT("Without navmesh, direct chase fallback should move the golem closer to the player instead of only queuing an AI path request."),
-		FVector::Dist2D(Threat->GetActorLocation(), PlayerCharacter->GetActorLocation()) < InitialDistance);
+		TEXT("Without navmesh, direct chase fallback should face the player without teleport-style transform pushes."),
+		FMath::Abs(Threat->GetActorRotation().Yaw) <= 2.0f);
+	TestTrue(
+		TEXT("Without navmesh, direct chase fallback should not manually change actor location in the same behavior tick."),
+		FMath::IsNearlyEqual(
+			static_cast<float>(FVector::Dist2D(Threat->GetActorLocation(), PlayerCharacter->GetActorLocation())),
+			InitialDistance,
+			KINDA_SMALL_NUMBER));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

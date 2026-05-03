@@ -7,9 +7,11 @@
 #include "EngineUtils.h"
 #include "Game/DeepWaterStationRouteKit.h"
 #include "GameFramework/HUD.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
 #include "Misc/AutomationTest.h"
+#include "Player/HorrorPlayerCharacter.h"
 #include "Player/HorrorPlayerController.h"
 #include "Tests/AutomationCommon.h"
 #include "UI/Day1SliceHUD.h"
@@ -56,6 +58,41 @@ bool FHorrorGameModeBaseForcesDay1NativeHUDTest::RunTest(const FString& Paramete
 	TestTrue(
 		TEXT("GameMode should force the native Day1 controller so the old English prototype widget cannot be spawned."),
 		GameMode->PlayerControllerClass.Get() == AHorrorPlayerController::StaticClass());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), DestroyTestWorld(TestWorld));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorGameModeBaseForcesNativePlayerPawnTest,
+	"HorrorProject.Game.GameModeBase.ForcesNativePlayerPawn",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FHorrorGameModeBaseForcesNativePlayerPawnTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for native player pawn coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AHorrorGameModeBase* GameMode = World->SpawnActor<AHorrorGameModeBase>();
+	TestNotNull(TEXT("Native player pawn test should spawn GameMode."), GameMode);
+	if (!GameMode)
+	{
+		DestroyTestWorld(TestWorld);
+		return false;
+	}
+
+	GameMode->DefaultPawnClass = APawn::StaticClass();
+	FString ErrorMessage;
+	GameMode->InitGame(TEXT("Level_Scrapopolis_Demo"), TEXT(""), ErrorMessage);
+
+	TestTrue(
+		TEXT("GameMode should force the native horror player pawn even when an imported map or Blueprint default overrides DefaultPawnClass."),
+		GameMode->DefaultPawnClass.Get() == AHorrorPlayerCharacter::StaticClass());
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), DestroyTestWorld(TestWorld));
 	return true;

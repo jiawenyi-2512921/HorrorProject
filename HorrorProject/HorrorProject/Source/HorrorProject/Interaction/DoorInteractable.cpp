@@ -19,6 +19,7 @@ namespace
 ADoorInteractable::ADoorInteractable()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	// Create components
 	DoorRoot = CreateDefaultSubobject<USceneComponent>(TEXT("DoorRoot"));
@@ -80,6 +81,10 @@ void ADoorInteractable::Tick(float DeltaTime)
 		{
 			StartClosing();
 		}
+	}
+	else if (DoorState != EDoorState::Opening && DoorState != EDoorState::Closing)
+	{
+		SetActorTickEnabled(false);
 	}
 }
 
@@ -223,6 +228,7 @@ void ADoorInteractable::StartOpening()
 	DoorState = EDoorState::Opening;
 	TargetRotationAlpha = 1.0f;
 	AutoCloseTimer = 0.0f;
+	SetActorTickEnabled(true);
 	UpdateDoorCollision();
 	PublishDoorOpenedEvent();
 
@@ -237,6 +243,7 @@ void ADoorInteractable::StartClosing()
 	DoorState = EDoorState::Closing;
 	TargetRotationAlpha = 0.0f;
 	AutoCloseTimer = 0.0f;
+	SetActorTickEnabled(true);
 	UpdateDoorCollision();
 
 	if (CloseSound && GetWorld())
@@ -258,6 +265,7 @@ void ADoorInteractable::UpdateDoorRotation(float DeltaTime)
 			CurrentRotationAlpha = TargetRotationAlpha;
 			DoorState = EDoorState::Open;
 			UpdateDoorCollision();
+			SetActorTickEnabled(bAutoClose);
 		}
 	}
 	else if (DoorState == EDoorState::Closing)
@@ -269,6 +277,7 @@ void ADoorInteractable::UpdateDoorRotation(float DeltaTime)
 			CurrentRotationAlpha = TargetRotationAlpha;
 			DoorState = EDoorState::Closed;
 			UpdateDoorCollision();
+			SetActorTickEnabled(false);
 		}
 	}
 
@@ -390,6 +399,7 @@ void ADoorInteractable::LoadState(const TMap<FName, bool>& InStateMap)
 			if (*LockedState || ShouldGateWithPassword())
 			{
 				DoorState = EDoorState::Locked;
+				SetActorTickEnabled(false);
 				UpdateDoorCollision();
 				return;
 			}
@@ -402,6 +412,7 @@ void ADoorInteractable::LoadState(const TMap<FName, bool>& InStateMap)
 				DoorState = EDoorState::Open;
 				CurrentRotationAlpha = 1.0f;
 				TargetRotationAlpha = 1.0f;
+				SetActorTickEnabled(bAutoClose);
 
 				FRotator NewRotation = InitialDoorRotation;
 				NewRotation.Pitch += OpenRotationOffset.Pitch;
@@ -414,12 +425,14 @@ void ADoorInteractable::LoadState(const TMap<FName, bool>& InStateMap)
 				DoorState = EDoorState::Closed;
 				CurrentRotationAlpha = 0.0f;
 				TargetRotationAlpha = 0.0f;
+				SetActorTickEnabled(false);
 			}
 			UpdateDoorCollision();
 		}
 		else if (ShouldGateWithPassword())
 		{
 			DoorState = EDoorState::Locked;
+			SetActorTickEnabled(false);
 			UpdateDoorCollision();
 		}
 	}

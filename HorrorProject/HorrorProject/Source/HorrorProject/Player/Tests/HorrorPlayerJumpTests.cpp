@@ -5,6 +5,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "InputAction.h"
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 
@@ -50,6 +51,11 @@ bool FHorrorPlayerCharacterEnablesJumpingTest::RunTest(const FString& Parameters
 	TestTrue(TEXT("Player nav agent should allow jumping."), MovementComponent->NavAgentProps.bCanJump);
 	TestTrue(TEXT("Player jump velocity should clear DeepWaterStation traversal gaps."), MovementComponent->JumpZVelocity >= ExpectedMinimumJumpZVelocity);
 	TestTrue(TEXT("Player step height should tolerate small imported-map lips."), MovementComponent->MaxStepHeight >= ExpectedMinimumStepHeight);
+	TestNotNull(TEXT("Native player should resolve the default move action so WASD works without Blueprint defaults."), PlayerCharacter->GetMoveActionForTests());
+	TestNotNull(TEXT("Native player should resolve the default look action so stick look works without Blueprint defaults."), PlayerCharacter->GetLookActionForTests());
+	TestNotNull(TEXT("Native player should resolve the default mouse look action so mouse view works without Blueprint defaults."), PlayerCharacter->GetMouseLookActionForTests());
+	TestNotNull(TEXT("Native player should resolve the default jump action so spacebar works without Blueprint defaults."), PlayerCharacter->GetJumpActionForTests());
+	TestNotNull(TEXT("Native player should resolve the default sprint action so chase maps remain playable."), PlayerCharacter->GetSprintActionForTests());
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;

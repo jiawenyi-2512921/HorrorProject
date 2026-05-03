@@ -170,6 +170,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	bool PlayEventSound(FGameplayTag EventTag, UObject* SourceObject = nullptr);
 
+	bool PlayEventSound(const struct FHorrorEventMessage& Message);
+
 	UFUNCTION(BlueprintCallable, Category="Horror|Audio")
 	bool EnterAudioZone(FName ZoneId);
 
@@ -258,6 +260,12 @@ public:
 	bool HasDefaultHorrorAmbienceForTests() const;
 	FString GetDefaultHorrorAmbienceSoundPathForTests() const;
 	FName GetDefaultHorrorAmbienceZoneIdForTests() const { return DefaultHorrorAmbienceZoneId; }
+	EHorrorAudioCategory ResolveAdvancedInteractionAudioCategoryForTests(const struct FHorrorEventMessage& Message) const;
+	float ResolveAdvancedInteractionAudioVolumeForTests(const struct FHorrorEventMessage& Message) const;
+	FGameplayTag GetLastResolvedEventAudioTagForTests() const { return LastResolvedEventAudioTagForTests; }
+	EHorrorAudioCategory GetLastResolvedEventAudioCategoryForTests() const { return LastResolvedEventAudioCategoryForTests; }
+	float GetLastResolvedEventAudioVolumeForTests() const { return LastResolvedEventAudioVolumeForTests; }
+	bool WasLastResolvedEventAudioSuppressedForTests() const { return bLastResolvedEventAudioSuppressedForTests; }
 #endif
 
 protected:
@@ -346,11 +354,24 @@ private:
 	float LastOcclusionUpdateTime = 0.0f;
 	float ActiveSoundUpdateInterval = 0.1f;
 
+#if WITH_DEV_AUTOMATION_TESTS
+	FGameplayTag LastResolvedEventAudioTagForTests;
+	EHorrorAudioCategory LastResolvedEventAudioCategoryForTests = EHorrorAudioCategory::Site;
+	float LastResolvedEventAudioVolumeForTests = 0.0f;
+	bool bLastResolvedEventAudioSuppressedForTests = false;
+#endif
+
 	void OnEventPublished(const struct FHorrorEventMessage& Message);
 	void InitializeDefaultVolumes();
 	void RegisterDefaultDay1AudioMappings();
 	USoundBase* ResolveDefaultHorrorAmbienceSound() const;
 	bool TryResolveDay1StageFromEvent(FGameplayTag EventTag, FName EventName, EHorrorDay1AudioStage& OutStage) const;
+	EHorrorAudioCategory ResolveAdvancedInteractionAudioCategory(const struct FHorrorEventMessage& Message) const;
+	float ResolveAdvancedInteractionAudioVolume(const struct FHorrorEventMessage& Message) const;
+	bool PlayMappedEventSound(const FHorrorAudioEventMapping& Mapping, UObject* SourceObject, EHorrorAudioCategory EffectiveCategory, float EffectiveVolumeMultiplier);
+#if WITH_DEV_AUTOMATION_TESTS
+	void RecordResolvedEventAudioForTests(FGameplayTag EventTag, EHorrorAudioCategory Category, float VolumeMultiplier, bool bSuppressed);
+#endif
 	void ProcessAudioQueue();
 	void CleanupAudioPool();
 	UAudioComponent* GetPooledComponent(USoundBase* Sound);

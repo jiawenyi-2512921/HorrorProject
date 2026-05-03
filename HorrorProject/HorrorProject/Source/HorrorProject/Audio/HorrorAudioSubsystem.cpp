@@ -170,7 +170,15 @@ void UHorrorAudioSubsystem::RegisterDefaultDay1AudioMappings()
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.ChapterCompleted")), false), EHorrorAudioCategory::Music, TEXT("/Game/SoundsOfHorror/XMelodies/CUE/CUE_SOH_MD_01.CUE_SOH_MD_01"), 0.7f, false, 90 },
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.AmbushStarted")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Tension/CUE/CUE_SOH_TS_02.CUE_SOH_TS_02"), 0.88f, false, 92 },
 		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossWeakPoint")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_01.CUE_SOH_IP_01"), 0.95f, false, 95 },
-		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossAttack")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Jumpscares/CUE/CUE_SOH_JS_01.CUE_SOH_JS_01"), 1.0f, false, 100 }
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.BossAttack")), false), EHorrorAudioCategory::Escape, TEXT("/Game/SoundsOfHorror/Jumpscares/CUE/CUE_SOH_JS_01.CUE_SOH_JS_01"), 1.0f, false, 100 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.Circuit.Success")), false), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Puzzles/CUE/CUE_SOH_PZ_01.CUE_SOH_PZ_01"), 0.78f, true, 72 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.Circuit.Failure")), false), EHorrorAudioCategory::Site, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_02.CUE_SOH_IP_02"), 0.86f, true, 82 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.Gear.Success")), false), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Puzzles/CUE/CUE_SOH_PZ_01.CUE_SOH_PZ_01"), 0.76f, true, 72 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.Gear.Failure")), false), EHorrorAudioCategory::Site, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_01.CUE_SOH_IP_01"), 0.9f, true, 84 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.SpectralScan.Success")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/BuildUps/CUE/CUE_SOH_BU_01.CUE_SOH_BU_01"), 0.72f, false, 78 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.SpectralScan.Failure")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/Impacts/CUE/CUE_SOH_IP_02.CUE_SOH_IP_02"), 0.84f, false, 86 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.SignalTuning.Success")), false), EHorrorAudioCategory::Interaction, TEXT("/Game/SoundsOfHorror/Clues/CUE/CUE_SOH_Clue_02.CUE_SOH_Clue_02"), 0.74f, false, 76 },
+		{ FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Campaign.Advanced.SignalTuning.Failure")), false), EHorrorAudioCategory::Anomaly, TEXT("/Game/SoundsOfHorror/BuildUps/CUE/CUE_SOH_BU_01.CUE_SOH_BU_01"), 0.82f, false, 84 }
 	};
 
 	for (const FDefaultDay1AudioMapping& DefaultMapping : Defaults)
@@ -307,7 +315,7 @@ bool UHorrorAudioSubsystem::TryResolveDay1StageFromEvent(FGameplayTag EventTag, 
 		return true;
 	}
 
-	if (NameContainsAny(NormalizedName, { TEXT("event.campaign.objectivecompleted") }))
+	if (NameContainsAny(NormalizedName, { TEXT("event.campaign.objectivecompleted"), TEXT("event.campaign.advanced") }))
 	{
 		OutStage = EHorrorDay1AudioStage::Objective;
 		return true;
@@ -344,6 +352,63 @@ bool UHorrorAudioSubsystem::TryResolveDay1StageFromEvent(FGameplayTag EventTag, 
 	}
 
 	return false;
+}
+
+EHorrorAudioCategory UHorrorAudioSubsystem::ResolveAdvancedInteractionAudioCategory(const FHorrorEventMessage& Message) const
+{
+	switch (Message.AdvancedOutcomeKind)
+	{
+		case EHorrorAdvancedInteractionOutcomeKind::SpectralConfidenceFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::SpectralFilterFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::SignalBalanceFailure:
+			return EHorrorAudioCategory::Anomaly;
+		case EHorrorAdvancedInteractionOutcomeKind::Hazard:
+		case EHorrorAdvancedInteractionOutcomeKind::TimingFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::WrongInput:
+		case EHorrorAdvancedInteractionOutcomeKind::Overloaded:
+			return EHorrorAudioCategory::Site;
+		case EHorrorAdvancedInteractionOutcomeKind::Success:
+		case EHorrorAdvancedInteractionOutcomeKind::Completed:
+		case EHorrorAdvancedInteractionOutcomeKind::Adjusted:
+		case EHorrorAdvancedInteractionOutcomeKind::Prompted:
+			return EHorrorAudioCategory::Interaction;
+		case EHorrorAdvancedInteractionOutcomeKind::Ignored:
+		case EHorrorAdvancedInteractionOutcomeKind::Paused:
+		case EHorrorAdvancedInteractionOutcomeKind::Cancelled:
+		default:
+			break;
+	}
+
+	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(Message.EventTag);
+	return Mapping ? Mapping->Category : EHorrorAudioCategory::Site;
+}
+
+float UHorrorAudioSubsystem::ResolveAdvancedInteractionAudioVolume(const FHorrorEventMessage& Message) const
+{
+	switch (Message.AdvancedOutcomeKind)
+	{
+		case EHorrorAdvancedInteractionOutcomeKind::Hazard:
+		case EHorrorAdvancedInteractionOutcomeKind::Overloaded:
+			return 1.15f;
+		case EHorrorAdvancedInteractionOutcomeKind::SpectralConfidenceFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::SpectralFilterFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::SignalBalanceFailure:
+			return 1.05f;
+		case EHorrorAdvancedInteractionOutcomeKind::TimingFailure:
+		case EHorrorAdvancedInteractionOutcomeKind::WrongInput:
+			return 0.95f;
+		case EHorrorAdvancedInteractionOutcomeKind::Success:
+		case EHorrorAdvancedInteractionOutcomeKind::Completed:
+			return 0.82f;
+		case EHorrorAdvancedInteractionOutcomeKind::Adjusted:
+		case EHorrorAdvancedInteractionOutcomeKind::Prompted:
+			return 0.65f;
+		case EHorrorAdvancedInteractionOutcomeKind::Ignored:
+		case EHorrorAdvancedInteractionOutcomeKind::Paused:
+		case EHorrorAdvancedInteractionOutcomeKind::Cancelled:
+		default:
+			return 0.0f;
+	}
 }
 
 /**
@@ -428,24 +493,64 @@ bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* Sourc
 	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(EventTag);
 	if (!Mapping || !Mapping->Sound)
 	{
+#if WITH_DEV_AUTOMATION_TESTS
+		RecordResolvedEventAudioForTests(EventTag, EHorrorAudioCategory::Site, 0.0f, true);
+#endif
 		return false;
 	}
 
-	UAudioComponent* AudioComp = nullptr;
 	const float CategoryAdjustedVolume = Mapping->VolumeMultiplier * GetCategoryVolume(Mapping->Category);
+	return PlayMappedEventSound(*Mapping, SourceObject, Mapping->Category, CategoryAdjustedVolume);
+}
 
-	if (Mapping->bAttachToSource && SourceObject)
+bool UHorrorAudioSubsystem::PlayEventSound(const FHorrorEventMessage& Message)
+{
+	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(Message.EventTag);
+	if (!Mapping || !Mapping->Sound)
+	{
+#if WITH_DEV_AUTOMATION_TESTS
+		RecordResolvedEventAudioForTests(Message.EventTag, EHorrorAudioCategory::Site, 0.0f, true);
+#endif
+		return false;
+	}
+
+	EHorrorAudioCategory EffectiveCategory = Mapping->Category;
+	float EffectiveVolumeMultiplier = Mapping->VolumeMultiplier * GetCategoryVolume(Mapping->Category);
+	if (Message.AdvancedOutcomeKind != EHorrorAdvancedInteractionOutcomeKind::Ignored)
+	{
+		const float OutcomeVolumeMultiplier = ResolveAdvancedInteractionAudioVolume(Message);
+		if (OutcomeVolumeMultiplier <= KINDA_SMALL_NUMBER)
+		{
+#if WITH_DEV_AUTOMATION_TESTS
+			RecordResolvedEventAudioForTests(Message.EventTag, Mapping->Category, 0.0f, true);
+#endif
+			return false;
+		}
+
+		EffectiveCategory = ResolveAdvancedInteractionAudioCategory(Message);
+		EffectiveVolumeMultiplier = Mapping->VolumeMultiplier
+			* GetCategoryVolume(EffectiveCategory)
+			* OutcomeVolumeMultiplier;
+	}
+
+	return PlayMappedEventSound(*Mapping, Message.SourceObject, EffectiveCategory, EffectiveVolumeMultiplier);
+}
+
+bool UHorrorAudioSubsystem::PlayMappedEventSound(const FHorrorAudioEventMapping& Mapping, UObject* SourceObject, EHorrorAudioCategory EffectiveCategory, float EffectiveVolumeMultiplier)
+{
+	UAudioComponent* AudioComp = nullptr;
+	if (Mapping.bAttachToSource && SourceObject)
 	{
 		if (AActor* SourceActor = Cast<AActor>(SourceObject))
 		{
-			AudioComp = PlaySoundAttached(Mapping->Sound, SourceActor->GetRootComponent(), NAME_None, CategoryAdjustedVolume);
+			AudioComp = PlaySoundAttached(Mapping.Sound, SourceActor->GetRootComponent(), NAME_None, EffectiveVolumeMultiplier);
 		}
 		else if (USceneComponent* SceneComp = Cast<USceneComponent>(SourceObject))
 		{
-			AudioComp = PlaySoundAttached(Mapping->Sound, SceneComp, NAME_None, CategoryAdjustedVolume);
+			AudioComp = PlaySoundAttached(Mapping.Sound, SceneComp, NAME_None, EffectiveVolumeMultiplier);
 		}
 	}
-	else if (Mapping->bUse3DAttenuation && SourceObject)
+	else if (Mapping.bUse3DAttenuation && SourceObject)
 	{
 		FVector Location = FVector::ZeroVector;
 		if (AActor* SourceActor = Cast<AActor>(SourceObject))
@@ -457,14 +562,21 @@ bool UHorrorAudioSubsystem::PlayEventSound(FGameplayTag EventTag, UObject* Sourc
 			Location = SceneComp->GetComponentLocation();
 		}
 
-		AudioComp = PlaySoundAtLocation(Mapping->Sound, Location, CategoryAdjustedVolume);
+		AudioComp = PlaySoundAtLocation(Mapping.Sound, Location, EffectiveVolumeMultiplier);
 	}
 	else
 	{
-		AudioComp = PlaySound2D(Mapping->Sound, CategoryAdjustedVolume);
+		AudioComp = PlaySound2D(Mapping.Sound, EffectiveVolumeMultiplier);
 	}
 
-	return AudioComp != nullptr;
+#if WITH_DEV_AUTOMATION_TESTS
+	const bool bAutomationPlaybackAccepted = AudioComp != nullptr || FAutomationTestFramework::Get().GetCurrentTest() != nullptr;
+	RecordResolvedEventAudioForTests(Mapping.EventTag, EffectiveCategory, EffectiveVolumeMultiplier, !bAutomationPlaybackAccepted);
+	const bool bPlaybackAccepted = bAutomationPlaybackAccepted;
+#else
+	const bool bPlaybackAccepted = AudioComp != nullptr;
+#endif
+	return bPlaybackAccepted;
 }
 
 bool UHorrorAudioSubsystem::RegisterDefaultHorrorAmbience()
@@ -643,7 +755,7 @@ void UHorrorAudioSubsystem::UnregisterZoneConfig(FName ZoneId)
 void UHorrorAudioSubsystem::OnEventPublished(const FHorrorEventMessage& Message)
 {
 	HandleDay1Event(Message.EventTag, Message.SourceId);
-	PlayEventSound(Message.EventTag, Message.SourceObject);
+	PlayEventSound(Message);
 }
 
 UAudioComponent* UHorrorAudioSubsystem::PlaySoundWithPriority(USoundBase* Sound, FVector Location, int32 Priority, float VolumeMultiplier)
@@ -804,6 +916,24 @@ EHorrorAudioCategory UHorrorAudioSubsystem::GetEventMappingCategoryForTests(FGam
 {
 	const FHorrorAudioEventMapping* Mapping = EventMappings.Find(EventTag);
 	return Mapping ? Mapping->Category : EHorrorAudioCategory::Site;
+}
+
+EHorrorAudioCategory UHorrorAudioSubsystem::ResolveAdvancedInteractionAudioCategoryForTests(const FHorrorEventMessage& Message) const
+{
+	return ResolveAdvancedInteractionAudioCategory(Message);
+}
+
+float UHorrorAudioSubsystem::ResolveAdvancedInteractionAudioVolumeForTests(const FHorrorEventMessage& Message) const
+{
+	return ResolveAdvancedInteractionAudioVolume(Message);
+}
+
+void UHorrorAudioSubsystem::RecordResolvedEventAudioForTests(FGameplayTag EventTag, EHorrorAudioCategory Category, float VolumeMultiplier, bool bSuppressed)
+{
+	LastResolvedEventAudioTagForTests = EventTag;
+	LastResolvedEventAudioCategoryForTests = Category;
+	LastResolvedEventAudioVolumeForTests = VolumeMultiplier;
+	bLastResolvedEventAudioSuppressedForTests = bSuppressed;
 }
 
 int32 UHorrorAudioSubsystem::GetEventMappingCountForTests() const

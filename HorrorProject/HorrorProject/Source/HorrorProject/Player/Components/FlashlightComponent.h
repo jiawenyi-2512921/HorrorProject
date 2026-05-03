@@ -87,6 +87,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Light", meta=(ClampMin="0.0"))
 	float FlickerThresholdPercent = 0.15f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Light", meta=(ClampMin="0.05", ClampMax="1.0"))
+	float LightIntensityScale = 0.55f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Flashlight|Light", meta=(ClampMin="0.0", ClampMax="1.0"))
 	float FlickerIntensityMin = 0.3f;
 
@@ -97,6 +100,7 @@ private:
 	void UpdateLightState();
 	void UpdateBatteryDrain(float DeltaTime);
 	void UpdateFlickerEffect(float DeltaTime);
+	float GetEffectiveBaseIntensity() const;
 	bool TryAutoBindSpotLight();
 
 	UPROPERTY(Transient)

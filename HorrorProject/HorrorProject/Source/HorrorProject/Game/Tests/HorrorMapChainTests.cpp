@@ -71,7 +71,7 @@ bool FHorrorMapChainResolvesImportedMapOrderTest::RunTest(const FString& Paramet
 		FinalMapPackage,
 		FString(TEXT("/Game/Bodycam_VHS_Effect/Maps/LVL_Showcase_01")));
 	TestTrue(TEXT("Bodycam VHS should be treated as the final black-box ending map."), FHorrorMapChain::IsFinalMap(FinalMapPackage));
-	TestFalse(TEXT("The temporary ending should not resolve another map yet."), FHorrorMapChain::TryGetNextMapPackage(FinalMapPackage, NextMapPackage));
+	TestFalse(TEXT("The black-box ending should not resolve another map."), FHorrorMapChain::TryGetNextMapPackage(FinalMapPackage, NextMapPackage));
 
 	for (const FHorrorMapChainEntry& Entry : Entries)
 	{

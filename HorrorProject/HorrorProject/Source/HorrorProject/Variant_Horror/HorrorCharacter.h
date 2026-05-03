@@ -112,6 +112,10 @@ public:
 	/** Returns the spot light component */
 	USpotLightComponent* GetSpotLight() const { return SpotLight; }
 
+#if WITH_DEV_AUTOMATION_TESTS
+	UInputAction* GetSprintActionForTests() const { return SprintAction; }
+#endif
+
 	UFUNCTION(BlueprintPure, Category="Sprint")
 	float GetSprintPercent() const;
 

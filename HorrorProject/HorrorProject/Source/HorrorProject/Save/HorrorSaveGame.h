@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 #include "Game/HorrorEncounterDirector.h"
+#include "Game/HorrorCampaign.h"
 #include "GameplayTagContainer.h"
 #include "Player/Components/InventoryComponent.h"
 #include "Player/Components/NoteRecorderComponent.h"
@@ -62,6 +63,18 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
 	bool bDay1Complete = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	FName CampaignChapterId;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	TArray<FName> CompletedCampaignObjectiveIds;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	bool bCampaignBossDefeated = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
+	TArray<FHorrorCampaignObjectiveSaveState> CampaignObjectiveRuntimeStates;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame, Category="Horror|Save")
 	FTransform PlayerTransform;

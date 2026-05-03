@@ -20,6 +20,7 @@ namespace
 AExaminableInteractable::AExaminableInteractable()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	// Create components
 	ExamineMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ExamineMesh"));
@@ -98,6 +99,7 @@ void AExaminableInteractable::StartExamining(APlayerController* PlayerController
 	ExaminingPlayerController = PlayerController;
 	ExamineState = EExamineState::Examining;
 	CurrentExamineRotation = FRotator::ZeroRotator;
+	SetActorTickEnabled(true);
 
 	// Play start sound
 	if (ExamineStartSound && GetWorld())
@@ -133,6 +135,7 @@ void AExaminableInteractable::StopExamining()
 	}
 
 	ExamineState = EExamineState::Idle;
+	SetActorTickEnabled(false);
 
 	// Play end sound
 	if (ExamineEndSound && GetWorld())

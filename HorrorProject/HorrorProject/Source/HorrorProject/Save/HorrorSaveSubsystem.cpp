@@ -232,6 +232,11 @@ UHorrorSaveGame* UHorrorSaveSubsystem::CreateCheckpointSnapshot(UObject* WorldCo
 	const FHorrorFoundFootageSaveState FoundFootageSaveState = HorrorGameMode->ExportFoundFootageSaveState();
 	SaveGame->RecordedObjectiveEvents = FoundFootageSaveState.RecordedObjectiveEvents;
 	SaveGame->CompletedObjectiveStates = FoundFootageSaveState.CompletedObjectiveStates;
+	const FHorrorCampaignSaveState CampaignSaveState = HorrorGameMode->ExportCampaignSaveState();
+	SaveGame->CampaignChapterId = CampaignSaveState.ChapterId;
+	SaveGame->CompletedCampaignObjectiveIds = CampaignSaveState.CompletedObjectiveIds;
+	SaveGame->bCampaignBossDefeated = CampaignSaveState.bBossDefeated;
+	SaveGame->CampaignObjectiveRuntimeStates = CampaignSaveState.ObjectiveRuntimeStates;
 	SaveGame->PendingFirstAnomalySourceId = HorrorGameMode->GetPendingFirstAnomalySourceId();
 	SaveGame->CollectedEvidenceIds = Inventory->ExportCollectedEvidenceIds();
 	SaveGame->RecordedNoteIds = NoteRecorder->ExportRecordedNoteIds();
@@ -278,6 +283,12 @@ bool UHorrorSaveSubsystem::ApplyCheckpointSnapshot(UObject* WorldContextObject, 
 	FoundFootageSaveState.CompletedObjectiveStates = SaveGame->CompletedObjectiveStates;
 	SanitizeFoundFootageSaveStateForDay1Restore(FoundFootageSaveState, SaveGame->CollectedEvidenceIds, SaveGame->RecordedNoteIds);
 	HorrorGameMode->ImportFoundFootageSaveState(FoundFootageSaveState);
+	FHorrorCampaignSaveState CampaignSaveState;
+	CampaignSaveState.ChapterId = SaveGame->CampaignChapterId;
+	CampaignSaveState.CompletedObjectiveIds = SaveGame->CompletedCampaignObjectiveIds;
+	CampaignSaveState.bBossDefeated = SaveGame->bCampaignBossDefeated;
+	CampaignSaveState.ObjectiveRuntimeStates = SaveGame->CampaignObjectiveRuntimeStates;
+	HorrorGameMode->ImportCampaignSaveState(CampaignSaveState);
 	HorrorGameMode->ImportPendingFirstAnomalyCandidate(SaveGame->PendingFirstAnomalySourceId);
 	const bool bRestoredDay1Complete = SaveGame->bDay1Complete && HorrorGameMode->IsExitUnlocked();
 	HorrorGameMode->ImportDay1CompleteState(bRestoredDay1Complete);

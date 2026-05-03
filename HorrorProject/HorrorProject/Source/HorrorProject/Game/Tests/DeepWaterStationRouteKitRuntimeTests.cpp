@@ -27,6 +27,8 @@ namespace
 	constexpr int32 Day1RouteAutosaveUserIndex = 0;
 	constexpr double Day1ServiceRouteYOffsetCm = 300.0;
 	constexpr double Day1LateObjectiveMaxSpacingCm = 650.0;
+	constexpr float Day1ConservativeEscapeSpeedCmPerSecond = 450.0f;
+	constexpr float Day1MinimumEscapeAdvantageSeconds = 1.0f;
 
 	AHorrorPlayerCharacter* SpawnControlledRoutePlayer(FAutomationTestBase& Test, UWorld* World, const FVector& Location)
 	{
@@ -139,6 +141,77 @@ bool FDeepWaterStationRouteKitLateObjectivesStayOnReachableServiceRouteTest::Run
 	TestEqual(TEXT("Exit gate should sit on the reachable service route instead of the sealed straight corridor."), ExitRouteGateLocation.Y, Day1ServiceRouteYOffsetCm);
 	TestTrue(TEXT("Archive review should remain close enough to guide from the anomaly recording window."), FVector::Dist2D(FirstAnomalyRecordLocation, ArchiveReviewLocation) <= Day1LateObjectiveMaxSpacingCm);
 	TestTrue(TEXT("Exit gate should remain close enough to guide from the archive terminal."), FVector::Dist2D(ArchiveReviewLocation, ExitRouteGateLocation) <= Day1LateObjectiveMaxSpacingCm);
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FDeepWaterStationRouteKitArchiveRevealEscapeBudgetValidationTest,
+	"HorrorProject.Game.DeepWaterStation.RouteKit.ArchiveRevealEscapeBudgetValidation",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FDeepWaterStationRouteKitArchiveRevealEscapeBudgetValidationTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for archive reveal escape budget validation."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Route kit should spawn for archive reveal escape budget validation."), RouteKit);
+	if (!RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+
+	TArray<FText> ValidationErrors;
+	TestTrue(TEXT("Default Day1 route should satisfy the archive reveal escape budget."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
+	TestEqual(TEXT("Default archive reveal budget should not report validation errors."), ValidationErrors.Num(), 0);
+
+	const FVector ArchiveLocation = RouteKit->ObjectiveNodes[4].RelativeTransform.GetLocation();
+	const FVector ExitLocation = RouteKit->ObjectiveNodes[5].RelativeTransform.GetLocation();
+	const FVector ExitDirection = (ExitLocation - ArchiveLocation).GetSafeNormal2D();
+	const FVector ThreatLocation = ArchiveLocation - ExitDirection * 1200.0f + FVector(-ExitDirection.Y, ExitDirection.X, 0.0f) * 420.0f;
+	const float PlayerEscapeSeconds = FVector::Dist2D(ArchiveLocation, ExitLocation) / Day1ConservativeEscapeSpeedCmPerSecond;
+	const float ThreatCatchupSeconds = FVector::Dist2D(ThreatLocation, ExitLocation) / HorrorGolemDefaults::FullChaseSpeedCmPerSecond;
+	TestTrue(
+		TEXT("Default archive reveal should leave a measurable escape advantage over the full chase speed."),
+		ThreatCatchupSeconds - PlayerEscapeSeconds >= Day1MinimumEscapeAdvantageSeconds);
+
+	RouteKit->ObjectiveNodes[5].RelativeTransform.SetLocation(FVector(2000.0f, 0.0f, 80.0f));
+	TestFalse(TEXT("Archive reveal validation should reject an exit route that leaves the service lane."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
+	TestTrue(TEXT("Off-lane exit route should report at least one validation error."), ValidationErrors.Num() > 0);
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	RouteKit->ObjectiveNodes[5].RelativeTransform.SetLocation(FVector(4100.0f, 300.0f, 80.0f));
+	ValidationErrors.Reset();
+	TestFalse(TEXT("Archive reveal validation should reject an escape leg with no fair timing budget."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
+	TestTrue(
+		TEXT("Long escape leg should report a readable timing-budget error."),
+		ValidationErrors.ContainsByPredicate(
+			[](const FText& Error)
+			{
+				return Error.ToString().Contains(TEXT("enough time")) || Error.ToString().Contains(TEXT("too far"));
+			}));
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	RouteKit->ObjectiveNodes[5].RelativeTransform.SetLocation(RouteKit->ObjectiveNodes[4].RelativeTransform.GetLocation());
+	ValidationErrors.Reset();
+	TestFalse(TEXT("Archive reveal validation should reject a zero-length archive-to-exit route."), RouteKit->ValidateObjectiveNodes(ValidationErrors));
+	TestTrue(
+		TEXT("Zero-length escape routes should report that archive-to-exit direction is invalid."),
+		ValidationErrors.ContainsByPredicate(
+			[](const FText& Error)
+			{
+				return Error.ToString().Contains(TEXT("non-zero archive-to-exit direction"));
+			}));
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
@@ -353,6 +426,100 @@ bool FDeepWaterStationRouteKitArchiveRevealFailureRestoresCheckpointTest::RunTes
 		}));
 
 	UGameplayStatics::DeleteGameInSlot(Day1RouteAutosaveSlotName, Day1RouteAutosaveUserIndex);
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FDeepWaterStationRouteKitArchiveRevealThreatSpawnsBehindExitRouteTest,
+	"HorrorProject.Game.DeepWaterStation.RouteKit.ArchiveRevealThreatSpawnsBehindExitRoute",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FDeepWaterStationRouteKitArchiveRevealThreatSpawnsBehindExitRouteTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for Day1 archive reveal threat placement coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	World->GetWorldSettings()->DefaultGameMode = AHorrorGameModeBase::StaticClass();
+	TestTrue(TEXT("Transient world should create the Day1 route placement game mode."), World->SetGameMode(FURL()));
+	AHorrorGameModeBase* GameMode = World->GetAuthGameMode<AHorrorGameModeBase>();
+	AHorrorPlayerCharacter* PlayerCharacter = SpawnControlledRoutePlayer(*this, World, FVector::ZeroVector);
+	TestNotNull(TEXT("Archive reveal placement should expose the game mode."), GameMode);
+	TestNotNull(TEXT("Archive reveal placement should spawn a controlled player."), PlayerCharacter);
+	if (!GameMode || !PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	ADeepWaterStationRouteKit* RouteKit = World->SpawnActor<ADeepWaterStationRouteKit>();
+	TestNotNull(TEXT("Archive reveal placement should spawn the route kit."), RouteKit);
+	if (!RouteKit)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	RouteKit->ConfigureDefaultFirstLoopObjectiveNodes();
+	TestEqual(TEXT("Archive reveal placement should spawn the full objective route."), RouteKit->SpawnObjectiveNodes(), 6);
+	AHorrorEncounterDirector* EncounterDirector = RouteKit->SpawnEncounterDirector();
+	const TArray<AFoundFootageObjectiveInteractable*>& SpawnedInteractables = RouteKit->GetSpawnedObjectiveInteractablesForTests();
+	TestNotNull(TEXT("Archive reveal placement should spawn an encounter director."), EncounterDirector);
+	TestEqual(TEXT("Archive reveal placement should retain six objective interactables."), SpawnedInteractables.Num(), 6);
+	if (!EncounterDirector || SpawnedInteractables.Num() != 6)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	FVector ArchiveLocation = FVector::ZeroVector;
+	FVector ExitLocation = FVector::ZeroVector;
+	TestTrue(TEXT("Route kit should expose the archive terminal world location."), RouteKit->TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective::ArchiveReview, ArchiveLocation));
+	TestTrue(TEXT("Route kit should expose the exit gate world location."), RouteKit->TryGetObjectiveWorldLocation(EFoundFootageInteractableObjective::ExitRouteGate, ExitLocation));
+	PlayerCharacter->SetActorLocation(ArchiveLocation);
+
+	const FHitResult EmptyHit;
+	TestTrue(TEXT("Bodycam interaction should complete before archive reveal placement."), SpawnedInteractables[0]->Interact_Implementation(PlayerCharacter, EmptyHit));
+	TestTrue(TEXT("First note interaction should complete before archive reveal placement."), SpawnedInteractables[1]->Interact_Implementation(PlayerCharacter, EmptyHit));
+	TestTrue(TEXT("Anomaly candidate interaction should complete before archive reveal placement."), SpawnedInteractables[2]->Interact_Implementation(PlayerCharacter, EmptyHit));
+
+	UQuantumCameraComponent* QuantumCamera = PlayerCharacter->GetQuantumCameraComponent();
+	TestNotNull(TEXT("Archive reveal placement player should expose quantum camera."), QuantumCamera);
+	if (!QuantumCamera)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+	QuantumCamera->SetCameraAcquired(true);
+	QuantumCamera->SetCameraEnabled(true);
+	TestTrue(TEXT("Archive reveal placement player should start recording."), QuantumCamera->StartRecording());
+	TestTrue(TEXT("Anomaly recording interaction should complete before archive reveal placement."), SpawnedInteractables[3]->Interact_Implementation(PlayerCharacter, EmptyHit));
+
+	TestTrue(TEXT("Archive terminal should reveal the Day1 threat after evidence review."), SpawnedInteractables[4]->Interact_Implementation(PlayerCharacter, EmptyHit));
+	AHorrorThreatCharacter* Threat = EncounterDirector->GetThreatActor();
+	TestNotNull(TEXT("Archive reveal should spawn a readable pursuit threat."), Threat);
+	if (!Threat)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	const FVector ExitDirection = (ExitLocation - ArchiveLocation).GetSafeNormal2D();
+	const FVector SideDirection(-ExitDirection.Y, ExitDirection.X, 0.0f);
+	const FVector ThreatOffset = Threat->GetActorLocation() - ArchiveLocation;
+	const float ForwardProjection = FVector::DotProduct(ThreatOffset, ExitDirection);
+	const float SideProjection = FMath::Abs(FVector::DotProduct(ThreatOffset, SideDirection));
+	const float ThreatDistance = FVector::Dist2D(Threat->GetActorLocation(), ArchiveLocation);
+
+	TestTrue(TEXT("Archive reveal threat should spawn behind the player's exit route instead of between the player and exit."), ForwardProjection <= -250.0f);
+	TestTrue(TEXT("Archive reveal threat should use a readable side offset so the player can react."), SideProjection >= 320.0f);
+	TestTrue(TEXT("Archive reveal threat should be close enough to create pressure without spawning on top of the player."), ThreatDistance >= 950.0f && ThreatDistance <= 2300.0f);
+
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
 }

@@ -11,18 +11,32 @@
 #include "Game/HorrorGameModeBase.h"
 #include "Game/HorrorMapChain.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/HUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/PackageName.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/EndingCreditsWidget.h"
 
 namespace
 {
 	const FVector ExitTriggerExtent(130.0f, 130.0f, 120.0f);
 	const FColor NextMapLightColor(80, 180, 255);
 	const FColor FinalExitLightColor(255, 120, 60);
+	const FText NextMapExitLabel = NSLOCTEXT("HorrorMapChainExit", "NextMapExitLabel", "下一地图");
+	const FText FinalExitLabel = NSLOCTEXT("HorrorMapChainExit", "FinalExitLabel", "黑盒终章");
+	const FText FinalEndingMessage = NSLOCTEXT("HorrorMapChainExit", "FinalEndingMessage", "黑盒回放完成。深水站真相已归档。");
 
 	bool IsPlayerPawn(const AActor* Actor)
 	{
 		const APawn* Pawn = Cast<APawn>(Actor);
 		return Pawn && Pawn->IsPlayerControlled();
+	}
+
+	bool IsDay1MapPackage(const FString& MapPackageName)
+	{
+		const FString NormalizedMapPackageName = FHorrorMapChain::NormalizeMapPackageName(MapPackageName);
+		return NormalizedMapPackageName.Contains(TEXT("/DeepWaterStation/"))
+			|| FPackageName::GetShortName(NormalizedMapPackageName) == TEXT("DemoMap_VerticalSlice_Day1");
 	}
 }
 
@@ -130,7 +144,7 @@ void AHorrorMapChainExit::RefreshMarkerVisuals()
 {
 	if (LabelText)
 	{
-		LabelText->SetText(bFinalExit ? FText::FromString(TEXT("临时结局")) : FText::FromString(TEXT("下一地图")));
+		LabelText->SetText(bFinalExit ? FinalExitLabel : NextMapExitLabel);
 		LabelText->SetTextRenderColor(bFinalExit ? FinalExitLightColor : NextMapLightColor);
 	}
 
@@ -146,7 +160,18 @@ bool AHorrorMapChainExit::CanUseExit(AActor* InstigatorActor) const
 
 	const UWorld* World = GetWorld();
 	const AHorrorGameModeBase* HorrorGameMode = World ? World->GetAuthGameMode<AHorrorGameModeBase>() : nullptr;
-	return !HorrorGameMode || HorrorGameMode->IsCurrentCampaignChapterComplete();
+	if (!HorrorGameMode)
+	{
+		return true;
+	}
+
+	const bool bIsDay1Exit = IsDay1MapPackage(CurrentMapPackageName.IsEmpty() ? (World ? World->GetPackage()->GetName() : FString()) : CurrentMapPackageName);
+	if (bIsDay1Exit)
+	{
+		return HorrorGameMode->IsDay1Complete();
+	}
+
+	return HorrorGameMode->IsCurrentCampaignChapterComplete();
 }
 
 void AHorrorMapChainExit::ShowLockedFeedback(AActor* InstigatorActor) const
@@ -193,18 +218,60 @@ void AHorrorMapChainExit::TriggerFinalEnding(AActor* InstigatorActor)
 		TriggerBounds->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	if (GEngine)
+	APawn* InstigatorPawn = Cast<APawn>(InstigatorActor);
+	APlayerController* PlayerController = InstigatorPawn ? Cast<APlayerController>(InstigatorPawn->GetController()) : nullptr;
+	if (!PlayerController)
 	{
-		GEngine->AddOnScreenDebugMessage(
-			INDEX_NONE,
-			8.0f,
-			FColor::Cyan,
-			TEXT("已到达临时结局。最终视频稍后接入。"));
+		// cast 失败时重置，避免出口永久锁死
+		bTransitionTriggered = false;
+		if (TriggerBounds)
+		{
+			TriggerBounds->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+		return;
 	}
 
-	APawn* InstigatorPawn = Cast<APawn>(InstigatorActor);
-	if (APlayerController* PlayerController = InstigatorPawn ? Cast<APlayerController>(InstigatorPawn->GetController()) : nullptr)
+	if (AHUD* HUD = PlayerController->GetHUD())
 	{
-		PlayerController->ClientMessage(TEXT("已到达临时结局。最终视频稍后接入。"));
+		HUD->bShowHUD = false;
 	}
+
+	// 优先尝试 Blueprint Widget，路径使用正确的 _C 后缀格式
+	UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/WBP_EndingCredits.WBP_EndingCredits_C"));
+	if (WidgetClass)
+	{
+		if (UUserWidget* CreditsWidget = CreateWidget<UUserWidget>(PlayerController, WidgetClass))
+		{
+			CreditsWidget->AddToViewport(100);
+			if (UFunction* StartFunc = CreditsWidget->FindFunction(FName("StartCreditsRoll")))
+			{
+				CreditsWidget->ProcessEvent(StartFunc, nullptr);
+			}
+		}
+	}
+	else
+	{
+		if (UEndingCreditsWidget* CreditsWidget = CreateWidget<UEndingCreditsWidget>(PlayerController, UEndingCreditsWidget::StaticClass()))
+		{
+			CreditsWidget->AddToViewport(100);
+			CreditsWidget->StartCreditsRoll();
+		}
+	}
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	PlayerController->SetInputMode(InputMode);
+	PlayerController->bShowMouseCursor = false;
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+FText AHorrorMapChainExit::GetLabelTextForTests() const
+{
+	return LabelText ? LabelText->Text : FText::GetEmpty();
+}
+
+FText AHorrorMapChainExit::GetFinalEndingMessageForTests() const
+{
+	return FinalEndingMessage;
+}
+#endif

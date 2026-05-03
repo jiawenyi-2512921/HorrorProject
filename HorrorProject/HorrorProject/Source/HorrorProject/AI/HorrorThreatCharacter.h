@@ -71,6 +71,9 @@ public:
 	UFUNCTION(BlueprintPure, Category="Horror|Threat")
 	class UHorrorGolemBehaviorComponent* GetGolemBehavior() const;
 
+	UFUNCTION(BlueprintCallable, Category="Horror|Threat|Animation")
+	void SetThreatMovementAnimationSpeed(float MovementSpeedCmPerSecond);
+
 	UPROPERTY(BlueprintAssignable, Category="Horror|Threat")
 	FHorrorThreatActiveChangedSignature OnThreatActiveChanged;
 
@@ -78,7 +81,8 @@ public:
 	FHorrorThreatDetectedTargetChangedSignature OnDetectedTargetChanged;
 
 private:
-	void ApplyThreatAnimation(class UAnimationAsset* AnimationAsset);
+	float CalculateThreatRunAnimationPlayRate(float MovementSpeedCmPerSecond) const;
+	void ApplyThreatAnimation(class UAnimationAsset* AnimationAsset, float PlayRate);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Horror|Threat", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<class UHorrorGolemBehaviorComponent> GolemBehavior;

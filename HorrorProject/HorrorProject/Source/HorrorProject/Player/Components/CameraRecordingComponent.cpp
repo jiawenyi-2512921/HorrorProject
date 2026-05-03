@@ -130,7 +130,7 @@ bool UCameraRecordingComponent::StopRecording()
 
 bool UCameraRecordingComponent::StartRewind()
 {
-	if (bIsRewinding || RecordingBuffer.Num() == 0)
+	if (bIsRewinding || RecordingFrameCount == 0)
 	{
 		return false;
 	}
@@ -152,7 +152,7 @@ bool UCameraRecordingComponent::StartRewind()
 
 	bIsRewinding = true;
 	RewindPlaybackTime = 0.0f;
-	CurrentRewindFrameIndex = RecordingBuffer.Num() - 1;
+	CurrentRewindFrameIndex = RecordingFrameCount - 1;
 
 	SetComponentTickEnabled(true);
 
@@ -197,6 +197,8 @@ float UCameraRecordingComponent::GetRecordingProgress() const
 void UCameraRecordingComponent::ClearRecording()
 {
 	RecordingBuffer.Empty();
+	RecordingStartIndex = 0;
+	RecordingFrameCount = 0;
 	CurrentRecordingDuration = 0.0f;
 	FrameCaptureAccumulator = 0.0f;
 	RewindPlaybackTime = 0.0f;
@@ -207,13 +209,13 @@ FCameraRecordingMetadata UCameraRecordingComponent::GetRecordingMetadata() const
 {
 	FCameraRecordingMetadata Metadata;
 	Metadata.TotalDuration = CurrentRecordingDuration;
-	Metadata.FrameCount = RecordingBuffer.Num();
+	Metadata.FrameCount = RecordingFrameCount;
 	Metadata.RecordingStartTime = RecordingStartTimestamp;
 	Metadata.bHasAudio = RecordingStartSound != nullptr;
 
-	if (!RecordingBuffer.IsEmpty())
+	if (const FCameraRecordingFrame* FirstFrame = GetRecordingFrameChronological(0))
 	{
-		Metadata.StartLocation = RecordingBuffer.GetData()->Location;
+		Metadata.StartLocation = FirstFrame->Location;
 	}
 
 	return Metadata;
@@ -223,6 +225,25 @@ void UCameraRecordingComponent::SetMaxRecordingDuration(float NewDuration)
 {
 	MaxRecordingDuration = FMath::Max(1.0f, NewDuration);
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+bool UCameraRecordingComponent::GetRecordedFrameForTests(int32 ChronologicalIndex, FCameraRecordingFrame& OutFrame) const
+{
+	if (const FCameraRecordingFrame* Frame = GetRecordingFrameChronological(ChronologicalIndex))
+	{
+		OutFrame = *Frame;
+		return true;
+	}
+
+	return false;
+}
+
+void UCameraRecordingComponent::SetMaxBufferFramesForTests(int32 NewMaxBufferFrames)
+{
+	MaxBufferFrames = FMath::Max(1, NewMaxBufferFrames);
+	EnsureRecordingBufferCapacity();
+}
+#endif
 
 void UCameraRecordingComponent::HandleQuantumCameraModeChanged(EQuantumCameraMode NewMode)
 {
@@ -293,11 +314,6 @@ void UCameraRecordingComponent::CaptureFrame(float DeltaTime)
 	{
 		FrameCaptureAccumulator -= FrameInterval;
 
-		if (RecordingBuffer.Num() >= MaxBufferFrames)
-		{
-			RecordingBuffer.RemoveAt(0);
-		}
-
 		AActor* Owner = GetOwner();
 		if (!Owner)
 		{
@@ -310,7 +326,7 @@ void UCameraRecordingComponent::CaptureFrame(float DeltaTime)
 		NewFrame.Rotation = Owner->GetActorRotation();
 		NewFrame.Timestamp = CurrentRecordingDuration;
 
-		RecordingBuffer.Add(NewFrame);
+		AppendRecordingFrame(MoveTemp(NewFrame));
 
 		OnRecordingProgress.Broadcast(CurrentRecordingDuration);
 	}
@@ -318,7 +334,7 @@ void UCameraRecordingComponent::CaptureFrame(float DeltaTime)
 
 void UCameraRecordingComponent::ProcessRewind(float DeltaTime)
 {
-	if (RecordingBuffer.Num() == 0)
+	if (RecordingFrameCount == 0)
 	{
 		StopRewind();
 		return;
@@ -341,15 +357,92 @@ void UCameraRecordingComponent::ProcessRewind(float DeltaTime)
 			return;
 		}
 
-		if (!RecordingBuffer.IsValidIndex(CurrentRewindFrameIndex))
+		const FCameraRecordingFrame* Frame = GetRecordingFrameChronological(CurrentRewindFrameIndex);
+		if (!Frame)
 		{
 			StopRewind();
 			return;
 		}
 
-		const FCameraRecordingFrame& Frame = *(RecordingBuffer.GetData() + CurrentRewindFrameIndex);
-		OnRewindProgress.Broadcast(Frame.Timestamp);
+		OnRewindProgress.Broadcast(Frame->Timestamp);
 	}
+}
+
+void UCameraRecordingComponent::AppendRecordingFrame(FCameraRecordingFrame&& NewFrame)
+{
+	const int32 BufferCapacity = FMath::Max(1, MaxBufferFrames);
+	if (RecordingBuffer.Num() < BufferCapacity)
+	{
+		RecordingBuffer.Add(MoveTemp(NewFrame));
+		++RecordingFrameCount;
+		return;
+	}
+
+	if (RecordingBuffer.Num() > BufferCapacity)
+	{
+		EnsureRecordingBufferCapacity();
+	}
+
+	if (RecordingFrameCount < RecordingBuffer.Num())
+	{
+		const int32 WriteIndex = (RecordingStartIndex + RecordingFrameCount) % RecordingBuffer.Num();
+		RecordingBuffer[WriteIndex] = MoveTemp(NewFrame);
+		++RecordingFrameCount;
+		return;
+	}
+
+	RecordingBuffer[RecordingStartIndex] = MoveTemp(NewFrame);
+	RecordingStartIndex = (RecordingStartIndex + 1) % RecordingBuffer.Num();
+	RecordingFrameCount = RecordingBuffer.Num();
+}
+
+void UCameraRecordingComponent::EnsureRecordingBufferCapacity()
+{
+	const int32 BufferCapacity = FMath::Max(1, MaxBufferFrames);
+	if (RecordingFrameCount <= 0)
+	{
+		RecordingBuffer.Empty();
+		RecordingStartIndex = 0;
+		RecordingFrameCount = 0;
+		return;
+	}
+
+	if (RecordingBuffer.Num() <= BufferCapacity && RecordingFrameCount <= BufferCapacity)
+	{
+		return;
+	}
+
+	TArray<FCameraRecordingFrame> PreservedFrames;
+	const int32 FramesToKeep = FMath::Min(RecordingFrameCount, BufferCapacity);
+	PreservedFrames.Reserve(FramesToKeep);
+	const int32 FirstFrameToKeep = RecordingFrameCount - FramesToKeep;
+	for (int32 FrameIndex = 0; FrameIndex < FramesToKeep; ++FrameIndex)
+	{
+		if (const FCameraRecordingFrame* Frame = GetRecordingFrameChronological(FirstFrameToKeep + FrameIndex))
+		{
+			PreservedFrames.Add(*Frame);
+		}
+	}
+
+	RecordingBuffer = MoveTemp(PreservedFrames);
+	RecordingStartIndex = 0;
+	RecordingFrameCount = RecordingBuffer.Num();
+}
+
+const FCameraRecordingFrame* UCameraRecordingComponent::GetRecordingFrameChronological(int32 ChronologicalIndex) const
+{
+	if (ChronologicalIndex < 0 || ChronologicalIndex >= RecordingFrameCount || RecordingBuffer.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	const int32 PhysicalIndex = (RecordingStartIndex + ChronologicalIndex) % RecordingBuffer.Num();
+	if (!RecordingBuffer.IsValidIndex(PhysicalIndex))
+	{
+		return nullptr;
+	}
+
+	return &RecordingBuffer[PhysicalIndex];
 }
 
 void UCameraRecordingComponent::PublishEvent(FGameplayTag EventTag)

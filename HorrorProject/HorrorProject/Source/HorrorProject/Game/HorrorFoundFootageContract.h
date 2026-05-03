@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Game/HorrorAdvancedInteractionTypes.h"
 #include "NativeGameplayTags.h"
 #include "HorrorFoundFootageContract.generated.h"
 
@@ -73,6 +74,66 @@ struct HORRORPROJECT_API FHorrorObjectiveChecklistItem
 	FText Label;
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText Detail;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText InteractionLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText LockReason;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText StatusText;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText TacticalLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText DeviceStatusLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText NextActionLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText FailureRecoveryLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName ObjectiveId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName BeatId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	int32 BeatIndex = INDEX_NONE;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignObjectiveRuntimeStatus RuntimeStatus = EHorrorCampaignObjectiveRuntimeStatus::Hidden;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName FailureCause = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName RecoveryAction = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignInteractionMode InteractionMode = EHorrorCampaignInteractionMode::Instant;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignObjectiveRiskLevel RiskLevel = EHorrorCampaignObjectiveRiskLevel::None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignObjectiveBeatCompletionRule BeatCompletionRule = EHorrorCampaignObjectiveBeatCompletionRule::None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignObjectiveBeatFailurePolicy BeatFailurePolicy = EHorrorCampaignObjectiveBeatFailurePolicy::None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	EHorrorCampaignObjectiveBeatNavigationRole BeatNavigationRole = EHorrorCampaignObjectiveBeatNavigationRole::None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText RewardText;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	bool bComplete = false;
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
@@ -80,6 +141,45 @@ struct HORRORPROJECT_API FHorrorObjectiveChecklistItem
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	bool bRequiresRecording = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bBlocked = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bOpensInteractionPanel = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bUrgent = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bOptional = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bRetryable = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bMainline = true;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bNavigationFocused = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float RuntimeProgressFraction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float PerformanceGradeFraction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float InputPrecisionFraction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float DeviceLoadFraction = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float RemainingSeconds = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	float DistanceMeters = 0.0f;
 };
 
 USTRUCT(BlueprintType)
@@ -103,7 +203,28 @@ struct HORRORPROJECT_API FHorrorObjectiveTrackerSnapshot
 	FText ProgressLabel;
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText InteractionLabel;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText MissionContext;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText FailureStakes;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FText LockReason;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName ActiveChapterId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	FName ActiveObjectiveId = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	TArray<FHorrorObjectiveChecklistItem> ChecklistItems;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	TArray<FHorrorObjectiveChecklistItem> ObjectiveGraphItems;
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	int32 CompletedMilestoneCount = 0;
@@ -125,6 +246,12 @@ struct HORRORPROJECT_API FHorrorObjectiveTrackerSnapshot
 
 	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
 	bool bComplete = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bUsesFocusedInteraction = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Horror|Objectives")
+	bool bOpensInteractionPanel = false;
 };
 
 struct HORRORPROJECT_API FHorrorFoundFootageSaveState

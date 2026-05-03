@@ -56,6 +56,13 @@ protected:
 public:
 	AHorrorProjectCharacter();
 
+#if WITH_DEV_AUTOMATION_TESTS
+	UInputAction* GetJumpActionForTests() const { return JumpAction; }
+	UInputAction* GetMoveActionForTests() const { return MoveAction; }
+	UInputAction* GetLookActionForTests() const { return LookAction; }
+	UInputAction* GetMouseLookActionForTests() const { return MouseLookAction; }
+#endif
+
 protected:
 
 	/** Gameplay initialization */

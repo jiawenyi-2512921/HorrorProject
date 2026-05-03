@@ -55,6 +55,7 @@ bool FDoorInteractableClearsDoorwayCollisionWhenOpenTest::RunTest(const FString&
 	}
 
 	Door->DispatchBeginPlay();
+	TestFalse(TEXT("Idle closed doors should not spend a constant actor tick."), Door->IsActorTickEnabled());
 	IInteractableInterface* DoorInterface = Cast<IInteractableInterface>(Door);
 	TestNotNull(TEXT("Door collision test should use the native interactable interface path."), DoorInterface);
 	if (!DoorInterface)
@@ -75,6 +76,7 @@ bool FDoorInteractableClearsDoorwayCollisionWhenOpenTest::RunTest(const FString&
 
 	FHitResult Hit;
 	TestTrue(TEXT("Closed door should accept an open interaction."), DoorInterface->Interact_Implementation(InstigatorActor, Hit));
+	TestTrue(TEXT("Opening doors should enable actor tick only for animation."), Door->IsActorTickEnabled());
 	TestEqual(TEXT("Opening doors should clear blocking collision immediately."), DoorMesh->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
 
 	for (int32 TickIndex = 0; TickIndex < 60; ++TickIndex)
@@ -83,8 +85,10 @@ bool FDoorInteractableClearsDoorwayCollisionWhenOpenTest::RunTest(const FString&
 	}
 
 	TestEqual(TEXT("Open doors should keep doorway collision clear."), Door->GetDoorState(), EDoorState::Open);
+	TestFalse(TEXT("Open doors without auto-close should disable actor tick after animation settles."), Door->IsActorTickEnabled());
 	TestEqual(TEXT("Open doors should not block the doorway."), DoorMesh->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
 	TestTrue(TEXT("Open door should accept a close interaction."), DoorInterface->Interact_Implementation(InstigatorActor, Hit));
+	TestTrue(TEXT("Closing doors should re-enable actor tick for animation."), Door->IsActorTickEnabled());
 	TestEqual(TEXT("Closing doors should restore blocking collision."), DoorMesh->GetCollisionEnabled(), ECollisionEnabled::QueryAndPhysics);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interaction/HorrorInteractionTypes.h"
 #include "Templates/Function.h"
 #include "InteractionComponent.generated.h"
 
@@ -37,11 +38,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Interaction")
 	bool GetFocusedInteractionPrompt(FText& OutPrompt) const;
 
+	UFUNCTION(BlueprintCallable, Category="Interaction")
+	bool GetFocusedInteractionContext(FHorrorInteractionContext& OutContext) const;
+
 	bool FindFocusedInteractable(FHitResult& OutHit, UObject*& OutTargetObject) const;
 	bool FindFocusedInteractionTarget(FHitResult& OutHit, UObject*& OutTargetObject) const;
 	bool TryInteractWithHit(const FHitResult& Hit) const;
 	void SetLegacyDoorTimelineFallbackEnabledForTests(bool bEnabled) { bEnableLegacyDoorTimelineFallback = bEnabled; }
 	UObject* ResolveInterfaceTargetForTests(const FHitResult& Hit) const { return ResolveInterfaceTarget(Hit); }
+	FHorrorInteractionContext BuildInteractionContextForTests(UObject* TargetObject, const FHitResult& Hit) const { return BuildInteractionContext(TargetObject, Hit); }
 	float CalculatePerpendicularDistanceToTraceForTests(const FVector& Start, const FVector& End, const FVector& Point) const;
 
 protected:
@@ -80,6 +85,7 @@ private:
 	UObject* ResolveInterfaceTarget(const FHitResult& Hit) const;
 	bool CanInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const;
 	FText BuildInteractionPrompt(UObject* TargetObject, const FHitResult& Hit) const;
+	FHorrorInteractionContext BuildInteractionContext(UObject* TargetObject, const FHitResult& Hit) const;
 	void ShowBlockedInteractionFeedback(UObject* TargetObject, const FHitResult& Hit) const;
 	bool TryInvokeInteractableInterface(UObject* TargetObject, const FHitResult& Hit) const;
 	bool HasLegacyInteractionFunction(AActor* TargetActor) const;

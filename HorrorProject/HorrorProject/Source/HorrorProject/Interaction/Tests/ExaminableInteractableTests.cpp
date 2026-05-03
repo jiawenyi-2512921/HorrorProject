@@ -21,6 +21,7 @@ bool FExaminableInteractableConstructionTest::RunTest(const FString& Parameters)
 	AExaminableInteractable* Examinable = World->SpawnActor<AExaminableInteractable>();
 	TestNotNull("Examinable should be spawned", Examinable);
 	TestFalse("Should not be examining by default", Examinable->IsBeingExamined());
+	TestFalse("Idle examinable objects should not spend a constant actor tick", Examinable->IsActorTickEnabled());
 
 	return true;
 }
@@ -34,6 +35,7 @@ bool FExaminableInteractableStartExamineTest::RunTest(const FString& Parameters)
 
 	Examinable->StartExamining(PC);
 	TestTrue("Should be examining", Examinable->IsBeingExamined());
+	TestTrue("Examining should enable actor tick for camera and input updates", Examinable->IsActorTickEnabled());
 
 	return true;
 }
@@ -50,6 +52,7 @@ bool FExaminableInteractableStopExamineTest::RunTest(const FString& Parameters)
 
 	Examinable->StopExamining();
 	TestFalse("Should not be examining", Examinable->IsBeingExamined());
+	TestFalse("Stopping examination should disable actor tick again", Examinable->IsActorTickEnabled());
 
 	return true;
 }

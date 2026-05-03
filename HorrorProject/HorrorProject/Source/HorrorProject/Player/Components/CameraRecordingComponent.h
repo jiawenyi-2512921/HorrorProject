@@ -101,7 +101,7 @@ public:
 	float GetRecordingProgress() const;
 
 	UFUNCTION(BlueprintPure, Category="CameraRecording")
-	bool HasRecording() const { return RecordingBuffer.Num() > 0; }
+	bool HasRecording() const { return RecordingFrameCount > 0; }
 
 	UFUNCTION(BlueprintCallable, Category="CameraRecording")
 	void ClearRecording();
@@ -111,6 +111,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="CameraRecording")
 	void SetMaxRecordingDuration(float NewDuration);
+
+#if WITH_DEV_AUTOMATION_TESTS
+	int32 GetRecordedFrameCountForTests() const { return RecordingFrameCount; }
+	bool GetRecordedFrameForTests(int32 ChronologicalIndex, FCameraRecordingFrame& OutFrame) const;
+	void SetMaxBufferFramesForTests(int32 NewMaxBufferFrames);
+#endif
 
 	UPROPERTY(BlueprintAssignable, Category="CameraRecording")
 	FOnRecordingStartedSignature OnRecordingStarted;
@@ -177,12 +183,21 @@ private:
 	void ProcessRewind(float DeltaTime);
 	void PublishEvent(FGameplayTag EventTag);
 	void PlayRecordingSound(USoundBase* Sound);
+	void AppendRecordingFrame(FCameraRecordingFrame&& NewFrame);
+	void EnsureRecordingBufferCapacity();
+	const FCameraRecordingFrame* GetRecordingFrameChronological(int32 ChronologicalIndex) const;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UQuantumCameraComponent> CameraComponent;
 
 	UPROPERTY(Transient)
 	TArray<FCameraRecordingFrame> RecordingBuffer;
+
+	UPROPERTY(Transient)
+	int32 RecordingStartIndex = 0;
+
+	UPROPERTY(Transient)
+	int32 RecordingFrameCount = 0;
 
 	UPROPERTY(Transient)
 	bool bIsRecording = false;

@@ -267,7 +267,7 @@ void AHorrorPlayerCharacter::DoInteract()
 {
 	if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(GetController()))
 	{
-		if (HorrorPlayerController->TrySubmitActiveAdvancedInteractionExpectedInput())
+		if (HorrorPlayerController->TryPromptActiveAdvancedInteractionSelection())
 		{
 			return;
 		}

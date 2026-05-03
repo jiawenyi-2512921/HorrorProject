@@ -4,6 +4,15 @@ DerivedDataCache/
 Intermediate/
 Saved/
 
+# Development-only files (not for packaging)
+Docs/
+Scripts/
+Tools/
+CLAUDE.md
+DECISIONS.md
+*.png
+主菜单设置说明.md
+
 # Local IDE/editor state
 .vs/
 *.sln

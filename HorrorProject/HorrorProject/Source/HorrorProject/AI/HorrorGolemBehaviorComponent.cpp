@@ -26,6 +26,8 @@ namespace HorrorGolemBehavior
 	constexpr float MoveRotationInterpSpeed = 5.0f;
 	constexpr float PatrolRotationInterpSpeed = 3.0f;
 	constexpr float NavigationAcceptanceRadiusCm = 75.0f;
+	constexpr float NavigationRequestMinIntervalSeconds = 0.35f;
+	constexpr float NavigationRequestDestinationDeltaCm = 175.0f;
 	constexpr float PatrolNavigationStepCm = 300.0f;
 	constexpr float MinimumPatrolInputSizeSquared = 0.01f;
 	constexpr float FinalImpactTriggerGraceSeconds = 0.1f;
@@ -99,6 +101,8 @@ void UHorrorGolemBehaviorComponent::ActivateBehavior(AActor* InTargetActor)
 	bFinalImpactFailureRequested = false;
 	StateTimer = 0.0f;
 	LostTargetTimer = 0.0f;
+	LastRequestedMoveDestination = FVector::ZeroVector;
+	LastMoveRequestWorldSeconds = -100000.0f;
 
 	SetComponentTickEnabled(true);
 	TransitionToState(EGolemEncounterState::DistantSighting);
@@ -222,7 +226,15 @@ void UHorrorGolemBehaviorComponent::UpdateChaseTriggeredState(float DistanceToTa
 		return;
 	}
 
-	if (DistanceToTarget <= FullChase_MaxDistance)
+	if (DistanceToTarget <= FinalImpact_TriggerDistance && StateTimer >= ChaseTriggered_MinReadableSeconds)
+	{
+		TransitionToState(EGolemEncounterState::FinalImpact);
+		return;
+	}
+
+	if (DistanceToTarget >= FullChase_MinDistance
+		&& DistanceToTarget <= FullChase_MaxDistance
+		&& StateTimer >= ChaseTriggered_MinReadableSeconds)
 	{
 		TransitionToState(EGolemEncounterState::FullChase);
 		return;
@@ -260,6 +272,8 @@ void UHorrorGolemBehaviorComponent::TransitionToState(EGolemEncounterState NewSt
 	LostTargetTimer = 0.0f;
 	PatrolPauseTimer = 0.0f;
 	bPatrolPaused = false;
+	LastRequestedMoveDestination = FVector::ZeroVector;
+	LastMoveRequestWorldSeconds = -100000.0f;
 
 	OnStateChanged.Broadcast(OldState, NewState);
 	BP_OnStateChanged(OldState, NewState);
@@ -346,6 +360,7 @@ void UHorrorGolemBehaviorComponent::UpdateChaseTriggered(float DeltaTime)
 	}
 
 	const float ChaseSpeed = ChaseTriggered_BaseSpeed * ChaseTriggered_SpeedMultiplier;
+	OwnerThreat->SetThreatMovementAnimationSpeed(ChaseSpeed);
 	MoveTowardsTarget(ChaseSpeed, DeltaTime);
 
 	BP_OnChaseUpdate(DeltaTime, ChaseSpeed);
@@ -358,6 +373,7 @@ void UHorrorGolemBehaviorComponent::UpdateFullChase(float DeltaTime)
 		return;
 	}
 
+	OwnerThreat->SetThreatMovementAnimationSpeed(FullChase_Speed);
 	MoveTowardsTarget(FullChase_Speed, DeltaTime);
 
 	// Environment destruction check
@@ -371,7 +387,7 @@ void UHorrorGolemBehaviorComponent::UpdateFullChase(float DeltaTime)
 
 void UHorrorGolemBehaviorComponent::UpdateFinalImpact(float DeltaTime)
 {
-	if (StateTimer < HorrorGolemBehavior::FinalImpactTriggerGraceSeconds)
+	if (StateTimer <= HorrorGolemBehavior::FinalImpactTriggerGraceSeconds + KINDA_SMALL_NUMBER)
 	{
 		BP_OnFinalImpactTriggered();
 		TriggerFinalImpactFailure();
@@ -452,7 +468,20 @@ bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Desti
 		return false;
 	}
 
-	UNavigationPath* NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(
+	UNavigationPath* NavigationPath = nullptr;
+	const float WorldSeconds = World->GetTimeSeconds();
+	const bool bDestinationChangedEnough =
+		LastRequestedMoveDestination.IsNearlyZero()
+		|| FVector::DistSquared2D(LastRequestedMoveDestination, Destination)
+			>= FMath::Square(HorrorGolemBehavior::NavigationRequestDestinationDeltaCm);
+	const bool bRequestIntervalElapsed =
+		WorldSeconds - LastMoveRequestWorldSeconds >= HorrorGolemBehavior::NavigationRequestMinIntervalSeconds;
+	if (!bDestinationChangedEnough && !bRequestIntervalElapsed)
+	{
+		return true;
+	}
+
+	NavigationPath = UNavigationSystemV1::FindPathToLocationSynchronously(
 		World,
 		ThreatCharacter->GetActorLocation(),
 		Destination,
@@ -466,6 +495,7 @@ bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Desti
 
 	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
 	const FVector MoveDestination = NavigationPath->PathPoints.Last();
+
 	const EPathFollowingRequestResult::Type MoveResult = AIController->MoveToLocation(
 		MoveDestination,
 		AcceptanceRadius,
@@ -481,6 +511,8 @@ bool UHorrorGolemBehaviorComponent::MoveToNavigableLocation(const FVector& Desti
 		return MoveDirectlyTowardLocation(Destination, Speed, DeltaTime);
 	}
 
+	LastRequestedMoveDestination = Destination;
+	LastMoveRequestWorldSeconds = WorldSeconds;
 	return true;
 }
 
@@ -508,20 +540,6 @@ bool UHorrorGolemBehaviorComponent::MoveDirectlyTowardLocation(const FVector& De
 	ThreatCharacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
 	const FVector MoveDirection = Direction.GetSafeNormal();
 	ThreatCharacter->AddMovementInput(MoveDirection, 1.0f, true);
-
-	const float StepDistance = FMath::Min(Direction.Size(), Speed * FMath::Max(0.0f, DeltaTime));
-	if (StepDistance <= KINDA_SMALL_NUMBER)
-	{
-		return true;
-	}
-
-	FHitResult SweepHit;
-	const FVector NextLocation = CurrentLocation + MoveDirection * StepDistance;
-	ThreatCharacter->SetActorLocation(NextLocation, true, &SweepHit);
-	if (SweepHit.bStartPenetrating && FVector::DistSquared2D(ThreatCharacter->GetActorLocation(), CurrentLocation) <= KINDA_SMALL_NUMBER)
-	{
-		ThreatCharacter->SetActorLocation(NextLocation, false);
-	}
 	return true;
 }
 
