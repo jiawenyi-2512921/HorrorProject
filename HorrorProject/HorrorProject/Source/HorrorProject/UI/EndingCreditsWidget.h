@@ -19,12 +19,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Credits")
 	FName MainMenuMapName = TEXT("DemoMap_VerticalSlice_Day1");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Credits")
-	class USoundBase* EndingMusic;
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Credits")
-	float ScrollSpeed = 65.0f;
+	float ScrollSpeed = 50.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Credits")
 	float FinalTextDisplayDuration = 5.0f;

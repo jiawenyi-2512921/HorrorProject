@@ -43,6 +43,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	"HorrorProject.Player.Controller.NativeInputContexts",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorPlayerControllerRestoresMouseLookOnPossessTest,
+	"HorrorProject.Player.Controller.RestoresMouseLookOnPossess",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
 bool FHorrorPlayerControllerNativeInputContextsTest::RunTest(const FString& Parameters)
 {
 	const AHorrorPlayerController* NativeDefaults = GetDefault<AHorrorPlayerController>();
@@ -58,6 +63,48 @@ bool FHorrorPlayerControllerNativeInputContextsTest::RunTest(const FString& Para
 	TestTrue(
 		TEXT("Native Day1 controller should load mouse look input without relying on the old Blueprint controller."),
 		NativeDefaults->GetMobileExcludedMappingContextCountForTests() > 0);
+	return true;
+}
+
+bool FHorrorPlayerControllerRestoresMouseLookOnPossessTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for mouse look restore coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>();
+	TestNotNull(TEXT("Mouse look restore test should spawn a horror player controller."), PlayerController);
+	TestNotNull(TEXT("Mouse look restore test should spawn a horror player character."), PlayerCharacter);
+	if (!PlayerController || !PlayerCharacter)
+	{
+		TestWorld.DestroyTestWorld(false);
+		return false;
+	}
+
+	PlayerController->PlayerState = World->SpawnActor<APlayerState>();
+	PlayerController->bShowMouseCursor = true;
+	PlayerController->bEnableClickEvents = true;
+	PlayerController->bEnableMouseOverEvents = true;
+	PlayerController->SetIgnoreMoveInput(true);
+	PlayerController->SetIgnoreLookInput(true);
+	PlayerController->SetIgnoreMoveInput(true);
+	PlayerController->SetIgnoreLookInput(true);
+
+	World->AddController(PlayerController);
+	PlayerController->Possess(PlayerCharacter);
+
+	TestFalse(TEXT("Possessing the gameplay pawn should hide the menu cursor so mouse deltas drive the camera."), PlayerController->bShowMouseCursor);
+	TestFalse(TEXT("Gameplay possession should disable menu click handling."), PlayerController->bEnableClickEvents);
+	TestFalse(TEXT("Gameplay possession should disable menu hover handling."), PlayerController->bEnableMouseOverEvents);
+	TestFalse(TEXT("Gameplay possession should restore movement input."), PlayerController->IsMoveInputIgnored());
+	TestFalse(TEXT("Gameplay possession should restore look input so mouse movement rotates the view."), PlayerController->IsLookInputIgnored());
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), TestWorld.DestroyTestWorld(false));
 	return true;
 }
 

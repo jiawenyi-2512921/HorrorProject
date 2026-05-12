@@ -81,6 +81,9 @@ public:
 	/** Clears transient Day1 modal/input state after failure or checkpoint restore. */
 	void ResetDay1ModalInputState();
 
+	/** Restores gameplay input after menus, map transitions, or UI-only screens. */
+	void RestoreGameplayInputMode();
+
 	void ShowPlayerMessage(const FText& MessageText, const FLinearColor& MessageColor = FLinearColor::White, float DisplaySeconds = 2.5f);
 	bool TryPromptActiveAdvancedInteractionSelection();
 	void NotifyAdvancedInteractionObjectiveOpened(AHorrorCampaignObjectiveActor* ObjectiveActor);

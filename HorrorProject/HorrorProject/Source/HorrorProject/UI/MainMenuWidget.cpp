@@ -22,24 +22,13 @@ void UMainMenuWidget::OnNewGameClicked()
 		{
 			if (UHorrorSaveSubsystem* SaveSubsystem = GameInstance->GetSubsystem<UHorrorSaveSubsystem>())
 			{
-				// 完全清除存档缓存和磁盘文件
 				SaveSubsystem->ClearCachedSaveOnly();
-
-				// 删除磁盘上的存档文件
-				const FString SlotName = TEXT("SM13_Day1_Autosave");
-				if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
-				{
-					UGameplayStatics::DeleteGameInSlot(SlotName, 0);
-					UE_LOG(LogHorrorProject, Log, TEXT("主菜单：已删除旧存档，开始全新游戏"));
-				}
 			}
 		}
 	}
 
-	// 加载第一章 - 使用绝对路径确保正确加载
-	const FString FirstChapterPath = FirstChapterMapName.ToString();
-	UE_LOG(LogHorrorProject, Log, TEXT("主菜单：正在加载第一章地图：%s"), *FirstChapterPath);
-	UGameplayStatics::OpenLevel(this, FName(*FirstChapterPath), true);
+	// 加载第一章
+	UGameplayStatics::OpenLevel(this, FName(FirstChapterMapName));
 }
 
 void UMainMenuWidget::OnContinueGameClicked()

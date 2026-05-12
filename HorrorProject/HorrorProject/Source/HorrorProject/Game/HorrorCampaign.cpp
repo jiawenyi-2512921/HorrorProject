@@ -658,8 +658,8 @@ namespace
 					MakeObjective(TEXT("Signal.CalibrateLens"), EHorrorCampaignObjectiveType::AcquireSignal, TEXT("校准黑盒录像带画面"), TEXT("录像带噪点稳定，最后走廊显形。"), FVector(650.0f, -260.0f, 90.0f), DeviceMeshPath),
 					AsOptionalInvestigation(MakeObjective(TEXT("Signal.RecordMissingFrame"), EHorrorCampaignObjectiveType::ScanAnomaly, TEXT("记录录像带缺失的一帧"), TEXT("缺失画面已归档，结局旁白出现新的证词。"), FVector(980.0f, -620.0f, 90.0f), ScreenMeshPath)),
 					WithPrerequisites(MakeObjective(TEXT("Signal.ScanCorridor"), EHorrorCampaignObjectiveType::ScanAnomaly, TEXT("扫描走廊尽头的深水站倒影"), TEXT("深水站倒影与黑盒频率重合。"), FVector(1450.0f, 220.0f, 90.0f), ScreenMeshPath), { TEXT("Signal.CalibrateLens") }),
-					WithPrerequisites(WithTimedDuration(MakeObjective(TEXT("Signal.SurviveStaticPursuit"), EHorrorCampaignObjectiveType::SurviveAmbush, TEXT("触发最后的石像巨人追逐，跑向录像带出口"), TEXT("巨人的残响被甩在录像带之外。"), FVector(1650.0f, 280.0f, 90.0f), DeviceMeshPath, FVector(2300.0f, 700.0f, 0.0f), 500.0f), 24.0f), { TEXT("Signal.ScanCorridor") }),
-					WithPrerequisites(MakeObjective(TEXT("Signal.FinalTerminal"), EHorrorCampaignObjectiveType::FinalTerminal, TEXT("播放完整黑盒录像带，确认深水站真相"), TEXT("真相归档，黑盒关闭。"), FVector(1900.0f, 360.0f, 90.0f), TerminalMeshPath), { TEXT("Signal.SurviveStaticPursuit") })
+					WithPrerequisites(WithTimedDuration(MakeObjective(TEXT("Signal.SurviveStaticPursuit"), EHorrorCampaignObjectiveType::SurviveAmbush, TEXT("触发最后的石像巨人追逐，跑向录像带出口"), TEXT("巨人的残响被甩在录像带之外。"), FVector(2050.0f, -300.0f, 90.0f), DeviceMeshPath, FVector(2300.0f, 820.0f, 90.0f), 500.0f), 24.0f), { TEXT("Signal.ScanCorridor") }),
+					WithPrerequisites(MakeObjective(TEXT("Signal.FinalTerminal"), EHorrorCampaignObjectiveType::FinalTerminal, TEXT("播放完整黑盒录像带，确认深水站真相"), TEXT("真相归档，黑盒关闭。"), FVector(2620.0f, 580.0f, 90.0f), TerminalMeshPath), { TEXT("Signal.SurviveStaticPursuit") })
 				})
 		};
 

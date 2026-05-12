@@ -40,6 +40,8 @@
 #include "EngineUtils.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include "Widgets/SViewport.h"
+#include "Engine/GameViewportClient.h"
 
 namespace
 {
@@ -432,6 +434,7 @@ void AHorrorPlayerController::BeginPlay()
 	}
 
 	ApplyInputMappingContexts();
+	RestoreGameplayInputMode();
 	BindObjectiveEventBus();
 	RefreshDay1HUDState();
 }
@@ -494,6 +497,7 @@ void AHorrorPlayerController::OnPossess(APawn* aPawn)
 	}
 
 	RefreshDay1HUDState();
+	RestoreGameplayInputMode();
 }
 
 void AHorrorPlayerController::OnUnPossess()
@@ -538,8 +542,7 @@ void AHorrorPlayerController::RestampCheckpointLoadedUIState()
 	else if (bDay1CompletionInputLocked)
 	{
 		bDay1CompletionInputLocked = false;
-		SetIgnoreMoveInput(false);
-		SetIgnoreLookInput(false);
+		RestoreGameplayInputMode();
 		if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 		{
 			Day1HUD->ClearDay1CompletionOverlay();
@@ -576,12 +579,8 @@ void AHorrorPlayerController::ResetDay1ModalInputState()
 
 	if (!bDay1CompletionInputLocked)
 	{
-		SetIgnoreMoveInput(false);
-		SetIgnoreLookInput(false);
+		RestoreGameplayInputMode();
 	}
-
-	SetInputMode(FInputModeGameOnly());
-	bShowMouseCursor = false;
 
 	if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 	{
@@ -592,6 +591,50 @@ void AHorrorPlayerController::ResetDay1ModalInputState()
 			Day1HUD->ClearDay1CompletionOverlay();
 		}
 	}
+}
+
+void AHorrorPlayerController::RestoreGameplayInputMode()
+{
+	if (bDay1CompletionInputLocked)
+	{
+		return;
+	}
+
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+	// ResetIgnore* 直接把内部 +1/-1 计数归零，调用方若成对 Set/Reset 不会出现负值。
+	ResetIgnoreMoveInput();
+	ResetIgnoreLookInput();
+
+	FInputModeGameOnly GameOnlyMode;
+	GameOnlyMode.SetConsumeCaptureMouseDown(true);
+	SetInputMode(GameOnlyMode);
+	bShowMouseCursor = false;
+	bEnableClickEvents = false;
+	bEnableMouseOverEvents = false;
+
+	// 强制刷新 viewport 鼠标捕获，修复主菜单 FInputModeGameAndUI 残留
+	// 导致的鼠标事件未喂给 PlayerController（视角不动）问题。
+	UWorld* World = GetWorld();
+	UGameViewportClient* ViewportClient = World ? World->GetGameViewport() : nullptr;
+	ULocalPlayer* LocalPlayer = GetLocalPlayer();
+	if (ViewportClient && LocalPlayer)
+	{
+		if (TSharedPtr<SViewport> ViewportWidget = ViewportClient->GetGameViewportWidget())
+		{
+			LocalPlayer->GetSlateOperations()
+				.UseHighPrecisionMouseMovement(ViewportWidget.ToSharedRef())
+				.SetUserFocus(ViewportWidget.ToSharedRef())
+				.LockMouseToWidget(ViewportWidget.ToSharedRef());
+		}
+		ViewportClient->SetMouseCaptureMode(EMouseCaptureMode::CapturePermanently);
+		ViewportClient->SetMouseLockMode(EMouseLockMode::LockAlways);
+		ViewportClient->SetHideCursorDuringCapture(true);
+	}
+
+	// 重新挂载 IMC：如果主菜单/暂停菜单过程中 IMC 被移除，或首次挂载时 LocalPlayer 尚未就绪，
+	// 这里是唯一能让 Look/MouseLook 回到活跃状态的路径。
+	ApplyInputMappingContexts();
 }
 
 void AHorrorPlayerController::ShowPlayerMessage(const FText& MessageText, const FLinearColor& MessageColor, float DisplaySeconds)
@@ -773,34 +816,49 @@ AHorrorCampaignObjectiveActor* AHorrorPlayerController::GetActiveAdvancedInterac
 
 void AHorrorPlayerController::ApplyInputMappingContexts()
 {
-	if (bInputContextsApplied || !IsLocalPlayerController())
+	if (!IsLocalPlayerController())
 	{
 		return;
 	}
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (!Subsystem)
 	{
-		for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
-		{
-			if (CurrentContext)
-			{
-				Subsystem->AddMappingContext(CurrentContext, 0);
-			}
-		}
-
-		if (!SVirtualJoystick::ShouldDisplayTouchInterface())
-		{
-			for (UInputMappingContext* CurrentContext : MobileExcludedMappingContexts)
-			{
-				if (CurrentContext)
-				{
-					Subsystem->AddMappingContext(CurrentContext, 0);
-				}
-			}
-		}
-
-		bInputContextsApplied = true;
+		// LocalPlayer 尚未就绪，下次回到游戏（OnPossess / RestoreGameplayInputMode）会重试。
+		return;
 	}
+
+	auto AddContext = [Subsystem](UInputMappingContext* Context)
+	{
+		if (Context)
+		{
+			Subsystem->AddMappingContext(Context, 0);
+		}
+	};
+
+	for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
+	{
+		AddContext(CurrentContext);
+	}
+
+	if (!SVirtualJoystick::ShouldDisplayTouchInterface())
+	{
+		for (UInputMappingContext* CurrentContext : MobileExcludedMappingContexts)
+		{
+			AddContext(CurrentContext);
+		}
+	}
+
+	// 兜底：BP 子类若把 DefaultMappingContexts/MobileExcludedMappingContexts 覆写为空，
+	// 这里直接按硬路径再加一次。AddMappingContext 对同一 IMC 重复调用是安全幂等的。
+	AddContext(LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_HorrorGameplay.IMC_HorrorGameplay")));
+	if (!SVirtualJoystick::ShouldDisplayTouchInterface())
+	{
+		AddContext(LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_MouseLook.IMC_MouseLook")));
+	}
+
+	bInputContextsApplied = true;
 }
 
 ADay1SliceHUD* AHorrorPlayerController::GetDay1SliceHUD() const
@@ -1971,12 +2029,8 @@ void AHorrorPlayerController::CloseDay1PauseMenu()
 	bDay1PauseMenuOpen = false;
 	if (!bDay1CompletionInputLocked)
 	{
-		SetIgnoreMoveInput(false);
-		SetIgnoreLookInput(false);
+		RestoreGameplayInputMode();
 	}
-	SetInputMode(FInputModeGameOnly());
-	bShowMouseCursor = false;
-	UGameplayStatics::SetGamePaused(GetWorld(), false);
 
 	if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 	{
@@ -2015,11 +2069,8 @@ void AHorrorPlayerController::CloseDay1NotesJournal()
 	bDay1NotesJournalOpen = false;
 	if (!bDay1CompletionInputLocked)
 	{
-		SetIgnoreMoveInput(false);
-		SetIgnoreLookInput(false);
+		RestoreGameplayInputMode();
 	}
-	SetInputMode(FInputModeGameOnly());
-	bShowMouseCursor = false;
 
 	if (ADay1SliceHUD* Day1HUD = GetDay1SliceHUD())
 	{

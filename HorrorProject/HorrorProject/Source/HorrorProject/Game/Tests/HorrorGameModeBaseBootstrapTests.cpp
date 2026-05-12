@@ -4,12 +4,17 @@
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
+#include "EnhancedInputSubsystems.h"
+#include "Engine/Engine.h"
 #include "EngineUtils.h"
+#include "Engine/GameInstance.h"
+#include "Engine/LocalPlayer.h"
 #include "Game/DeepWaterStationRouteKit.h"
 #include "GameFramework/HUD.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
+#include "InputMappingContext.h"
 #include "Misc/AutomationTest.h"
 #include "Player/HorrorPlayerCharacter.h"
 #include "Player/HorrorPlayerController.h"
@@ -240,6 +245,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	"HorrorProject.Game.GameModeBase.UsesConfiguredRouteKitTransformWithoutPlayerStart",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FHorrorGameModeBaseRestoresMouseLookMappingAfterImportedMapCleanupTest,
+	"HorrorProject.Game.GameModeBase.RestoresMouseLookMappingAfterImportedMapCleanup",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
 bool FHorrorGameModeBaseUsesConfiguredRouteKitTransformWithoutPlayerStartTest::RunTest(const FString& Parameters)
 {
 	FTestWorldWrapper TestWorld;
@@ -271,6 +281,81 @@ bool FHorrorGameModeBaseUsesConfiguredRouteKitTransformWithoutPlayerStartTest::R
 	TestTrue(
 		TEXT("Runtime route kit should keep the configured fallback transform when no PlayerStart exists."),
 		RouteKit->GetActorLocation().Equals(FVector(0.0f, 0.0f, 80.0f), KINDA_SMALL_NUMBER));
+
+	TestTrue(TEXT("Transient world should be destroyed cleanly."), DestroyTestWorld(TestWorld));
+	return true;
+}
+
+bool FHorrorGameModeBaseRestoresMouseLookMappingAfterImportedMapCleanupTest::RunTest(const FString& Parameters)
+{
+	FTestWorldWrapper TestWorld;
+	TestTrue(TEXT("Transient game world should be created for imported-map input restore coverage."), TestWorld.CreateTestWorld(EWorldType::Game));
+	UWorld* World = TestWorld.GetTestWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	UGameInstance* GameInstance = World->GetGameInstance();
+	TestNotNull(TEXT("Input restore test should expose a game instance."), GameInstance);
+	if (!GameInstance)
+	{
+		DestroyTestWorld(TestWorld);
+		return false;
+	}
+
+	ULocalPlayer* LocalPlayer = GEngine ? NewObject<ULocalPlayer>(GEngine, GEngine->LocalPlayerClass) : nullptr;
+	TestNotNull(TEXT("Input restore test should create a local player."), LocalPlayer);
+	if (!LocalPlayer)
+	{
+		DestroyTestWorld(TestWorld);
+		return false;
+	}
+	const int32 LocalPlayerIndex = GameInstance->AddLocalPlayer(LocalPlayer, FPlatformUserId::CreateFromInternalId(0));
+	TestTrue(
+		TEXT("Input restore test should register the local player with the game instance."),
+		LocalPlayerIndex != INDEX_NONE);
+
+	AHorrorGameModeBase* GameMode = World->SpawnActor<AHorrorGameModeBase>();
+	AHorrorPlayerController* PlayerController = World->SpawnActor<AHorrorPlayerController>();
+	AHorrorPlayerCharacter* PlayerCharacter = World->SpawnActor<AHorrorPlayerCharacter>();
+	TestNotNull(TEXT("Input restore test should spawn the horror game mode."), GameMode);
+	TestNotNull(TEXT("Input restore test should spawn the horror player controller."), PlayerController);
+	TestNotNull(TEXT("Input restore test should spawn the horror player character."), PlayerCharacter);
+	if (!GameMode || !PlayerController || !PlayerCharacter)
+	{
+		DestroyTestWorld(TestWorld);
+		return false;
+	}
+
+	World->AddController(PlayerController);
+	PlayerController->SetPlayer(LocalPlayer);
+	PlayerController->Possess(PlayerCharacter);
+
+	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	TestNotNull(TEXT("Local player should expose Enhanced Input subsystem."), InputSubsystem);
+	UInputMappingContext* MouseLookContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_MouseLook.IMC_MouseLook"));
+	TestNotNull(TEXT("Mouse-look mapping context should load for runtime restore."), MouseLookContext);
+	if (!InputSubsystem || !MouseLookContext)
+	{
+		DestroyTestWorld(TestWorld);
+		return false;
+	}
+
+	InputSubsystem->ClearAllMappings();
+	TestFalse(TEXT("Test setup should remove mouse-look mapping before restore."), InputSubsystem->HasMappingContext(MouseLookContext));
+	PlayerController->SetIgnoreLookInput(true);
+	PlayerController->bShowMouseCursor = true;
+	PlayerController->bEnableClickEvents = true;
+	PlayerController->bEnableMouseOverEvents = true;
+
+	GameMode->RestoreLeadPlayerViewAndInputForTests();
+
+	TestTrue(TEXT("Imported-map cleanup should reapply the mouse-look mapping so mouse deltas rotate the camera."), InputSubsystem->HasMappingContext(MouseLookContext));
+	TestFalse(TEXT("Imported-map cleanup should restore look input."), PlayerController->IsLookInputIgnored());
+	TestFalse(TEXT("Imported-map cleanup should hide the menu cursor."), PlayerController->bShowMouseCursor);
+	TestFalse(TEXT("Imported-map cleanup should disable menu click handling."), PlayerController->bEnableClickEvents);
+	TestFalse(TEXT("Imported-map cleanup should disable menu hover handling."), PlayerController->bEnableMouseOverEvents);
 
 	TestTrue(TEXT("Transient world should be destroyed cleanly."), DestroyTestWorld(TestWorld));
 	return true;

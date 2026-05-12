@@ -235,6 +235,7 @@ public:
 	FHorrorCampaignAtmosphereTuning ResolveCampaignAtmosphereTuningForMapForTests(const FString& MapPackageName) const;
 	FHorrorCampaignAmbushThreatTuning ResolveCampaignAmbushThreatTuningForMapForTests(const FString& MapPackageName) const;
 	int32 SanitizeImportedMapVisualObstructionsForTests(const FString& MapPackageName);
+	void RestoreLeadPlayerViewAndInputForTests() { RestoreLeadPlayerViewAndInput(); }
 
 	const FHorrorCampaignChapterDefinition* GetCurrentCampaignChapterDefinition() const;
 	const TArray<AHorrorCampaignObjectiveActor*>& GetRuntimeCampaignObjectivesForTests() const { return RuntimeCampaignObjectiveActorViews; }
@@ -328,7 +329,6 @@ private:
 	bool TryRecoverFromCampaignFailure(FName FailureCause);
 	void QueueCampaignAutoTravelIfNeeded();
 	void ExecuteCampaignAutoTravel();
-	void TriggerFinalEndingSequence();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Horror|Bootstrap", meta=(AllowPrivateAccess="true"))
 	bool bAutoGrantBodycamOnPlayerBeginPlay = false;
@@ -435,7 +435,6 @@ private:
 	TArray<AHorrorCampaignObjectiveActor*> RuntimeCampaignObjectiveActorViews;
 	FHorrorCampaignProgress CampaignProgress;
 	FTimerHandle CampaignAutoTravelTimerHandle;
-	FTimerHandle FinalEndingTimerHandle;
 	bool bCampaignAutoTravelQueued = false;
 	FName ActiveCampaignAmbushSourceId = NAME_None;
 	FName CampaignNavigationFocusObjectiveId = NAME_None;

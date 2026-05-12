@@ -33,6 +33,8 @@ namespace HorrorPlayerCharacterDefaults
 	constexpr TCHAR RewindActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Rewind.IA_Rewind");
 	constexpr TCHAR OpenArchiveActionAssetPath[] = TEXT("/Game/Input/Actions/IA_OpenArchive.IA_OpenArchive");
 	constexpr TCHAR ToggleFlashlightActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Flashlight.IA_Flashlight");
+	constexpr TCHAR LookActionAssetPath[] = TEXT("/Game/Input/Actions/IA_Look.IA_Look");
+	constexpr TCHAR MouseLookActionAssetPath[] = TEXT("/Game/Input/Actions/IA_MouseLook.IA_MouseLook");
 }
 
 namespace
@@ -260,7 +262,32 @@ void AHorrorPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		const UInputAction* ResolvedToggleFlashlightAction = ResolveInputAction(&AHorrorPlayerCharacter::ToggleFlashlightAction, HorrorPlayerCharacterDefaults::ToggleFlashlightActionAssetPath, TEXT("ToggleFlashlightAction"));
 		BindActionAndStoreHandle(EnhancedInputComponent, ResolvedToggleFlashlightAction, ETriggerEvent::Started, this, &AHorrorPlayerCharacter::DoToggleFlashlight, ToggleFlashlightStartedBindingHandle);
+
+		// 兜底：父类 AHorrorProjectCharacter 依赖 BP CDO 设置 LookAction/MouseLookAction，
+		// 一旦 BP 子类把这两个字段置空，父类的 BindAction(nullptr, …) 就会静默失败，
+		// 表现是能走动但鼠标/右摇杆不转视角。这里只在 BP 置空时按资产硬路径补一条绑定，
+		// BP 有值时父类已绑，不重复挂，避免视角灵敏度翻倍。
+		auto EnsureLookBinding = [this, EnhancedInputComponent](const UInputAction* BPAction, const TCHAR* AssetPath)
+		{
+			if (BPAction)
+			{
+				return;
+			}
+			if (const UInputAction* FallbackAction = LoadObject<UInputAction>(nullptr, AssetPath))
+			{
+				EnhancedInputComponent->BindAction(FallbackAction, ETriggerEvent::Triggered, this,
+					&AHorrorPlayerCharacter::InvokeLookInput);
+			}
+		};
+		EnsureLookBinding(LookAction, HorrorPlayerCharacterDefaults::LookActionAssetPath);
+		EnsureLookBinding(MouseLookAction, HorrorPlayerCharacterDefaults::MouseLookActionAssetPath);
 	}
+}
+
+void AHorrorPlayerCharacter::InvokeLookInput(const FInputActionValue& Value)
+{
+	// protected 成员在子类上下文中可直接调用；单独出一个公开 thunk 是为了取成员函数指针时的访问控制。
+	LookInput(Value);
 }
 
 void AHorrorPlayerCharacter::DoInteract()

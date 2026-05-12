@@ -54,24 +54,6 @@ void UEndingCreditsWidget::StartCreditsRoll()
 	// 计算总高度
 	TArray<FString> Lines = GetCreditsLines();
 	TotalCreditsHeight = Lines.Num() * 40.0f; // 每行40像素
-
-	// 播放结局音乐 - Starfall
-	USoundBase* EndingMusicToPlay = EndingMusic;
-	if (!EndingMusicToPlay)
-	{
-		// 如果没有在编辑器中设置，则加载默认的 Starfall 音乐
-		EndingMusicToPlay = LoadObject<USoundBase>(nullptr, TEXT("/Game/Audio/Music/Starfall.Starfall"));
-	}
-
-	if (EndingMusicToPlay)
-	{
-		UGameplayStatics::PlaySound2D(this, EndingMusicToPlay);
-		UE_LOG(LogTemp, Log, TEXT("EndingCredits: 开始播放结局音乐 Starfall"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("EndingCredits: 无法加载结局音乐，请确保 Starfall.mp3 已导入到 Content/Audio/Music/"));
-	}
 }
 
 TArray<FString> UEndingCreditsWidget::GetCreditsLines() const

@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/HUD.h"
+#include "Player/HorrorPlayerController.h"
 #include "HorrorProject.h"
 
 void UMainMenuSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -111,16 +112,21 @@ void UMainMenuSubsystem::HideMainMenu()
 		MenuHUD->SetActorTickEnabled(false);
 		bMainMenuVisible = false;
 
-		// 恢复游戏输入模式
-		PC->bShowMouseCursor = false;
-		PC->bEnableClickEvents = false;
-		PC->bEnableMouseOverEvents = false;
+		if (AHorrorPlayerController* HorrorPlayerController = Cast<AHorrorPlayerController>(PC))
+		{
+			HorrorPlayerController->RestoreGameplayInputMode();
+		}
+		else
+		{
+			PC->bShowMouseCursor = false;
+			PC->bEnableClickEvents = false;
+			PC->bEnableMouseOverEvents = false;
 
-		FInputModeGameOnly InputMode;
-		PC->SetInputMode(InputMode);
+			FInputModeGameOnly InputMode;
+			PC->SetInputMode(InputMode);
 
-		// 取消暂停
-		UGameplayStatics::SetGamePaused(World, false);
+			UGameplayStatics::SetGamePaused(World, false);
+		}
 
 		UE_LOG(LogHorrorProject, Log, TEXT("主菜单已隐藏"));
 	}

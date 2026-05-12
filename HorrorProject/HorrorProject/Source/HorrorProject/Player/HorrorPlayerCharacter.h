@@ -72,6 +72,9 @@ protected:
 	virtual void PostInitializeComponents() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	/** 转发到父类 LookInput 的 thunk，避免子类取基类 protected 成员指针时的访问控制问题。 */
+	void InvokeLookInput(const struct FInputActionValue& Value);
+
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoInteract();
 
