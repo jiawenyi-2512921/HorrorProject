@@ -7,7 +7,7 @@ void UUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	EventManager = NewObject<UUIEventManager>(this);
+	EnsureEventManager();
 }
 
 void UUIManagerSubsystem::Deinitialize()
@@ -22,6 +22,16 @@ void UUIManagerSubsystem::Deinitialize()
 	ManagedWidgets.Empty();
 
 	Super::Deinitialize();
+}
+
+UUIEventManager* UUIManagerSubsystem::EnsureEventManager()
+{
+	if (!EventManager)
+	{
+		EventManager = NewObject<UUIEventManager>(this);
+	}
+
+	return EventManager;
 }
 
 UUserWidget* UUIManagerSubsystem::CreateWidget(TSubclassOf<UUserWidget> WidgetClass, FName WidgetName)
@@ -46,7 +56,10 @@ UUserWidget* UUIManagerSubsystem::CreateWidget(TSubclassOf<UUserWidget> WidgetCl
 	if (NewWidget)
 	{
 		ManagedWidgets.Add(WidgetName, NewWidget);
-		EventManager->RegisterWidget(NewWidget, WidgetName);
+		if (UUIEventManager* Manager = EnsureEventManager())
+		{
+			Manager->RegisterWidget(NewWidget, WidgetName);
+		}
 	}
 
 	return NewWidget;
@@ -65,7 +78,10 @@ void UUIManagerSubsystem::ShowWidget(FName WidgetName)
 		if (!Widget->IsInViewport())
 		{
 			Widget->AddToViewport();
-			EventManager->BroadcastWidgetOpened(Widget, WidgetName);
+			if (UUIEventManager* Manager = EnsureEventManager())
+			{
+				Manager->BroadcastWidgetOpened(Widget, WidgetName);
+			}
 		}
 	}
 }
@@ -82,7 +98,10 @@ void UUIManagerSubsystem::HideWidget(FName WidgetName)
 		if (Widget->IsInViewport())
 		{
 			Widget->RemoveFromParent();
-			EventManager->BroadcastWidgetClosed(Widget, WidgetName);
+			if (UUIEventManager* Manager = EnsureEventManager())
+			{
+				Manager->BroadcastWidgetClosed(Widget, WidgetName);
+			}
 		}
 	}
 }
@@ -92,7 +111,10 @@ void UUIManagerSubsystem::RemoveWidget(FName WidgetName)
 	if (UUserWidget* Widget = GetWidget(WidgetName))
 	{
 		Widget->RemoveFromParent();
-		EventManager->UnregisterWidget(WidgetName);
+		if (UUIEventManager* Manager = EnsureEventManager())
+		{
+			Manager->UnregisterWidget(WidgetName);
+		}
 		ManagedWidgets.Remove(WidgetName);
 		PendingUpdates.Remove(WidgetName);
 	}
@@ -112,7 +134,10 @@ void UUIManagerSubsystem::SetUIState(FName StateName)
 	if (CurrentUIState != StateName)
 	{
 		CurrentUIState = StateName;
-		EventManager->BroadcastUIStateChanged(StateName);
+		if (UUIEventManager* Manager = EnsureEventManager())
+		{
+			Manager->BroadcastUIStateChanged(StateName);
+		}
 	}
 }
 
@@ -133,7 +158,10 @@ void UUIManagerSubsystem::BatchUpdateEnd()
 			if (!Widget->IsInViewport())
 			{
 				Widget->AddToViewport();
-				EventManager->BroadcastWidgetOpened(Widget, WidgetName);
+				if (UUIEventManager* Manager = EnsureEventManager())
+				{
+					Manager->BroadcastWidgetOpened(Widget, WidgetName);
+				}
 			}
 		}
 	}

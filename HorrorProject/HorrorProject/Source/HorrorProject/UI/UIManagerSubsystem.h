@@ -37,7 +37,7 @@ public:
 	UUserWidget* GetWidget(FName WidgetName) const;
 
 	UFUNCTION(BlueprintPure, Category="UI|Manager")
-	UUIEventManager* GetEventManager() const { return EventManager; }
+	UUIEventManager* GetEventManager() const { return const_cast<UUIManagerSubsystem*>(this)->EnsureEventManager(); }
 
 	UFUNCTION(BlueprintCallable, Category="UI|Manager")
 	void SetUIState(FName StateName);
@@ -52,6 +52,8 @@ public:
 	void BatchUpdateEnd();
 
 private:
+	UUIEventManager* EnsureEventManager();
+
 	UPROPERTY()
 	TObjectPtr<UUIEventManager> EventManager;
 
